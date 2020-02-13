@@ -17,8 +17,9 @@ def _read_header(fileaddress):
         dtype_line = f.readline()
     nray = int(nray_line.strip().split(":")[1])
     dtype = dtype_line.strip().split()[1:]
-    dtype = [e for e in dtype if e not in PSVARS]
-    dtype = list(zip(dtype, [float]*len(dtype)))
+    # i only want the part about turns, elements and particle ids
+    dtype = [e for e in dtype if ((e not in PSVARS) and (e not in SPVARS))]
+    dtype = list(zip(dtype, [int]*len(dtype)))
     return nray, dtype
 
 def _shape_up(dat, nrays):
@@ -28,12 +29,14 @@ def _shape_up(dat, nrays):
     
 def load_ps(path, filename='TRPRAY.dat'):
     nray, d_type = _read_header(path+filename)
+    d_type += PSDTYPE
     ps = np.loadtxt(path+filename, d_type, skiprows=2)
     ps = _shape_up(ps, nray)
     return ps
 
 def load_sp(path, filename='TRPSPI.dat'):
     nray, d_type = _read_header(path+filename)
+    d_type += SPDTYPE
     sp = np.loadtxt(path+filename, d_type, skiprows=2)
     sp = _shape_up(sp, nray)
     return sp
