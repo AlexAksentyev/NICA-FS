@@ -18,7 +18,7 @@ def _read_header(fileaddress):
     nray = int(nray_line.strip().split(":")[1])
     dtype = dtype_line.strip().split()[1:]
     dtype = [e for e in dtype if e not in PSVARS]
-    dtype = list(zip(dtype, [float]*len(dtype))) + PSDTYPE
+    dtype = list(zip(dtype, [float]*len(dtype)))
     return nray, dtype
 
 def _shape_up(dat, nrays):
