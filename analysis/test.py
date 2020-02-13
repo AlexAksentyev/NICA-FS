@@ -1,15 +1,14 @@
 import numpy as np
 import matplotlib.pyplot as plt; plt.ion()
-import analysis as ana
+from analysis import HOMEDIR, DAVEC, load_ps, load_sp
 
-HOME = '/Users/alexaksentyev/REPOS/NICA-FS/'
 DIR  = 'data/TEST/'
 
-D_TYPE_BASE = list(zip(['iteration', 'PID'], [int]*2))
-VARS_PS = list(zip(['X','A','Y','B','T','D'], [float]*6))
-VARS_SP = list(zip(['X','Y','Z'], [float]*3))
-D_TYPE_PS = D_TYPE_BASE + VARS_PS
-D_TYPE_SP = D_TYPE_BASE + VARS_SP
+# D_TYPE_BASE = list(zip(['iteration', 'PID'], [int]*2))
+# VARS_PS = list(zip(['X','A','Y','B','T','D'], [float]*6))
+# VARS_SP = list(zip(['X','Y','Z'], [float]*3))
+# D_TYPE_PS = D_TYPE_BASE + VARS_PS
+# D_TYPE_SP = D_TYPE_BASE + VARS_SP
 
 def plot_spin(data, turns):
     fig1, ax1 = plt.subplots(4,1, sharex=True)
@@ -32,22 +31,27 @@ def plot_ps(data, varx, vary, turns):
 
 
 if __name__ == '__main__':
-    ps =  np.loadtxt(HOME+DIR+'TRPRAY:COSY.dat', D_TYPE_PS, skiprows=2)
-    sp =  np.loadtxt(HOME+DIR+'TRPSPI:COSY.dat', D_TYPE_SP, skiprows=2)
-    nray = ps['PID'].max() + 1
-    ps.shape = (-1, nray); sp.shape = (-1, nray)
-    ps = ps[:,1:]; sp = sp[:, 1:]; nray -= 1 # removing the zero ray
+    ps =  load_ps(HOMEDIR+DIR, 'TRPRAY:COSY.dat')
+    # sp =  load_sp(HOMEDIR+DIR, 'TRPSPI:COSY.dat')
 
-   
-    def plot_main(i0, varx='T', vary='D', turns=50):
-        ii = np.arange(i0, nray, 4)
-        spb = sp[:, ii]
-        psb = ps[:, ii]
-        plot_spin(spb, turns)
-        plot_ps(psb, varx,vary, turns)
-        return psb, spb
 
-    psb, spb = plot_main(0,'iteration','X',turns=1500)
+    tmp = np.genfromtxt(HOMEDIR+DIR+'MAP', skip_footer = 1,
+                        #dtype=DTYPE,
+                        delimiter=(1, 14, 14, 14, 14, 14, 7),
+                        usecols = range(1,6))
+    MAP = np.zeros((6,6))
+    MAP[:5,:] = tmp.T
+    MAP[5,-1] = 1
 
+    ntrn = 1000
+    z = np.zeros((ntrn, 6,4))
+    z[0,0,:] = [-1e-3, 0, 1e-3, 0]
+    z[0, 2,:] = [0, -1e-3, 0, 1e-3]
+
+    for i in range(1, ntrn):
+        z[i] = np.matmul(MAP, z[i-1])
     
-    X = ana.DAVEC(HOME+DIR+'MAP_1.da')
+
+    f, ax = plt.subplots(2,1, sharex=True)
+    ax[0].plot(z[:100,0,:]); ax[0].set_ylabel('X')
+    ax[1].plot(z[:100,2,:]); ax[1].set_ylabel('Y')
