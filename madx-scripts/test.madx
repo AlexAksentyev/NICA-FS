@@ -29,13 +29,10 @@ HZ1 = HZ1/koef;
 QF = QF/koef;
 QD = QD/koef;
 
-call file = "NICA_full.seq"; !"nica_24sol_rbend.seq";
-use, sequence=NICA;
-MAKETHIN, sequence=NICA, slice=2;
+call file = "nica_24sol_rbend.seq";
 use, sequence=NICA;
 
 SELECT, FLAG=TWISS, COLUMN= _name, q1, q2, betx, bety, orbit5;
-! SELECT, flag=MAKETHIN;
 
 twiss, save, centre, file=tbl/twiss.out; 
 
@@ -43,14 +40,12 @@ plot, haxis=s, vaxis=betx,bety,dx,colour=100, style=100,file=img/twiss_plot;
 survey, file=tbl/survey.out;
 
 TRACK, file=tbl/basis, onetable, dump;
-START, x=0;
-START, y=2e-3;
-! START, x=1e-3;
-! START, x=.8e-3;
-! START, y=1e-3;
-! START, y=.8e-3;
+START, x=1e-3;
+START, x=.8e-3;
+START, y=1e-3;
+START, y=.8e-3;
 DYNAP, TURNS=1000, FASTUNE=TRUE;
-RUN, turns=15000, ffile=1;
+RUN, turns=1500, ffile=1;
 ENDTRACK;
 
 PLOT, file=img/track_plot, table=trackone, trackfile=tbl/basis, multiple,
