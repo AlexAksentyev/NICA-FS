@@ -1,8 +1,8 @@
 import re
 
 HOME = '/Users/alexaksentyev/REPOS/NICA-FS/'
-INFILE = 'madx-scripts/nica_24sol_rbend.seq'
-OUTFILE = 'src/setups/nica_24sol_rbend-sequence.fox'
+INFILE = 'madx-scripts/NICA_full.seq' #'madx-scripts/nica_24sol_rbend.seq'
+OUTFILE = 'src/setups/NICA_full-sequence.fox' #'src/setups/nica_24sol_rbend-sequence.fox'
 NUM_ACC = 1 # current array position of the element to be written
 
 el_dict = {
@@ -98,6 +98,11 @@ def form_string(element):
     return out_str
 
 def write_dict(line):
+    try:
+        line, _ = line.split("!") # ignore inline comments
+    except:
+        pass
+    print(line)
     lbl, elem =  re.sub(":=", "=", " ".join(line.split())).split(":")
     print('**', lbl+': '+elem)
     elem = identify_mult(lbl, elem)
@@ -121,16 +126,16 @@ def write_file(line, fout):
 fout = open(HOME+OUTFILE,'w')
 with open(HOME+INFILE, 'r') as fin:
     for cnt, line in enumerate(fin):
-        if cnt<0: # 6
+        if cnt<6: # 0
             pass
-        elif cnt<471: # 138
+        elif cnt<138: # 471
             print(cnt)
             write_dict(line)
-        elif cnt<472: # 143
+        elif cnt<143: # 472
             print('++', cnt)
             print(line)
             pass
-        elif cnt>472: # 142
+        elif cnt>142: # 472
             print('##',cnt)
             print(line)
             if (line[0]!='\n' and line[0]!='/'):
