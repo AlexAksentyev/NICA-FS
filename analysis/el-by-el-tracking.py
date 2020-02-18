@@ -32,4 +32,6 @@ def plot(dat):
 
 
 if __name__ == '__main__':
-    plot_spin(sp[:,[0, 1, 28]])
+    # plot_spin(sp[:,[0, 1, 28]])
+    # plot(ps[:,[0,1,28]])
+    plot(ps)
