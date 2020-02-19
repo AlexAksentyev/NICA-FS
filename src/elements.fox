@@ -20,6 +20,7 @@ ENDFUNCTION; {BMULT}
 PROCEDURE THINMQ L {m} TILT {rad} K1 {m^-2};
                  {see QUAD for parameter explanations}
   VARIABLE OM NM1;
+  WRITE 6 '***** THIN QUADRUPOLE DEFINITION';
   OM := SQRT(ABS(K1));
   UMS;
   {load thin quad orbital map into MSC}

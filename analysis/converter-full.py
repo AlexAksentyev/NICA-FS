@@ -5,7 +5,7 @@ HOME = '/Users/alexaksentyev/REPOS/NICA-FS/'
 INFILE = 'madx-scripts/nica_24sol_rbend.seq'
 OUTFILE = 'src/setups/nica_24sol_rbend-select.fox'
 
-SELECT_ELEMENTS = ['DL', 'QUAD', 'RBEND'] # elements to appear in the lattice file
+SELECT_ELEMENTS = ['DL', 'QUADRUPOLE', 'RBEND'] # elements to appear in the lattice file
 
 
 el_dict = {

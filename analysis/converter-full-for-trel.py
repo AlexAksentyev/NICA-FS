@@ -5,7 +5,7 @@ INFILE = 'madx-scripts/nica_24sol_rbend.seq'
 OUTFILE = 'src/setups/nica_24sol_rbend-sequence-select.fox'
 NUM_ACC = 1 # current array position of the element to be written
 
-SELECT_ELEMENTS = ['DL', 'QUAD', 'RBEND'] # elements to appear in the lattice file
+SELECT_ELEMENTS = ['DL', 'QUADRUPOLE', 'RBEND'] # elements to appear in the lattice file
 
 el_dict = {
     'MONITOR': ('DL', 1),
