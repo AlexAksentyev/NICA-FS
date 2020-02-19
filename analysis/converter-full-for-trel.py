@@ -5,6 +5,8 @@ INFILE = 'madx-scripts/nica_24sol_rbend.seq'
 OUTFILE = 'src/setups/nica_24sol_rbend-sequence-select.fox'
 NUM_ACC = 1 # current array position of the element to be written
 
+SELECT_ELEMENTS = ['DL', 'QUAD', 'RBEND'] # elements to appear in the lattice file
+
 el_dict = {
     'MONITOR': ('DL', 1),
     'DRIFT': ('DL', 1),
@@ -88,14 +90,21 @@ def form_string(element):
     out_str = el_dict[element[0]][0] + ' ' # element line
     # arguments
     for par in element[1:]:
-        par = par.replace(' ', '')
-        par_val = par.split('=')[1]
+        par_val = par.replace(' ', '').split('=')[1]
         if (par_val.find('+',1)>0 or par_val.find('-',1)>0):
             par_val = '('+par_val+')'
         out_str += par_val+' '
     # finish
     out_str += ';' 
     return out_str
+
+def swap_for_DL(element):
+    out_str = 'DL '
+    for par in element[1:]:
+        par_name, par_val = par.replace(' ', '').split('=')
+        if par_name == 'L':
+            out_str += par_val
+    return out_str + ' ;'
 
 def write_dict(line):
     try:
@@ -107,7 +116,8 @@ def write_dict(line):
     print('**', lbl+': '+elem)
     elem = identify_mult(lbl, elem)
     elem = parse_element(elem)
-    out_string = form_string(elem) + ' {' + lbl + '}\n' # adding comment to procedure string
+    out_string = form_string(elem) if elem[0] in SELECT_ELEMENTS else swap_for_DL(elem)
+    out_string += ' {' + lbl + '}\n' # adding comment to procedure string
     lbl_dict.update({lbl : out_string}) # filling the label dictionary
     
 
@@ -116,21 +126,12 @@ def write_file(line, fout):
     seq = "".join(line.split())[:-1] # remove trailing comma
     seq = seq.strip(');')
     seq = seq.split(',')
-    for idx, element in enumerate(seq):
-        out_line = select(lbl_dict[element], ['DL','QUAD','RBEND']) # select only these elements
-        if out_line[0]!='{':
-            out_line = 'UM; ' + out_line
-            out_line += '\t SMAPS {} MAPARR SPNRARR;\n'.format(NUM_ACC + idx)
+    for idx, element in enumerate(seq):            
+        out_line = 'UM; '
+        out_line += lbl_dict[element]
+        out_line += '\t SMAPS {} MAPARR SPNRARR;\n'.format(NUM_ACC + idx)
         fout.write(out_line)
     NUM_ACC += idx + 1
-
-def select(line, select_elements='all'):
-    if select_elements!='all':
-        dummy = line.split()
-        name, comment = dummy[0], dummy[-1]
-        if name not in select_elements:
-            line = comment+'\n'
-    return line
 
 fout = open(HOME+OUTFILE,'w')
 with open(HOME+INFILE, 'r') as fin:

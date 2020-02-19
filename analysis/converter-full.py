@@ -5,6 +5,8 @@ HOME = '/Users/alexaksentyev/REPOS/NICA-FS/'
 INFILE = 'madx-scripts/nica_24sol_rbend.seq'
 OUTFILE = 'src/setups/nica_24sol_rbend-select.fox'
 
+SELECT_ELEMENTS = ['DL', 'QUAD', 'RBEND'] # elements to appear in the lattice file
+
 
 el_dict = {
     'MONITOR': ('DL', 1),
@@ -100,12 +102,22 @@ def form_string(element):
     out_str += ';' 
     return out_str
 
+def swap_for_DL(element):
+    out_str = 'DL '
+    for par in element[1:]:
+        par_name, par_val = par.replace(' ', '').split('=')
+        if par_name == 'L':
+            out_str += par_val
+    return out_str + ' ;'
+
+
 def write_dict(line):
     lbl, elem =  re.sub(":=", "=", " ".join(line.split())).split(":")
     print('**', lbl+': '+elem)
     elem = identify_mult(lbl, elem)
     elem = parse_element(elem)
-    out_string = form_string(elem) + ' {' + lbl + '}\n' # adding comment to procedure string
+    out_string = form_string(elem) if elem[0] in SELECT_ELEMENTS else swap_for_DL(elem)
+    out_string += ' {' + lbl + '}\n' # adding comment to procedure string
     lbl_dict.update({lbl : out_string}) # filling the label dictionary
     
 
@@ -115,16 +127,7 @@ def write_file(line, fout):
     seq = seq.split(',')
     for element in seq:
         out_line = lbl_dict[element]
-        out_line = select(out_line, ['DL', 'QUAD', 'RBEND']) # select only these elements
         fout.write(out_line)
-
-def select(line, select_elements='all'):
-    if select_elements!='all':
-        dummy = line.split()
-        name, comment = dummy[0], dummy[-1]
-        if name not in select_elements:
-            line = comment+'\n'
-    return line
     
 
 fout = open(HOME+OUTFILE,'w')
