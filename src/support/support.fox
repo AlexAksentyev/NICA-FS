@@ -1072,6 +1072,8 @@ PROCEDURE MAPSEQ24BENDS_SELECT MAPARR SPNRARR;
   VARIABLE QF 1; VARIABLE QD 1; {MATCHING QUADRUPOLE GRADIENT VARIATIONS; ZERO HERE B/C NO SOLENOIDS}
   WRITE 6 '*****************************************';
   WRITE 6 '*          CLEANED OUT LATTICE          *';
+  WRITE 6 '*            (USE WITH TREL)            *';
+  WRITE 6 '*        (LOCATED IN SUPPORT.FOX)       *';
   WRITE 6 '*****************************************';
   UM; DL 5.25 ; {Drift_1}
      SMAPS 1 MAPARR SPNRARR;

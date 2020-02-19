@@ -499,6 +499,7 @@ PROCEDURE BENDS24_SELECT;
   WRITE 6 '*****************************************';
   WRITE 6 '*           CLEANED OUT LATTICE         *';
   WRITE 6 '*          (USE WITH TR NOT TREL)       *';
+  WRITE 6 '*          (LOCATED IN SETUP.FOX)       *';
   WRITE 6 '*****************************************';
   DL 5.25 ; {Drift_1}
   QUAD 0.65 0 -0.5231928251 ; {Quadr_2}
