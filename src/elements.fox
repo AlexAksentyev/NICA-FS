@@ -17,6 +17,27 @@ FUNCTION BMULT KNL L; {COMPUTES MAGNETIC INDUCTION FOR A MADX MULTIPOLE ELEMENT}
   BMULT := KNL/L * CONS(CHIM);
 ENDFUNCTION; {BMULT}
 
+PROCEDURE THINMQ L {m} TILT {rad} K1 {m^-2};
+                 {see QUAD for parameter explanations}
+  VARIABLE OM NM1;
+  OM := SQRT(ABS(K1));
+  UMS;
+  {load thin quad orbital map into MSC}
+  IF CONS(K1)>0;
+    MSC(2) := -OM*SIN(OM*L)*DD(1) + 1*DD(2);
+    MSC(4) := OM*SINH(OM*L)*DD(3) + 1*DD(4);
+  ELSEIF CONS(K1)<0;
+    MSC(2) := OM*SINH(OM*L)*DD(1) + 1*DD(2);
+    MSC(4) := -OM*SIN(OM*L)*DD(3) + 1*DD(4);
+  ELSEIF TRUE;
+    DL L;
+  ENDIF;
+  {load thin quad spin map into SSCR}
+  {*** NOT IMPLEMENTED yet, SSCR = Identity ***}
+  {apply MSC and SSCR to MAP, SPNR respectively.}
+  LOCSET 0 0 0 0 0 0; UPDATE 1 1;
+ENDPROCEDURE;
+
 PROCEDURE QUAD L {m} TILT {rad} K1 {m^-2} ;
   {L quadrupole length}
   {K1 = B_Y/X / (B_0 R) [m^-2]}
@@ -26,9 +47,11 @@ PROCEDURE QUAD L {m} TILT {rad} K1 {m^-2} ;
       {hence B_y(a) = K1 * a in the automatic converter}
   VARIABLE Bpt 1; {magnetic induction (flux density @ pole tip)}
   VARIABLE A 1; {aperture}
-  A:=.05;  
+  A:=.05;
+  {this is the native COSY Infinity THICK LENS option}
   Bpt := K1*CONS(CHIM)*A; {in Tesla}
-  MQ L Bpt A;
+  { MQ L Bpt A; }
+  THINMQ L 0 K1; {using the THIN LENS matrix}
 ENDPROCEDURE; {QUAD}
 
 PROCEDURE SEXT L {m} TILT {rad} KNL {unit};
