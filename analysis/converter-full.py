@@ -3,7 +3,7 @@ import numpy as np
 
 HOME = '/Users/alexaksentyev/REPOS/NICA-FS/'
 INFILE = 'madx-scripts/nica_24sol_rbend.seq'
-OUTFILE = 'src/setups/nica_24sol_rbend.fox'
+OUTFILE = 'src/setups/nica_24sol_rbend-select.fox'
 
 
 el_dict = {
@@ -115,7 +115,17 @@ def write_file(line, fout):
     seq = seq.split(',')
     for element in seq:
         out_line = lbl_dict[element]
+        out_line = select(out_line, ['DL', 'QUAD', 'RBEND']) # select only these elements
         fout.write(out_line)
+
+def select(line, select_elements='all'):
+    if select_elements!='all':
+        dummy = line.split()
+        name, comment = dummy[0], dummy[-1]
+        if name not in select_elements:
+            line = comment+'\n'
+    return line
+    
 
 fout = open(HOME+OUTFILE,'w')
 with open(HOME+INFILE, 'r') as fin:

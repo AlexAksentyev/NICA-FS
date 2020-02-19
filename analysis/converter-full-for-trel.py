@@ -1,8 +1,8 @@
 import re
 
 HOME = '/Users/alexaksentyev/REPOS/NICA-FS/'
-INFILE = 'madx-scripts/NICA_full.seq' #'madx-scripts/nica_24sol_rbend.seq'
-OUTFILE = 'src/setups/NICA_full-sequence.fox' #'src/setups/nica_24sol_rbend-sequence.fox'
+INFILE = 'madx-scripts/nica_24sol_rbend.seq'
+OUTFILE = 'src/setups/nica_24sol_rbend-sequence-select.fox'
 NUM_ACC = 1 # current array position of the element to be written
 
 el_dict = {
@@ -117,25 +117,34 @@ def write_file(line, fout):
     seq = seq.strip(');')
     seq = seq.split(',')
     for idx, element in enumerate(seq):
-        out_line = 'UM; '
-        out_line += lbl_dict[element]
-        out_line += '\t SMAPS {} MAPARR SPNRARR;\n'.format(NUM_ACC + idx)
+        out_line = select(lbl_dict[element], ['DL','QUAD','RBEND']) # select only these elements
+        if out_line[0]!='{':
+            out_line = 'UM; ' + out_line
+            out_line += '\t SMAPS {} MAPARR SPNRARR;\n'.format(NUM_ACC + idx)
         fout.write(out_line)
     NUM_ACC += idx + 1
+
+def select(line, select_elements='all'):
+    if select_elements!='all':
+        dummy = line.split()
+        name, comment = dummy[0], dummy[-1]
+        if name not in select_elements:
+            line = comment+'\n'
+    return line
 
 fout = open(HOME+OUTFILE,'w')
 with open(HOME+INFILE, 'r') as fin:
     for cnt, line in enumerate(fin):
-        if cnt<6: # 0
+        if cnt<0: # 6
             pass
-        elif cnt<138: # 471
+        elif cnt<471: # 138
             print(cnt)
             write_dict(line)
-        elif cnt<143: # 472
+        elif cnt<472: # 143
             print('++', cnt)
             print(line)
             pass
-        elif cnt>142: # 472
+        elif cnt>472: # 142
             print('##',cnt)
             print(line)
             if (line[0]!='\n' and line[0]!='/'):
