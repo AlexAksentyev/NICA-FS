@@ -24,13 +24,34 @@ inject_deuterons(gamma_): MACRO = {
 EXEC, inject_protons(1.14);
 
 ! testing different solenoid strength values
-koef = 1000000; ! attenuation coefficient
+koef = 1; ! attenuation coefficient
 HZ1 = HZ1/koef;
 QF = QF/koef;
 QD = QD/koef;
 
-call file = "nica_24sol_rbend.seq";
+call file = "nica_24sol_rbend-thick.seq";
 use, sequence=NICA;
+
+! PTC_CREATE_UNIVERSE;
+
+! PTC_CREATE_LAYOUT;
+! select,flag=ptc_twiss,column=name,s,betx, bety;
+
+! ptc_twiss, file=twiss_ptc_ring;
+! PTC_NORMAL,closed_orbit,maptable,icase=6,no=3; ! generates fort.20 with the lattice transfer map
+
+! ! do some thick-lens tracking
+! PTC_START, x=0;
+! PTC_START, x=1e-15;
+! PTC_START, y=1e-8;
+! PTC_START, pt=1e-8;
+! PTC_TRACK, icase=6, closed_orbit, turns=10, onetable,
+! 	   file=tbl/ptc_tracking, norm_no=3;
+
+! PTC_END;
+
+! write,table="map_table",file="ring_matrix_at_end";
+
 
 SELECT, FLAG=TWISS, COLUMN= _name, q1, q2, betx, bety, orbit5;
 
@@ -38,6 +59,8 @@ twiss, save, centre, file=tbl/twiss.out;
 
 plot, haxis=s, vaxis=betx,bety,dx,colour=100, style=100,file=img/twiss_plot;
 survey, file=tbl/survey.out;
+
+! MAKETHIN, SEQUENCE=NICA;
 
 TRACK, file=tbl/basis, onetable, dump;
 START, x=1e-3;
