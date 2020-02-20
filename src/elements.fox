@@ -39,6 +39,27 @@ PROCEDURE THINMQ L {m} TILT {rad} K1 {m^-2};
   LOCSET 0 0 0 0 0 0; UPDATE 1 1;
 ENDPROCEDURE;
 
+PROCEDURE QUAD1 L {m} TILT G; {BNL-type quadrupole definition}
+  VARIABLE L0 1;
+  VARIABLE G0 1;
+  VARIABLE TILT0 1;
+  WRITE 6 'BNL TYPE QUAD IN NICA FS';
+
+  L0:=L;{in meters}
+  IF (G=0); WRITE 6 'G=0';
+    DL L0;
+  ELSEIF (1=1); 
+    G0:=G*10;{in Tesla/m}
+    TILT0:=TILT;
+    ROTATE TILT0;
+    WRITE 6 'B = '&ST(G0*.05);
+    MQ L0 G0*0.05 0.05; {Magnetic quadrupole}
+    {WRITE 6 'MQ' L0 G0*0.05;}
+    ROTATE -TILT0;
+  ENDIF;
+ENDPROCEDURE; { END OF QUADRUPOLE }
+
+
 PROCEDURE QUAD L {m} TILT {rad} K1 {m^-2} ;
   {L quadrupole length}
   {K1 = B_Y/X / (B_0 R) [m^-2]}
@@ -48,18 +69,22 @@ PROCEDURE QUAD L {m} TILT {rad} K1 {m^-2} ;
       {hence B_y(a) = K1 * a in the automatic converter}
   VARIABLE Bpt 1; {magnetic induction (flux density @ pole tip)}
   VARIABLE A 1; {aperture}
+  WRITE 6 'NICA FS QUAD DEFINITION';
   A:=.05;
   {this is the native COSY Infinity THICK LENS option}
   Bpt := K1*CONS(CHIM)*A; {in Tesla}
-  { MQ L Bpt A; }
-  THINMQ L 0 K1; {using the THIN LENS matrix}
+  WRITE 6 'B = '&ST(Bpt);
+  MQ L Bpt A;
+  { THINMQ L 0 K1; } {using the THIN LENS matrix}
 ENDPROCEDURE; {QUAD}
 
 PROCEDURE SEXT L {m} TILT {rad} KNL {unit};
   VARIABLE Bpt 1;
   VARIABLE L0 1;
   Bpt := BMULT(KNL, L);
-  MH L Bpt .05;
+  IF Bpt=0; DL L;
+  ELSEIF TRUE; MH L Bpt .05;
+  ENDIF;
 ENDPROCEDURE; {SEXT}
 
 PROCEDURE OCT L {m} TILT {rad} KNL {unit};
@@ -98,10 +123,16 @@ ENDPROCEDURE; {SBEND}
 
 PROCEDURE RBEND L {m} ANGLE {rad} TILT {rad};
   VARIABLE R 1; VARIABLE ANGLE0 1; VARIABLE TILT0 1;
+  WRITE 6 'IN RBEND';
+  WRITE 6 'ANGLE = '&ST(ANGLE);
   ANGLE0 := ABS(ANGLE)/DEGRAD;
-  TILT0 := TILT/DEGRAD;
-  R := L/ANGLE0;
-  IF ANGLE<0; CB; ENDIF;
+  WRITE 6 'DEGRAD = '&ST(DEGRAD)
+           'ANGLE0 = '&ST(ANGLE0)
+           'ANGLE = '&ST(ANGLE);
+  TILT0 := TILT*DEGRAD;
+  R := L/ANGLE;
+  WRITE 6 'R ='&ST(R);
+  IF ANGLE<0; CB; WRITE 6 'CB'; ENDIF;
   ROTATE TILT0;
     DP R ANGLE0 .1;
   ROTATE -TILT0;
@@ -133,6 +164,34 @@ PROCEDURE KICK L {m} KX {unit} KY {unit};
     WRITE 6 'UNIMPLEMENTED ERROR!';
   ENDIF;
 ENDPROCEDURE;
+
+{I PUT THIS ELEMENT HERE TO CHECK AGAINST THE BNL LATTICE}
+PROCEDURE WIEN L2 B1 B2 TILT; {homogenous WF; closed orbit preserved}
+{parasitic (tilt) fields are implemented via a spin kick like Eremey thesis section 6.5.3}
+  VARIABLE R1 1;
+  VARIABLE R2 1;
+  VARIABLE B0 1; VARIABLE B3 1;
+  VARIABLE L1 1;
+  VARIABLE TILT0 1; VARIABLE TOF 1;
+  VARIABLE BX 1; VARIABLE EY 1;
+  VARIABLE BETA 1; VARIABLE DWMDM 1; 
+  L1:=L2/100; {in meters}
+  B0:=ABS(B1)/10; {in Tesla}
+  B3:=ABS(B2)*1e5;   {in V/m}
+  R2:=CONS(CHIM)/B0;
+  R1:=CONS(CHIE)/B3;
+  TILT0 := TILT;
+  WF R1 R2 L1 0.05;
+  IF TILT0#0;
+    BX := B0*TAN(TILT0);
+    EY := CONS(CHIE)/CONS(CHIM)*BX;
+    BETA := CONS(V0)/CLIGHT;
+    DWMDM := Z0/M0*EZERO/AMU*(G0*BX - (G0 - 1/BETA/BETA + 1)*BETA*EY/CLIGHT);
+    TOF := L1/CONS(V0);
+    RSX TOF*DWMDM;
+  ENDIF;    
+ENDPROCEDURE; { END OF WIEN }
+
 
  
 SAVE 'bin/elements';

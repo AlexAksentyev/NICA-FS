@@ -1,6 +1,6 @@
 CORE-DIR= $(HOME)/REPOS/COSYINF-CORE
 CORE = $(addsuffix .bin, cosy utilities elements)
-SETUPS = $(addsuffix .bin, NICA_FS)
+SETUPS = $(addsuffix .bin, NICA_FS BNL simple)
 SUPPORT = support.bin
 
 define RM

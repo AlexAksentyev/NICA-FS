@@ -1,0 +1,79 @@
+
+INCLUDE 'bin/elements';
+
+PROCEDURE SIMPLE;
+  VARIABLE L_Q 1; VARIABLE GF 1; VARIABLE GD 1;
+  VARIABLE L_O 1; VARIABLE L_D 1; VARIABLE PHI 1;
+  L_O := .1; L_D := 1; L_Q := .2;
+  GF  := 0.08*10/CONS(CHIM);
+  GD := -.28*10/CONS(CHIM);
+  PHI := 25.714285714285715*DEGRAD;
+
+  UM;
+  DL L_O;
+  RBEND L_D PHI 0;
+  DL L_O;
+  QUAD L_Q 0 GF;
+  DL L_O;
+  RBEND L_D PHI 0;
+  DL L_O;
+  QUAD L_Q 0 GD;
+
+  DL L_O;
+  RBEND L_D PHI 0;
+  DL L_O;
+  QUAD L_Q 0 GF;
+  DL L_O;
+  RBEND L_D PHI 0;
+  DL L_O;
+  QUAD L_Q 0 GD;
+
+  DL L_O;
+  RBEND L_D PHI 0;
+  DL L_O;
+  QUAD L_Q 0 GF;
+  DL L_O;
+  RBEND L_D PHI 0;
+  DL L_O;
+  QUAD L_Q 0 GD;
+
+  DL L_O;
+  RBEND L_D PHI 0;
+  DL L_O;
+  QUAD L_Q 0 GF;
+  DL L_O;
+  RBEND L_D PHI 0;
+  DL L_O;
+  QUAD L_Q 0 GD;
+{}
+  DL L_O;
+  RBEND L_D PHI 0;
+  DL L_O;
+  QUAD L_Q 0 GF;
+  DL L_O;
+  RBEND L_D PHI 0;
+  DL L_O;
+  QUAD L_Q 0 GD;
+
+  DL L_O;
+  RBEND L_D PHI 0;
+  DL L_O;
+  QUAD L_Q 0 GF;
+  DL L_O;
+  RBEND L_D PHI 0;
+  DL L_O;
+  QUAD L_Q 0 GD;
+
+  DL L_O;
+  RBEND L_D PHI 0;
+  DL L_O;
+  QUAD L_Q 0 GF;
+  DL L_O;
+  RBEND L_D PHI 0;
+  DL L_O;
+  QUAD L_Q 0 GD;
+  
+
+ENDPROCEDURE;
+
+SAVE 'bin/setups/simple';
