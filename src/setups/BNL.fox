@@ -4,6 +4,12 @@ FUNCTION ACCLEN DUMMY;
   ACCLEN := 145.8456;
 ENDFUNCTION;
 
+PROCEDURE SET_UP_PARTICLE; {automatically set up injected particle parameters so i don't mess up in test scripts}
+{this lattice was designed to inject ELECTRONS at energy 200 MeV}
+RP 270 2.01410 1;
+RPS 1 -.142987;
+ENDPROCEDURE;
+
 PROCEDURE CW_SETUP GSX GSY GSD TILTS;
   {Parameters:}
   {* TILTS --- vector of element tilt angles }
