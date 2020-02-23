@@ -1,0 +1,42 @@
+! #################### definitions #################### 
+snake_str(G, ss): MACRO = {ss = 1/12 * PI/(1 + G)*1/.7;}; //формулa (1) в файле "Пояснения к структуре"
+
+inject_protons(gamma_): MACRO = {
+		   proton_G = 1.792847;
+		   EXEC, snake_str(proton_G, HZ1);
+		   HZ2 := HZ1;
+		   QF = -0.011;
+		   QD = -0.012;
+		   beam, PARTICLE=PROTON, GAMMA=gamma_;
+};
+
+inject_deuterons(gamma_): MACRO = {
+		     deuteron_G = -.142987;
+		     EXEC, snake_str(deuteron_G, HZ1);
+		     HZ2 := HZ1;
+		     QF = -.044;
+		     QD = -.032;
+		     beam, PARTICLE=ION, MASS=PROTON->MASS*2, GAMMA=gamma_;
+};
+! ##################################################
+
+! ********** TEST PROPER **********
+EXEC, inject_protons(1.14);
+
+call file = "nica_24sol_rbend-clean.seq";
+use, sequence=BH_seq;
+
+ptc_create_universe;
+ptc_create_layout,model=2,method=6,nst=10,exact;
+!ptc_align;
+
+! select,flag=ptc_twiss,column=name,s,beta11,beta21,
+!                                   beta12,beta22,disp1,disp3,x,px,y,py;
+
+
+PTC_NORMAL,closed_orbit,maptable,icase=6,no=1;
+
+ptc_end;
+
+write,table="map_table",file="elmap/map_table_BH";
+! write,table="map_table",file="ring_matrix_at_end";
