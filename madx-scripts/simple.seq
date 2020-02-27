@@ -1,0 +1,16 @@
+O:	DRIFT, L=.1;
+D:	RBEND, L=1, ANGLE=.4487989505128276;
+QF:	QUADRUPOLE, L=.2, K1:=.8/BEAM->BRHO;
+QD:	QUADRUPOLE, L=.2, K1:=-2.8/BEAM->BRHO;
+
+
+SIM: LINE = (
+o, D, o, qF, o, D, o, qD,
+o, D, o, qF, o, D, o, qD,
+o, D, o, qF, o, D, o, qD,
+o, D, o, qF, o, D, o, qD,
+
+o, D, o, qF, o, D, o, qD,
+o, D, o, qF, o, D, o, qD,
+o, D, o, qF, o, D, o, qD
+);

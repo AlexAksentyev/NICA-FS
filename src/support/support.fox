@@ -1,6 +1,8 @@
 { INCLUDE 'bin/setups/BNL'; }
-INCLUDE 'bin/elements';
+{ INCLUDE 'bin/elements'; }
 { INCLUDE 'bin/setups/simple'; }
+{ INCLUDE 'bin/setups/COSY_EXAMPLE_RING'; }
+INCLUDE 'bin/setups/NICA_FS';
 
 PROCEDURE WMAT MAT N M OU;
   VARIABLE I 1; VARIABLE J 1;

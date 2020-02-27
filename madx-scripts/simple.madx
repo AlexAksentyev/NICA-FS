@@ -1,0 +1,28 @@
+beam, PARTICLE=ELECTRON, ENERGY=.2;
+
+call, file="simple.seq";
+use, sequence=SIM;
+
+select, FLAG=TWISS, COLUMN=_name, q1, q2, betx, bety;
+twiss, save, centre, file=simple_twiss.out;
+
+plot, haxis=s, vaxis=betx,bety,dx,colour=100, style=100,file=simple_twiss_plot;
+
+track, file=basis, onetable, dump;
+start, x=1e-3;
+start, px=1e-4;
+start, y=1e-3;
+run, turns=10, ffile=1;
+endtrack;
+
+plot, file=simple_track_plot, table=trackone, trackfile=basis, multiple, haxis=turn, vaxis=x, particle=1,2,3;
+
+plot, file=simple_track_plot, table=trackone, trackfile=basis, multiple, haxis=turn, vaxis=y, particle=1,2,3;
+
+plot, file=simple_track_plot, table=trackone, trackfile=basis, multiple, haxis=x, vaxis=px, particle=1,2,3;
+
+plot, file=simple_track_plot, table=trackone, trackfile=basis, multiple, haxis=y, vaxis=py, particle=1,2,3;
+
+value, beam->brho;
+value, qf->k1;
+value, qd->k1;
