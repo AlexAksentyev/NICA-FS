@@ -1,7 +1,6 @@
 CORE-DIR= $(HOME)/REPOS/COSYINF-CORE
 CORE = $(addsuffix .bin, cosy utilities elements)
-SETUPS = $(addsuffix .bin, BENDS24FULL BENDS24CLEAN BENDS24SEQ_FULL BENDS24SEQ_CLEAN NICA_FULL NICA_SEQ_FULL BNL simple COSY_EXAMPLE_RING)
-SUPPORT = main.bin
+SETUPS = $(addsuffix .bin, BENDS24FULL BENDS24CLEAN BENDS24SEQ_FULL BENDS24SEQ_CLEAN)
 
 define RM
 	find $(1) -type f -name $(2) -print -delete
@@ -12,9 +11,6 @@ core.bld: $(addprefix $(CORE-DIR)/bin/, $(CORE))
 
 setups.bld: $(addprefix bin/setups/, $(SETUPS))
 	echo $(SETUPS) >> setups.bld
-
-support.bld: $(addprefix bin/support/, $(SUPPORT))
-	echo $(SUPPORT) >> support.bld
 
 $(CORE-DIR)/bin/cosy.bin: $(CORE-DIR)/src/cosy.fox ;
 	cosy $<;
@@ -27,7 +23,7 @@ bin/elements.bin: src/elements.fox $(CORE-DIR)/bin/utilities.bin
 	cosy $<;
 bin/support/main.bin: src/support/main.fox bin/elements.bin
 	cosy $<;
-bin/setups/%.bin: src/setups/%.fox support.bld
+bin/setups/%.bin: src/setups/%.fox bin/support/main.bin
 	cosy $<;
 
 TE/% : test/%.fox setups.bld
