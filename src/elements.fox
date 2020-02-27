@@ -73,7 +73,7 @@ PROCEDURE QUAD L {m} TILT {rad} K1 {m^-2} ;
   A:=.05;
   {this is the native COSY Infinity THICK LENS option}
   Bpt := K1*CONS(CHIM)*A; {in Tesla}
-  WRITE 6 'B = '&ST(Bpt);
+  WRITE 6 'K1 = '&ST(K1) 'B = '&ST(Bpt);
   MQ L Bpt A;
   { THINMQ L 0 K1; } {using the THIN LENS matrix}
 ENDPROCEDURE; {QUAD}
@@ -113,28 +113,42 @@ PROCEDURE SBEND L {m} ANGLE {rad} TILT {rad} E1 {rad} H1 {1/m} E2 {rad} H2{1/m} 
   E20 := E2/DEGRAD;
   ANGLE0 := ABS(ANGLE)/DEGRAD;
   TILT0 := TILT/DEGRAD;
-  R := L/ANGLE0;
+  R := L/ABS(ANGLE);
   IF ANGLE<0; CB; ENDIF;
   ROTATE TILT0;
-    DI R ANGLE0 .1 E1 H1 E2 H2;
+    DI R ANGLE0 .1 E10 H1 E20 H2;
   ROTATE -TILT0;
   IF ANGLE<0; CB; ENDIF;
 ENDPROCEDURE; {SBEND}
 
 PROCEDURE RBEND L {m} ANGLE {rad} TILT {rad};
-  VARIABLE R 1; VARIABLE ANGLE0 1; VARIABLE TILT0 1;
+  VARIABLE R 1; VARIABLE ANGLE_DEG 1; VARIABLE TILT0 1;
+  {variables needed for MCLK}
+  VARIABLE NT 1;
+  VARIABLE KN 1 1;
+  VARIABLE S1 1 1;
+  VARIABLE S2 1 1;
+  VARIABLE B 1;
+
   WRITE 6 'IN RBEND';
   WRITE 6 'ANGLE = '&ST(ANGLE);
-  ANGLE0 := ABS(ANGLE)/DEGRAD;
+  NT := 1;
+  B := CONS(P0)/(CLIGHT*1E-6) * ANGLE/L;
+  KN(1) := 0; S1(1) := 0; S2(1) := 0;
+  WRITE 6 'B = '&ST(B);
+  ANGLE_DEG := ABS(ANGLE)/DEGRAD;
   WRITE 6 'DEGRAD = '&ST(DEGRAD)
-           'ANGLE0 = '&ST(ANGLE0)
+           'ANGLE_DEG = '&ST(ANGLE_DEG)
            'ANGLE = '&ST(ANGLE);
-  TILT0 := TILT*DEGRAD;
-  R := L/ANGLE;
+  TILT0 := TILT/DEGRAD;
+  R := L/ABS(ANGLE);
   WRITE 6 'R ='&ST(R);
   IF ANGLE<0; CB; WRITE 6 'CB'; ENDIF;
   ROTATE TILT0;
-    DP R ANGLE0 .1;
+    { DI R ANGLE_DEG .1 0 0 0 0; }
+    DP R ANGLE_DEG .1;
+    {trying the dipole definition from COSY-FS/Eremey/BNL}
+    { MCLK L ANGLE_DEG .05 KN S1 S2 NT; }
   ROTATE -TILT0;
   IF ANGLE<0; CB; ENDIF;
 ENDPROCEDURE; {RBEND}

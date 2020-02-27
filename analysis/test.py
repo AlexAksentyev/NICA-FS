@@ -31,27 +31,17 @@ def plot_ps(data, varx, vary, turns):
 
 
 if __name__ == '__main__':
-    ps =  load_ps(HOMEDIR+DIR, 'TRPRAY:COSY.dat')
-    # sp =  load_sp(HOMEDIR+DIR, 'TRPSPI:COSY.dat')
+    ps =  load_ps(HOMEDIR+DIR, 'TRPRAY.dat')
+    # sp =  load_sp(HOMEDIR+DIR, 'TRPSPI.dat')
+    # plot_ps(ps[:,:5], 'EID','X', 471*5)
+    # plot_ps(ps[:,:5], 'EID','Y', 471*5)
+    fig, ax = plt.subplots(4,1,sharex=True)
+    ax[0].plot(ps['X']); ax[0].set_ylabel('X')
+    ax[1].plot(ps['Y']); ax[1].set_ylabel('Y')
+    ax[2].plot(ps['T']); ax[2].set_ylabel('T')
+    ax[3].plot(ps['D']); ax[3].set_ylabel('D')
 
-
-    tmp = np.genfromtxt(HOMEDIR+DIR+'MAP', skip_footer = 1,
-                        #dtype=DTYPE,
-                        delimiter=(1, 14, 14, 14, 14, 14, 7),
-                        usecols = range(1,6))
-    MAP = np.zeros((6,6))
-    MAP[:5,:] = tmp.T
-    MAP[5,-1] = 1
-
-    ntrn = 1000
-    z = np.zeros((ntrn, 6,4))
-    z[0,0,:] = [-1e-3, 0, 1e-3, 0]
-    z[0, 2,:] = [0, -1e-3, 0, 1e-3]
-
-    for i in range(1, ntrn):
-        z[i] = np.matmul(MAP, z[i-1])
-    
-
-    f, ax = plt.subplots(2,1, sharex=True)
-    ax[0].plot(z[:100,0,:]); ax[0].set_ylabel('X')
-    ax[1].plot(z[:100,2,:]); ax[1].set_ylabel('Y')
+    # fig1, ax1 = plt.subplots(3,1,sharex=True)
+    # ax1[0].plot(sp['S_X']); ax1[0].set_ylabel('S_X')
+    # ax1[1].plot(sp['S_Y']); ax1[1].set_ylabel('S_Y')
+    # ax1[2].plot(sp['S_Z']); ax1[2].set_ylabel('S_Z')

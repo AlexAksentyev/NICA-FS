@@ -21,32 +21,32 @@ inject_deuterons(gamma_): MACRO = {
 ! ##################################################
 
 ! ********** TEST PROPER **********
-EXEC, inject_deuterons(1.14);
+EXEC, inject_protons(1.14);
 
 ! testing different solenoid strength values
-koef = 0; ! attenuation coefficient
+koef = 1; ! attenuation coefficient
 HZ1 = HZ1*koef;
 QF = QF*koef;
 QD = QD*koef;
 
-call file = "nica_24sol_rbend-clean.seq";
+call file = "nica_24sol_rbend.seq";
 use, sequence=NICA;
 
 PTC_CREATE_UNIVERSE;
-
 PTC_CREATE_LAYOUT;
-select,flag=ptc_twiss,column=name,s,betx, bety;
 
+select,flag=ptc_twiss,column=name,s,betx, bety;
 ptc_twiss, file=twiss_ptc_ring;
-PTC_NORMAL,closed_orbit,normal,maptable,icase=4,no=1; ! generates ring_matrix_at_end ** with the lattice transfer map
+
+!PTC_NORMAL,closed_orbit,normal,maptable,icase=4,no=1; ! generates ring_matrix_at_end ** with the lattice transfer map
 
 ! do some thick-lens tracking
-PTC_START, x=0;
-PTC_START, x=1e-15;
-PTC_START, y=1e-8;
-PTC_START, pt=1e-8;
-PTC_TRACK, icase=6, closed_orbit, turns=10, onetable,
-	   file=tbl/ptc_tracking, norm_no=3;
+! PTC_START, x=0;
+! PTC_START, x=1e-15;
+! PTC_START, y=1e-8;
+! PTC_START, pt=1e-8;
+! PTC_TRACK, icase=6, closed_orbit, turns=10, onetable,
+! 	   file=tbl/ptc_tracking, norm_no=3;
 
 PTC_END;
 
