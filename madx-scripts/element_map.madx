@@ -24,19 +24,13 @@ inject_deuterons(gamma_): MACRO = {
 EXEC, inject_protons(1.14);
 
 call file = "nica_24sol_rbend-clean.seq";
-use, sequence=BH_seq;
+use, sequence=SNK1_seq;
 
 ptc_create_universe;
 ptc_create_layout,model=2,method=6,nst=10,exact;
-!ptc_align;
-
-! select,flag=ptc_twiss,column=name,s,beta11,beta21,
-!                                   beta12,beta22,disp1,disp3,x,px,y,py;
-
 
 PTC_NORMAL,closed_orbit,maptable,icase=6,no=1;
 
 ptc_end;
 
-write,table="map_table",file="elmap/map_table_BH";
-! write,table="map_table",file="ring_matrix_at_end";
+write,table="map_table",file="elmap/map_table_SNK1";
