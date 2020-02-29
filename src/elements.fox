@@ -67,13 +67,14 @@ PROCEDURE QUAD L {m} TILT {rad} K1 {m^-2} ;
       {which is B_y(a) = B*\rho*K_1*a, a = aperture}
       {checked with Optim; there K1 is Tl/m (not normalized by B\rho)}
       {hence B_y(a) = K1 * a in the automatic converter}
-  VARIABLE Bpt 1; {magnetic induction (flux density @ pole tip)}
+  VARIABLE Bpt NM1; {magnetic induction (flux density @ pole tip)}
   VARIABLE A 1; {aperture}
-  WRITE 6 'NICA FS QUAD DEFINITION';
+  WRITE 6 '********** NICA FS QUAD DEFINITION';
   A:=.05;
   {this is the native COSY Infinity THICK LENS option}
   Bpt := K1*CONS(CHIM)*A; {in Tesla}
-  WRITE 6 'K1 = '&ST(K1) 'B = '&ST(Bpt);
+  WRITE 6 'K1[m^-2]        B[Tl]          G[kG/cm]       '
+           SF(CONS(K1), '(E15.7)')&SF(CONS(Bpt), '(E15.7)')&SF(CONS(Bpt)/A/10,'(E15.7)');
   MQ L Bpt A;
   { THINMQ L 0 K1; } {using the THIN LENS matrix}
 ENDPROCEDURE; {QUAD}
@@ -130,19 +131,15 @@ PROCEDURE RBEND L {m} ANGLE {rad} TILT {rad};
   VARIABLE S2 1 1;
   VARIABLE B 1;
 
-  WRITE 6 'IN RBEND';
-  WRITE 6 'ANGLE = '&ST(ANGLE);
+  WRITE 6 '********** RBEND';
   NT := 1;
   B := CONS(P0)/(CLIGHT*1E-6) * ANGLE/L;
   KN(1) := 0; S1(1) := 0; S2(1) := 0;
-  WRITE 6 'B = '&ST(B);
   ANGLE_DEG := ABS(ANGLE)/DEGRAD;
-  WRITE 6 'DEGRAD = '&ST(DEGRAD)
-           'ANGLE_DEG = '&ST(ANGLE_DEG)
-           'ANGLE = '&ST(ANGLE);
   TILT0 := TILT/DEGRAD;
   R := L/ABS(ANGLE);
-  WRITE 6 'R ='&ST(R);
+  WRITE 6 'ANGLE[rad]      ANGLE[deg]      R[m]            B[Tl]'
+           SF(ANGLE,'(E15.7)')&SF(ANGLE_DEG, '(E15.7)')&SF(R, '(E15.7)')&' '&SF(B, '(E15.7)');
   IF ANGLE<0; CB; WRITE 6 'CB'; ENDIF;
   ROTATE TILT0;
     { DI R ANGLE_DEG .1 0 0 0 0; }
