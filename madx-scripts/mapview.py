@@ -63,10 +63,9 @@ def load_madx(name):
         i = pmat[k][0]
         try:
             j = list(pmat[k][1:]).index(1)
+            trans_map[i,j] = c
         except:
-            print(k, i, j, c, '***** constant coefficient')
-            print(k, i, j, c)
-        trans_map[i,j] = c
+            print(k, i, c, '***** constant coefficient')
     return trans_map
 
 def load_cosy(name, dir_=DIR):
