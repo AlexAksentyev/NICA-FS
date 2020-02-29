@@ -43,4 +43,7 @@ purge:
 	$(call RM, 'img', '*.png')
 	$(call RM, 'img', '*.pdf')
 
-.PHONY: clean uninstall purge
+dump:
+	rm -v img/dump/*
+
+.PHONY: clean uninstall purge dump
