@@ -1,0 +1,69 @@
+call, file='support/main.madx';
+exec, inject_protons(1.14);
+
+LQ = .2; // DEFAULT QUADRUPOLE LENGTH
+kf = 2.16;
+kd = -2.16;
+
+HD:   MARKER;
+HD1:  HD;
+HD2:  HD;
+HD3:  HD;
+HD4:  HD;
+HD5:  HD;
+HD6:  HD;
+HD7:  HD;
+HD8:  HD;
+HD9:  HD;
+HD10:  HD;
+HD11:  HD;
+O:    DRIFT, L=.1;
+D:    RBEND, L=1.94, ANGLE=.07853981633974483;
+QF:   QUADRUPOLE, L:=LQ, K1=kf, THICK=true;
+QD:   QUADRUPOLE, L:=LQ/2, K1=kd, THICK=true;
+
+CELL: 		LINE=(QD, HD1, O, HD2, D, HD3 O, HD4, QF, HD5, O, HD6, D, HD7, O, HD8, QD);
+SUPER:		LINE=(CELL, HD9, CELL, HD10, CELL, HD11);
+FODO:		LINE=(QD, HD1, O, HD2, QF, HD3, O, HD4, QD);
+SUPER_FODO:	LINE=(FODO, HD5, FODO, HD6, FODO);
+
+use, sequence=SUPER;
+! LQ = .5;
+
+SELECT, FLAG=TWISS, COLUMN= _name, q1, q2, betx, bety;
+twiss, save, centre, file=tbl/twiss.out;
+plot, haxis=s, vaxis1=betx,bety,vaxis2=dx,dy,colour=100, style=100,file=img/twiss_plot;
+survey, file=tbl/survey.out;
+
+TRACK, file=tbl/basis, onetable, dump;
+START, px=1e-3;
+START, px=-1e-3;
+START, py=1e-3;
+START, py=-1e-3;
+observe, place='HD1';
+observe, place='HD2';
+observe, place='HD3';
+observe, place='HD4';
+observe, place='HD5';
+observe, place='HD6';
+observe, place='HD7';
+observe, place='HD8';
+observe, place='HD9';
+observe, place='HD10';
+observe, place='HD11';
+observe, place='CELL';
+RUN, turns=1, ffile=1;
+ENDTRACK;
+PLOT, file=img/track_plot, table=trackone, trackfile=tbl/basis, multiple,
+      style=100,
+      haxis=s, vaxis=x, particle=1,2,3,4;
+PLOT, file=img/track_plot, table=trackone, trackfile=tbl/basis, multiple,
+      style=100,
+      haxis=s, vaxis=y, particle=1,2,3,4;
+
+VALUE, TABLE(summ, q1);
+VALUE, TABLE(summ, q2);
+VALUE, beam->brho;
+VALUE, QF->L;
+VALUE, QF->K1;
+VALUE, QD->K1;
