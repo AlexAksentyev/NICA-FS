@@ -1,25 +1,5 @@
-! #################### definitions #################### 
-snake_str(G, ss): MACRO = {ss = 1/12 * PI/(1 + G)*1/.7;}; //формулa (1) в файле "Пояснения к структуре"
 
-inject_protons(gamma_): MACRO = {
-		   proton_G = 1.792847;
-		   EXEC, snake_str(proton_G, HZ1);
-		   HZ2 := HZ1;
-		   QF = -0.011;
-		   QD = -0.012;
-		   beam, PARTICLE=PROTON, GAMMA=gamma_;
-};
-
-inject_deuterons(gamma_): MACRO = {
-		     deuteron_G = -.142987;
-		     EXEC, snake_str(deuteron_G, HZ1);
-		     HZ2 := HZ1;
-		     QF = -.044;
-		     QD = -.032;
-		     beam, PARTICLE=ION, MASS=PROTON->MASS*2, GAMMA=gamma_;
-};
-! ##################################################
-
+call, file='support/main.madx'; // contains definitions for shared procedures
 ! ********** TEST PROPER **********
 EXEC, inject_protons(1.14);
 
@@ -29,31 +9,17 @@ HZ1 = HZ1*koef;
 QF = QF*koef;
 QD = QD*koef;
 
-call file = "nica_24sol_rbend.seq";
+call file = "nica_24sol_rbend-clean.seq";
 use, sequence=NICA;
 
 PTC_CREATE_UNIVERSE;
-PTC_CREATE_LAYOUT;
-
-select,flag=ptc_twiss,column=name,s,betx, bety;
-ptc_twiss, file=twiss_ptc_ring;
-
-!PTC_NORMAL,closed_orbit,normal,maptable,icase=4,no=1; ! generates ring_matrix_at_end ** with the lattice transfer map
-
-! do some thick-lens tracking
-! PTC_START, x=0;
-! PTC_START, x=1e-15;
-! PTC_START, y=1e-8;
-! PTC_START, pt=1e-8;
-! PTC_TRACK, icase=6, closed_orbit, turns=10, onetable,
-! 	   file=tbl/ptc_tracking, norm_no=3;
-
+PTC_CREATE_LAYOUT,model=2,method=6,nst=10,exact;
+PTC_NORMAL,closed_orbit,maptable,icase=6,no=1;
 PTC_END;
+write,table="map_table", file="NICA_transfer_map";
 
-write,table="map_table", file="ring_matrix_at_end"; // **
 
-
-SELECT, FLAG=TWISS, COLUMN= _name, q1, q2, betx, bety, orbit5;
+SELECT, FLAG=TWISS, COLUMN= _name, q1, q2, betx, bety;
 
 twiss, save, centre, file=tbl/twiss.out; 
 
