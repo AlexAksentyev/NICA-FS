@@ -2,8 +2,8 @@ call, file='support/main.madx';
 exec, inject_protons(1.14);
 
 LQ = .2; // DEFAULT QUADRUPOLE LENGTH
-kf = 2.16;
-kd = -2.16;
+kf =  3.0188308;
+kd = -3.0606228;
 
 HD:   MARKER;
 HD1:  HD;
@@ -52,14 +52,14 @@ observe, place='HD9';
 observe, place='HD10';
 observe, place='HD11';
 observe, place='CELL';
-RUN, turns=1, ffile=1;
+RUN, turns=100, ffile=1;
 ENDTRACK;
 PLOT, file=img/track_plot, table=trackone, trackfile=tbl/basis, multiple,
       style=100,
-      haxis=s, vaxis=x, particle=1,2,3,4;
+      haxis=x, vaxis=px, particle=1,2,3,4;
 PLOT, file=img/track_plot, table=trackone, trackfile=tbl/basis, multiple,
       style=100,
-      haxis=s, vaxis=y, particle=1,2,3,4;
+      haxis=y, vaxis=py, particle=1,2,3,4;
 
 VALUE, TABLE(summ, q1);
 VALUE, TABLE(summ, q2);
