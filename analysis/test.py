@@ -31,15 +31,15 @@ def plot_ps(data, varx, vary, turns):
 
 
 if __name__ == '__main__':
-    ps =  load_ps(HOMEDIR+DIR, 'TRPRAY.dat')
+    ps =  load_ps(HOMEDIR+DIR, 'TRPRAY.dat', ndim=2)
     # sp =  load_sp(HOMEDIR+DIR, 'TRPSPI.dat')
     # plot_ps(ps[:,:5], 'EID','X', 471*5)
     # plot_ps(ps[:,:5], 'EID','Y', 471*5)
-    fig, ax = plt.subplots(4,1,sharex=True)
-    ax[0].plot(ps['X']); ax[0].set_ylabel('X')
-    ax[1].plot(ps['Y']); ax[1].set_ylabel('Y')
-    ax[2].plot(ps['T']); ax[2].set_ylabel('T')
-    ax[3].plot(ps['D']); ax[3].set_ylabel('D')
+    fig, ax = plt.subplots(2,1,sharex=True)
+    ax[0].plot(ps['X'], ps['A'], '.'); ax[0].set_xlabel('X'); ax[0].set_ylabel('A')
+    ax[1].plot(ps['Y'], ps['B'], '.'); ax[1].set_xlabel('Y'); ax[1].set_ylabel('B')
+    # ax[2].plot(ps['T']); ax[2].set_ylabel('T')
+    # ax[3].plot(ps['D']); ax[3].set_ylabel('D')
 
     # fig1, ax1 = plt.subplots(3,1,sharex=True)
     # ax1[0].plot(sp['S_X']); ax1[0].set_ylabel('S_X')
