@@ -1,30 +1,26 @@
-! #################### definitions #################### 
-snake_str(G, ss): MACRO = {ss = 1/12 * PI/(1 + G)*1/.7;}; //формулa (1) в файле "Пояснения к структуре"
+call, file='support/main.madx';
+exec, inject_protons(1.14);
 
-inject_protons(gamma_): MACRO = {
-		   proton_G = 1.792847;
-		   EXEC, snake_str(proton_G, HZ1);
-		   HZ2 := HZ1;
-		   QF = -0.011;
-		   QD = -0.012;
-		   beam, PARTICLE=PROTON, GAMMA=gamma_;
-};
+//call file = "nica_24sol_rbend-clean.seq";
+//use, sequence=BH_seq;
 
-inject_deuterons(gamma_): MACRO = {
-		     deuteron_G = -.142987;
-		     EXEC, snake_str(deuteron_G, HZ1);
-		     HZ2 := HZ1;
-		     QF = -.044;
-		     QD = -.032;
-		     beam, PARTICLE=ION, MASS=PROTON->MASS*2, GAMMA=gamma_;
-};
-! ##################################################
+SNK01: SOLENOID, L=.07, KS:=HZ1;//*.1;
+SNK02: SOLENOID, L=.14, KS:=HZ1;//*.2;
+SNK03: SOLENOID, L=.21, KS:=HZ1;//*.3;
+SNK04: SOLENOID, L=.28, KS:=HZ1;//*.4;
+SNK05: SOLENOID, L=.35, KS:=HZ1;//*.5;
+SNK06: SOLENOID, L=.42, KS:=HZ1;//*.6;
+SNK10: SOLENOID, L=.7, KS:=HZ1;
 
-! ********** TEST PROPER **********
-EXEC, inject_protons(1.14);
+CELL1: LINE=(SNK01);
+CELL2: LINE=(SNK02);
+CELL3: LINE=(SNK03);
+CELL4: LINE=(SNK04);
+CELL5: LINE=(SNK05);
+CELL6: LINE=(SNK06);
+CELL10: LINE=(SNK10);
 
-call file = "nica_24sol_rbend-clean.seq";
-use, sequence=BH_seq;
+USE, SEQUENCE=CELL10;
 
 ptc_create_universe;
 ptc_create_layout,model=2,method=6,nst=10,exact;
@@ -33,4 +29,5 @@ PTC_NORMAL,closed_orbit,maptable,icase=6,no=1;
 
 ptc_end;
 
-write,table="map_table",file="elmap/map_table_BH";
+write,table="map_table",file="elmap/len_vary/SNK_10";
+value, SNK10->KS;
