@@ -1,0 +1,47 @@
+INCLUDE 'bin/elements';
+
+FUNCTION ACCLEN DUMMY;
+  ACCLEN := 503;
+ENDFUNCTION;
+
+FUNCTION SNAKE_STR G;
+  SNAKE_STR := 1/12 * PI/(1 + G)*1/.7;
+ENDFUNCTION;
+
+PROCEDURE SET_FOR_PROTONS HZ1 HZ2 QF QD;
+  VARIABLE EKIN 1; VARIABLE GAMMA 1; VARIABLE RESTMASSAMU 1;
+  GAMMA := 1.14;
+  RESTMASSAMU := 1.00728; EKIN := (GAMMA-1)*RESTMASSAMU*AMUMEV;
+  RP EKIN RESTMASSAMU 1;
+  RPS 1 1.792847;
+  HZ1 := SNAKE_STR(G0);
+  HZ2 := HZ1;
+  QF  := -0.011;
+  QD  := -0.012;
+  WRITE 6 '++++++++++ SETTING UP FOR PROTONS:';
+  WRITE 6 'EKIN           GAMMA          ';
+  WRITE 6 SF(EKIN, '(E15.7)')&SF(GAMMA, '(E15.7)');
+  WRITE 6 'HZ1            HZ2            QF             QD';
+  WRITE 6 SF(HZ1, '(E15.7)')&SF(HZ2, '(E15.7)')&SF(QF, '(E15.7)')&SF(QD, '(E15.7)');
+  WRITE 6 '+++++++++++++++++++++++++++++++++++';
+ENDPROCEDURE;
+
+PROCEDURE SET_FOR_DEUTERONS HZ1 HZ2 QF QD;
+  VARIABLE EKIN 1; VARIABLE GAMMA 1; VARIABLE RESTMASSAMU 1;
+  GAMMA := 1.14;
+  RESTMASSAMU := 2.01410; EKIN := (GAMMA-1)*RESTMASSAMU*AMUMEV;
+  RP EKIN RESTMASSAMU 1;
+  RPS 1 -.142987;
+  HZ1 := SNAKE_STR(G0);
+  HZ2 := HZ1;
+  QF  := -0.044;
+  QD  := -0.032;
+  WRITE 6 '++++++++++ SETTING UP FOR DEUTERONS:';
+  WRITE 6 'EKIN           GAMMA          ';
+  WRITE 6 SF(EKIN, '(E15.7)')&SF(GAMMA, '(E15.7)');
+  WRITE 6 'HZ1            HZ2            QF             QD';
+  WRITE 6 SF(HZ1, '(E15.7)')&SF(HZ2, '(E15.7)')&SF(QF, '(E15.7)')&SF(QD, '(E15.7)');
+  WRITE 6 '+++++++++++++++++++++++++++++++++++';
+ENDPROCEDURE;
+
+SAVE '~/REPOS/NICA-FS/bin/common/bends24';

@@ -1,6 +1,8 @@
 CORE-DIR= $(HOME)/REPOS/COSYINF-CORE
 CORE = $(addsuffix .bin, cosy utilities elements)
-SETUPS = $(addsuffix .bin, BENDS24FULL BENDS24CLEAN BENDS24SEQ_FULL BENDS24SEQ_CLEAN NICA_FULL)
+
+COMMON = $(addsuffix .bin, bends24 nica)
+SETUPS = $(addsuffix .bin, BENDS24/BENDS24FULL NICA/NICA_FULL)
 
 define RM
 	find $(1) -type f -name $(2) -print -delete
@@ -8,7 +10,8 @@ endef
 
 core.bld: $(addprefix $(CORE-DIR)/bin/, $(CORE))
 	echo $(CORE) >> core.bld
-
+common.bld: $(addprefix bin/common/, $(COMMON))
+	echo $(COMMON) >> common.bld
 setups.bld: $(addprefix bin/setups/, $(SETUPS))
 	echo $(SETUPS) >> setups.bld
 
@@ -19,11 +22,11 @@ $(CORE-DIR)/bin/utilities.bin: $(CORE-DIR)/src/utilities.fox $(CORE-DIR)/bin/cos
 $(CORE-DIR)/bin/elements.bin: $(CORE-DIR)/src/elements.fox $(CORE-DIR)/bin/utilities.bin 
 	cosy $<;
 
-bin/elements.bin: src/elements.fox $(CORE-DIR)/bin/utilities.bin
+bin/elements.bin: src/elements.fox $(CORE-DIR)/bin/utilities.bin # local elements.fox
 	cosy $<;
-bin/support/main.bin: src/support/main.fox bin/elements.bin
+bin/common/%.bin: src/common/%.fox bin/elements.bin
 	cosy $<;
-bin/setups/%.bin: src/setups/%.fox bin/support/main.bin
+bin/setups/%.bin: src/setups/%.fox common.bld
 	cosy $<;
 
 TE/% : test/%.fox setups.bld
