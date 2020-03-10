@@ -1,6 +1,6 @@
 CORE-DIR= $(HOME)/REPOS/COSYINF-CORE
 CORE = $(addsuffix .bin, cosy utilities elements)
-SETUPS = $(addsuffix .bin, BENDS24FULL BENDS24CLEAN BENDS24SEQ_FULL BENDS24SEQ_CLEAN)
+SETUPS = $(addsuffix .bin, BENDS24FULL BENDS24CLEAN BENDS24SEQ_FULL BENDS24SEQ_CLEAN NICA_FULL)
 
 define RM
 	find $(1) -type f -name $(2) -print -delete
