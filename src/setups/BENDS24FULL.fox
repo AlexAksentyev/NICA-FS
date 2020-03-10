@@ -5,7 +5,7 @@ PROCEDURE LATTICE HZ1 HZ2 KZ1 KZ2 QF QD RFFLAG;
   VARIABLE FREQ 1;
 
   {SETTING RF PARAMETERS}
-  VRF(1, 1) := 100; {RF Voltage}
+  VRF(1, 1) := 100; {RF Voltage [kV]}
   FREQ := REVFREQ(ACCLEN(1)); {RF Frequency}
 
   WRITE 6 '********************************************';
