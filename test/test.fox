@@ -1,4 +1,4 @@
-INCLUDE 'bin/setups/BENDS24FULL';
+INCLUDE 'bin/setups/BENDS24/FULL';
 
 PROCEDURE INJECT;
   CR;

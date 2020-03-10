@@ -44,4 +44,4 @@ PROCEDURE SET_FOR_DEUTERONS HZ1 HZ2 QF QD;
   WRITE 6 '+++++++++++++++++++++++++++++++++++';
 ENDPROCEDURE;
 
-SAVE '~/REPOS/NICA-FS/bin/common/bends24';
+SAVE '~/REPOS/NICA-FS/bin/common/BENDS24/header';
