@@ -3,16 +3,19 @@ INCLUDE 'bin/common/BENDS24/header';
 PROCEDURE LATTICE HZ1 HZ2 KZ1 KZ2 QF QD RFFLAG;
   VARIABLE VRF 1 1 1;
   VARIABLE FREQ 1;
+  VARIABLE HNUM 1;
 
   {SETTING RF PARAMETERS}
-  VRF(1, 1) := 100; {RF Voltage [kV]}
-  FREQ := REVFREQ(ACCLEN(1)); {RF Frequency}
+  HNUM := 66;
+  VRF(1, 1) := 100/HNUM; {RF Voltage [kV]}
+  FREQ := HNUM*REVFREQ(ACCLEN(1)); {RF Frequency}
 
   WRITE 6 '********************************************';
   WRITE 6 '*     FS NICA BENDS24 24 OCT 2019 (CW)     *';
   WRITE 6 '********************************************';
 
-  WRITE 6 'REVOLUTION FREQUENCY: '&ST(REVFREQ(ACCLEN(1)));
+  WRITE 6 'REVOLUTION FREQUENCY: '&ST(REVFREQ(ACCLEN(1))/1E6)&' MHZ';
+  WRITE 6 'RF FREQUENCY: '&ST(FREQ/1E6)&' MHZ';
 
   UM;
   IF RFFLAG=1; RF VRF 0 FREQ 0 0.05; WRITE 6 'INSERTING RF...'; ENDIF; {inserted by @AA}
