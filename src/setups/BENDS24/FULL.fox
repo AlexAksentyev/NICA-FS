@@ -250,7 +250,7 @@ PROCEDURE LATTICE HZ1 HZ2 KZ1 KZ2 QF QD RFFLAG;
   DL 0.2 ; {Drift_228}
   DL 0.47 ; {Drift_229} {this is MPD}
   DL 0.1 ; {Drift_230}
-  QUAD 1. 0 0.4158533601 ; {Quadr_231} {changed length 1. -> .96 to remove const in MAP variable T}
+  QUAD 1. 0 0.4158533601 ; {Quadr_231}
   DL 0.3 ; {Drift_232}
   QUAD 1.85 0 -0.3777967958 ; {Quadr_233}
   DL 0.3 ; {Drift_234}
@@ -485,7 +485,7 @@ PROCEDURE LATTICE HZ1 HZ2 KZ1 KZ2 QF QD RFFLAG;
   DL 0.2 ; {Drift_463}
   DL 0.47 ; {Drift_464}
   DL 0.1 ; {Drift_465}
-  QUAD 1. 0 0.4158533601 ; {Quadr_466} {same length change as in element 231}
+  QUAD 1. 0 0.4158533601 ; {Quadr_466}
   DL 0.3 ; {Drift_467}
   QUAD 1.85 0 -0.3777967958 ; {Quadr_468}
   DL 0.3 ; {Drift_469}
