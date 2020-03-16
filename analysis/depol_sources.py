@@ -1,110 +1,217 @@
 import numpy as np
 import matplotlib.pyplot as plt; plt.ion()
+from importlib import reload
 import analysis as ana
+reload(ana)
 from scipy.optimize import curve_fit
 
-## for 3d animation
-from mpl_toolkits.mplot3d import Axes3D, proj3d
-from matplotlib import animation
+HOMEDIR, load_ps, load_sp = ana.HOMEDIR, ana.load_ps, ana.load_sp
 
-def get_arrow(index, S_X, S_Y, S_Z):
-    return 0, 0, 0, S_X[index], S_Y[index], S_Z[index]
+DATADIR = 'data/DEPOL_SOURCES/WITHRF/'
 
-def update(index, S_X, S_Y, S_Z, elems):
-    global quiver
-    quiver.remove()
-    quiver = ax.quiver(*get_arrow(0, S_X, S_Y, S_Z), color='r')
-    quiver = ax.quiver(*get_arrow(-1, S_X, S_Y, S_Z), color='k')
-    quiver = ax.quiver(*get_arrow(index, S_X, S_Y, S_Z))
-    ax.set_title('# = {}'.format(elems[index]))
-##
+ELNAMES = np.insert(np.load('nica_element_names.npy'),0,'INJ')
+ELNAMES = np.insert(ELNAMES, 1,'RF')
+#ELNAMES = np.array([e+' ['+ str(i) + ']' for i,e in enumerate(ELNAMES)])
 
-def plot_decoh_meas(data):
-    dm = {'X': data['S_X'].std(axis=1), 'Y': data['S_Y'].std(axis=1), 'Z': data['S_Z'].std(axis=1)}
-    fig, ax = plt.subplots(3,1, sharex=True)
-    ax[1].set_xlabel('EID')
-    for i, lbl in enumerate(['X','Y', 'Z']):
-        ax[i].plot(data['EID'], dm[lbl])
-        ax[i].set_ylabel('RMS(S_{})'.format(lbl))
-    ax[2].set_xlabel('EID')
-    plt.xticks(ticks=data['EID'][:,0], labels=NICA_EL_LBLS[data['EID'][:,0]], rotation=45)
+def pick_elems(name, dat):
+    lbls = tick_labels(dat)
+    sub_ii = [i for i, e in enumerate(lbls) if name in e]
+    return sub_ii, np.array(lbls)[sub_ii]
 
+def tick_labels(dat):
+    it = dat['iteration'][:,0]
+    nit = np.unique(it[1:])
+    eid = dat['EID'][:,0]
+    name = ELNAMES[eid]
+    return ['{} [{}:{}]'.format(*e) for e in list(zip(name, it, eid))]
+
+def guess_freq(time, signal): # estimating the initial frequency guess
+    zci = np.where(np.diff(np.sign(signal)))[0] # find indexes of signal zeroes
+    delta_phase = np.pi*(len(zci)-1)
+    delta_t = time[zci][-1]-time[zci][0]
+    guess = delta_phase/delta_t/2/np.pi
+    return guess
+
+def guess_phase(time, sine):
+    ds = sine[1]-sine[0]
+    dt = time[1]-time[0]
+    sg = np.sign(ds/dt)
+    phase0 = np.arcsin(sine[0]) if sg>0 else np.pi-np.arcsin(sine[0])
+    return phase0
+
+
+def plot_spin(dat):
+    fig, ax = plt.subplots(3,1,sharex=True)
+    ax[0].plot(dat['S_X']); ax[0].set_ylabel('S_X')
+    ax[0].grid(axis='x')
+    ax[1].plot(dat['S_Y']); ax[1].set_ylabel('S_Y')
+    ax[1].grid(axis='x')
+    ax[2].plot(dat['S_Z']); ax[2].set_ylabel('S_Z')
+    ax[2].grid(axis='x')
+    ax[2].set_xlabel('(TURN, EID)')
+    plt.xticks(ticks=np.arange(dat.shape[0]), labels=tick_labels(dat), rotation=60)
+    
+
+def plot(dat):
+    fig, ax = plt.subplots(4,1,sharex=True)
+    ax[0].plot(dat['X']); ax[0].set_ylabel('X')
+    ax[1].plot(dat['Y']); ax[1].set_ylabel('Y')
+    ax[2].plot(dat['T']); ax[2].set_ylabel('T')
+    ax[3].plot(dat['D']); ax[3].set_ylabel('D')
+
+def plot_ps(data, varx, vary, turns):
+    fig2, ax2 = plt.subplots(1,1)
+    ax2.plot(data[varx][:turns], data[vary][:turns], '.')
+    ax2.set_ylabel(vary)
+    ax2.set_xlabel(varx)
+    ax2.ticklabel_format(axis='both', style='sci', scilimits=(0,0), useMathText=True)
+
+def plot_dm_angle2d(dat, same_axis=True, deg=True):
+    phih = angles2d(dat)
+    phiv = angles2d(dat, 'V')
+    phit = angles2d(dat, 'T')
+    title = 'RMS deviation angle from (0, 0, 1)'
+    if deg:
+        phih, phiv, phit = (np.rad2deg(e) for e in [phih, phiv, phit])
+        ylabel_app = ' [deg]'
+    else:
+        ylabel_app = ' [rad]'
+    hd_meas = phih.std(axis=1)
+    vd_meas = phiv.std(axis=1)
+    td_meas = phit.std(axis=1)
+    #it = dat['EID'][:,0]
+    if same_axis:
+        fig, ax = plt.subplots(1,1)
+        ax.plot(hd_meas, label=r'$\sigma(\theta_{xz})$')
+        ax.plot(vd_meas, label=r'$\sigma(\theta_{zy})$')
+        ax.plot(td_meas, label=r'$\sigma(\theta_{xy})$')
+        ax.legend()
+        ax.ticklabel_format(style='sci', axis='y', scilimits=(0,0), useMathText=True)
+        ax.set_xlabel('EID')
+        ax.set_ylabel('Statistic' + ylabel_app)
+        ax.set_title(title)
+    else:
+        fig, ax = plt.subplots(3,1,sharex=True)
+        ax[0].plot(hd_meas, label='hor')
+        ax[0].set_ylabel(r'$\sigma(\theta_{xz})$' + ylabel_app)
+        ax[1].plot(vd_meas, label='vert')
+        ax[1].set_ylabel(r'$\sigma(\theta_{zy})$' + ylabel_app)
+        ax[2].plot(td_meas, label='tran')
+        ax[2].set_ylabel(r'$\sigma(\theta_{zy})$' + ylabel_app)
+        ax[2].set_xlabel('turn')
+        for i in range(3):
+            ax[i].ticklabel_format(style='sci', axis='y', scilimits=(0,0), useMathText=True)
+    plt.xticks(ticks=np.arange(dat.shape[0]), labels=tick_labels(dat), rotation=60)
+    plt.grid(axis='x')
+
+def plot_dm_angle3d(dat, deg=True, ii=slice(1,None), elem='all'):
+    dp = dot3d(dat, ii)
+    phi = np.arccos(dp)
+    title = 'RMS deviation angle from reference (1st injected ray)'
+    if deg:
+        phi = np.rad2deg(phi)
+        ylabel_app = ' [deg]'
+    else:
+        ylabel_app = ' [rad]'
+    dm = phi.std(axis=1)
+    if elem=='all':
+        jj = np.arange(len(dm))
+        lbls = tick_labels(dat)
+        ylabel = r'$\sigma[\arccos(\vec s_1\cdot\vec s_0)]$' + ylabel_app
+    else:
+        jj, lbls = pick_elems(elem, dat)
+        dm = np.diff(np.insert(dm, 0, 0))
+        ylabel = r'$\Delta\sigma[\arccos(\vec s_1\cdot\vec s_0)]$' + ylabel_app
     fig, ax = plt.subplots(1,1)
-    ax.set_xlabel('RMS(S_X)')
-    ax.set_ylabel('RMS(S_Y)')
-    ax.plot(dm['X'], dm['Y'], '.')
-    ax.ticklabel_format(axis='both', style='sci', scilimits=(0,0), useMathText=True)
+    ax.plot(dm[jj])
+    ax.ticklabel_format(style='sci', axis='y', scilimits=(0,0), useMathText=True)
+    ax.set_xlabel('EID')
+    ax.set_ylabel(ylabel)
+    ax.set_title(title)
+    plt.xticks(ticks=np.arange(len(jj)), labels=lbls, rotation=60)
+    plt.grid(axis='x')
+    
 
-HOME = '/Users/alexaksentyev/REPOS/NICA-FS/'
-DIR  = 'data/TEST/TREL/INJECT/'
+def plot_pol(dat, diff=False):
+    P = pol(dat)
+    if diff:
+        P = np.diff(P)
+    #it = dat['EID'][:,0]
+    fig, ax = plt.subplots(1,1)
+    ax.plot(P)
+    ax.set_xlabel('EID')
+    if diff:
+        ax.set_ylabel(r'$\Delta P$')
+    else:
+        ax.set_ylabel('P')
+    ax.ticklabel_format(style='sci', axis='y', scilimits=(0,0), useMathText=True)
+    plt.xticks(ticks=np.arange(dat.shape[0]), labels=tick_labels(dat), rotation=60)
+    plt.grid(axis='x')
 
-VARS = list(zip(['S_X','S_Y','S_Z'], [float]*3))
-VARS_PS = list(zip(['X','A','Y','B','T','D'], [float]*6))
-D_TYPE = list(zip(['iteration','EID', 'PID'], [int]*3)) + VARS
-D_TYPE_PS = list(zip(['iteration','EID', 'PID'], [int]*3)) + VARS_PS
+def pol(dat):
+    PX, PY, PZ = (dat['S_'+e].sum(axis=1) for e in ['X','Y','Z'])
+    N = dat.shape[1]
+    return np.sqrt(PX**2 + PY**2 + PZ**2)/N
 
-NICA_EL_LBLS = np.insert(np.load('nica_element_names.npy'),0,'INJ')
-NICA_EL_LBLS = np.array([e+' ['+ str(i) + ']' for i,e in enumerate(NICA_EL_LBLS)])
+def angles2d(s1, plane='H'):
+    pdict = {'H':('S_X', 'S_Z'), 'V':('S_Z','S_Y'), 'T':('S_X','S_Y')}
+    c1, c2 = pdict[plane.upper()]
+    if plane!='T':
+        s0 = np.array([(0, 0, 1)], dtype=list(zip(['S_X','S_Y','S_Z'], [float]*3)))
+    else:
+        s0 = np.array([(0, 1, 0)], dtype=list(zip(['S_X','S_Y','S_Z'], [float]*3)))
+    s1n = np.sqrt(s1[c1]**2 + s1[c2]**2)
+    # if np.all((s1n==0) + (s0n == 0)):
+    #     return np.zeros(s1.shape)
+    dp = s1[c1]*s0[c1] + s1[c2]*s0[c2]
+    cos_phi = np.divide(dp, s1n, where=s1n!=0, out=np.zeros(s1n.shape))
+    return np.arccos(cos_phi)
 
-dat = np.loadtxt(HOME+DIR+'TRPSPI:TREL.dat', D_TYPE, skiprows=2)
-ps =  np.loadtxt(HOME+DIR+'TRPRAY:TREL.dat', D_TYPE_PS, skiprows=2)
-nray = dat['PID'].max() + 1
-dat.shape = (-1, nray)
-ps.shape = (-1, nray)
-dat = dat[:,1:]; ps = ps[:,1:]; nray -= 1 # removing the zero ray
+def norm3d(svec):
+    sx, sy, sz = [svec['S_'+e] for e in ['X','Y','Z']]
+    return np.sqrt(sx**2 + sy**2 + sz**2)
+    
+def dot3d(spdat, ii=slice(1,None)):
+    s0 = spdat[:,0] # reference ray is at index 0
+    s1 = spdat[:,ii]
+    s0n = norm3d(s0)
+    s1n = norm3d(s1)
+    s0 = {'S_'+e: s0['S_'+e]/s0n for e in ['X','Y','Z']}
+    s1 = {'S_'+e:s1['S_'+e]/s1n for e in ['X','Y','Z']}
+    ## |s0| = |s1| = 1
+    dp = s1['S_X'].T*s0['S_X'] + s1['S_Y'].T*s0['S_Y'] + s1['S_Z'].T*s0['S_Z']
+    ## cos (s1, s2) = dp/|s1|/|s2| = dp
+    return dp.T
 
-#plot_decoh_meas(dat)
+def synchrotron_osc(dat, plot=False):
+    fun = lambda x, a,b,p: a*np.sin(b*x + p)
+    nray = dat.shape[1]
+    stat = np.empty((nray, 3), dtype = list(zip(['EST','SE'], [float]*2)))
+    fig, ax = plt.subplots(1,1)
+    ax.ticklabel_format(axis='y', style='sci', scilimits=(0,0), useMathText=True)
+    ax.set_xlabel('turn')
+    ax.set_ylabel('D')
+    for i,ray in enumerate(dat.T):
+        #it = ray['iteration']
+        d = ray['D']
+        a0 = d.max()
+        f0 = guess_freq(it, d/a0)
+        p0 = guess_phase(it, d/a0)
+        popt, pcov = curve_fit(fun, it, d, [a0, f0, p0])
+        perr = np.sqrt(np.diag(pcov))
+        stat[i]['EST'] = popt
+        stat[i]['SE']  = perr
+        ax.plot(d, '.')
+        ax.plot(fun(it, *popt), '--r')
+    plt.xticks(ticks=np.arange(dat.shape[0]), labels=tick_labels(dat), rotation=60)
+    return stat
 
-a = ana.Analysis(dat[:, np.arange(0,nray,2)])
-# fig, ax = plt.subplots(1,1)
-# ax.plot(a.Pval, '--.')
-# ax.ticklabel_format(axis='y', style='sci', scilimits=(0,0), useMathText=True)
-# ax.set_ylabel('P')
-# ax.set_xlabel('element #')
-# nn = np.arange(0,a.Pval.shape[0])
-# popt, pcov = curve_fit(lambda x, a,b: a + b*x, nn, a.Pval)
-# ax.plot(nn, popt[0] + popt[1]*nn, 'r-', label=r'$(\beta_0 = {:4.2e}, \beta_1 = {:4.2e})$'.format(*popt))
-# ax.legend()
-
-elems = np.concatenate((np.arange(0,50,10), np.arange(100,400, 10), np.array([420, 450, 470, 471])))
-S_X, S_Y, S_Z = (a.S[lbl][elems] for lbl in ['X','Y','Z'])
-
-fig = plt.figure()
-ax = fig.add_subplot(111, projection='3d')
-ax.view_init(30, 60)
-ax.set_xlabel('X')
-ax.set_ylabel('Z')
-ax.set_zlabel('Y')
-ax.set_xlim(-1, 1)
-ax.set_ylim(-1, 1)
-ax.set_zlim(-1, 1)
-
-quiver = ax.quiver(*get_arrow(0, S_X, S_Z, S_Y))
-
-anim = animation.FuncAnimation(fig, update, fargs=(S_X, S_Z, S_Y, elems),
-                                   interval=600, blit=False, frames=S_X.shape[0])
-# anim.save('../reports/depol_sources-longit_spin.gif')
-
-## for 2D PS animation
-# PS_VARS = ['X','A']
-# X, A = (ps[lbl][elems] for lbl in PS_VARS)
-
-# fig1, ax = plt.subplots()
-# ax.set_xlim(-2e-3, 2e-3)
-# ax.set_ylim(-2e-3, 2e-3)
-
-# line, = ax.plot(X[0], A[0], '.')
-
-
-# def init():  # only required for blitting to give a clean slate.
-#     line.set_ydata([np.nan] * X.shape[1])
-#     return line,
-
-
-# def animate(i):
-#     line.set_data(X[i], A[i]) # update the data.
-#     return line,
-
-
-# ani = animation.FuncAnimation(fig, animate, blit=False,
-#                                   interval=200, frames=X.shape[0])
+if __name__ == '__main__':
+    ps0 = load_ps(HOMEDIR+DATADIR, 'TRPRAY:TREL.dat')
+    sp0 = load_sp(HOMEDIR+DATADIR, 'TRPSPI:TREL.dat')
+    ps = ps0[:1+472,3::3]
+    sp = sp0[:1+472,3::3]
+    # plot_ps(ps,'T','D',-1)
+    # plot_pol(sp)
+    # plot_dm_angle(sp)
+    # plot_spin(sp)
