@@ -7,7 +7,7 @@ from scipy.optimize import curve_fit
 
 HOMEDIR, load_ps, load_sp = ana.HOMEDIR, ana.load_ps, ana.load_sp
 
-DATADIR = 'data/DECOH/300k/'
+DATADIR = 'data/DECOH/SHORT/'
 
 Fcyc = 286166.4863010005 # Hz
 
