@@ -7,7 +7,7 @@ from scipy.optimize import curve_fit
 
 HOMEDIR, load_ps, load_sp = ana.HOMEDIR, ana.load_ps, ana.load_sp
 
-DATADIR = 'data/DECOH/'
+DATADIR = 'data/DECOH/300k/'
 
 Fcyc = 286166.4863010005 # Hz
 
@@ -104,11 +104,9 @@ def angles(s1, plane='H'):
         s0 = np.array([(0, 0, 1)], dtype=list(zip(['S_X','S_Y','S_Z'], [float]*3)))
     else:
         s0 = np.array([(0, 1, 0)], dtype=list(zip(['S_X','S_Y','S_Z'], [float]*3)))
-    s1n, s0n = (np.sqrt(e[c1]**2 + e[c2]**2) for e in (s1,s0))
-    # if np.all((s1n==0) + (s0n == 0)):
-    #     return np.zeros(s1.shape)
+    s1n = np.sqrt(s1[c1]**2 + s1[c2]**2) # s0n = 1
     dp = s1[c1]*s0[c1] + s1[c2]*s0[c2]
-    cos_phi = np.divide(dp/s0n, s1n, where=s1n!=0, out=np.zeros(s1n.shape))
+    cos_phi = np.divide(dp, s1n, where=s1n!=0, out=np.zeros(s1n.shape))
     return np.arccos(cos_phi)
 
 def synchrotron_osc(dat, plot=False):
@@ -136,8 +134,8 @@ def synchrotron_osc(dat, plot=False):
 if __name__ == '__main__':
     ps0 = load_ps(HOMEDIR+DATADIR)
     sp0 = load_sp(HOMEDIR+DATADIR)
-    ps = ps0[:,2::3]
-    sp = sp0[:,2::3]
+    ps = ps0[:,0::3]
+    sp = sp0[:,0::3]
     plot_ps(ps,'T','D',-1)
     plot_pol(sp)
     plot_dm_angle(sp)
