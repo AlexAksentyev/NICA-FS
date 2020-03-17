@@ -107,7 +107,7 @@ def plot_dm_angle2d(dat, same_axis=True, deg=True, elem='all'):
         ax[1].set_ylabel(lab_pref + r'$\sigma(\theta_{zy})$' + ylabel_app)
         ax[2].plot(td_meas[jj], label='tran')
         ax[2].set_ylabel(lab_pref + r'$\sigma(\theta_{xy})$' + ylabel_app)
-        ax[2].set_xlabel('turn')
+        ax[2].set_xlabel('EID')
         for i in range(3):
             ax[i].ticklabel_format(style='sci', axis='y', scilimits=(0,0), useMathText=True)
             ax[i].grid(axis='x')
