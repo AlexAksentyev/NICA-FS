@@ -7,7 +7,7 @@ from scipy.optimize import curve_fit
 
 HOMEDIR, load_ps, load_sp = ana.HOMEDIR, ana.load_ps, ana.load_sp
 
-DATADIR = 'data/DEPOL_SOURCES/WITHRF/'
+DATADIR = 'data/DEPOL_SOURCES/WITHRF/LONGITUDINAL_SPIN/100turns/'
 
 ELNAMES = np.insert(np.load('nica_element_names.npy'),0,'INJ')
 ELNAMES = np.insert(ELNAMES, 1,'RF')
@@ -66,11 +66,10 @@ def plot_ps(data, varx, vary, turns):
     ax2.set_xlabel(varx)
     ax2.ticklabel_format(axis='both', style='sci', scilimits=(0,0), useMathText=True)
 
-def plot_dm_angle2d(dat, same_axis=True, deg=True):
-    phih = angles2d(dat)
-    phiv = angles2d(dat, 'V')
-    phit = angles2d(dat, 'T')
-    title = 'RMS deviation angle from (0, 0, 1)'
+def plot_dm_angle2d(dat, same_axis=True, deg=True, elem='all'):
+    phih = np.arccos(dot2d(dat))
+    phiv = np.arccos(dot2d(dat, 'V'))
+    phit = np.arccos(dot2d(dat, 'T'))
     if deg:
         phih, phiv, phit = (np.rad2deg(e) for e in [phih, phiv, phit])
         ylabel_app = ' [deg]'
@@ -80,29 +79,40 @@ def plot_dm_angle2d(dat, same_axis=True, deg=True):
     vd_meas = phiv.std(axis=1)
     td_meas = phit.std(axis=1)
     #it = dat['EID'][:,0]
+    if elem=='all':
+        jj = np.arange(len(hd_meas))
+        lbls = tick_labels(dat)
+        lab_pref = ''
+        ylabel = lab_pref + r'$\sigma$' + ylabel_app
+    else:
+        jj, lbls = pick_elems(elem, dat)
+        hd_meas, vd_meas, td_meas = (np.diff(np.insert(e,0,0)) for e in [hd_meas, vd_meas, td_meas])
+        lab_pref = r'$\Delta$'
+        ylabel = lab_pref+ r'$\sigma$' + ylabel_app
     if same_axis:
         fig, ax = plt.subplots(1,1)
-        ax.plot(hd_meas, label=r'$\sigma(\theta_{xz})$')
-        ax.plot(vd_meas, label=r'$\sigma(\theta_{zy})$')
-        ax.plot(td_meas, label=r'$\sigma(\theta_{xy})$')
+        ax.plot(hd_meas[jj], label=r'$\theta_{xz}$')
+        ax.plot(vd_meas[jj], label=r'$\theta_{zy}$')
+        ax.plot(td_meas[jj], label=r'$\theta_{xy}$')
         ax.legend()
         ax.ticklabel_format(style='sci', axis='y', scilimits=(0,0), useMathText=True)
         ax.set_xlabel('EID')
-        ax.set_ylabel('Statistic' + ylabel_app)
-        ax.set_title(title)
+        ax.set_ylabel(ylabel)
+        ax.grid(axis='x')
     else:
         fig, ax = plt.subplots(3,1,sharex=True)
-        ax[0].plot(hd_meas, label='hor')
-        ax[0].set_ylabel(r'$\sigma(\theta_{xz})$' + ylabel_app)
-        ax[1].plot(vd_meas, label='vert')
-        ax[1].set_ylabel(r'$\sigma(\theta_{zy})$' + ylabel_app)
-        ax[2].plot(td_meas, label='tran')
-        ax[2].set_ylabel(r'$\sigma(\theta_{zy})$' + ylabel_app)
+        ax[0].plot(hd_meas[jj], label='hor')
+        ax[0].set_ylabel(lab_pref + r'$\sigma(\theta_{xz})$' + ylabel_app)
+        ax[1].plot(vd_meas[jj], label='vert')
+        ax[1].set_ylabel(lab_pref + r'$\sigma(\theta_{zy})$' + ylabel_app)
+        ax[2].plot(td_meas[jj], label='tran')
+        ax[2].set_ylabel(lab_pref + r'$\sigma(\theta_{xy})$' + ylabel_app)
         ax[2].set_xlabel('turn')
         for i in range(3):
             ax[i].ticklabel_format(style='sci', axis='y', scilimits=(0,0), useMathText=True)
-    plt.xticks(ticks=np.arange(dat.shape[0]), labels=tick_labels(dat), rotation=60)
-    plt.grid(axis='x')
+            ax[i].grid(axis='x')
+    plt.xticks(ticks=np.arange(len(jj)), labels=lbls, rotation=60)
+    
 
 def plot_dm_angle3d(dat, deg=True, ii=slice(1,None), elem='all'):
     dp = dot3d(dat, ii)
@@ -153,19 +163,20 @@ def pol(dat):
     N = dat.shape[1]
     return np.sqrt(PX**2 + PY**2 + PZ**2)/N
 
-def angles2d(s1, plane='H'):
+def dot2d(s1, plane='H'):
     pdict = {'H':('S_X', 'S_Z'), 'V':('S_Z','S_Y'), 'T':('S_X','S_Y')}
     c1, c2 = pdict[plane.upper()]
-    if plane!='T':
+    if plane=='H':
         s0 = np.array([(0, 0, 1)], dtype=list(zip(['S_X','S_Y','S_Z'], [float]*3)))
-    else:
+    elif plane=='T':
         s0 = np.array([(0, 1, 0)], dtype=list(zip(['S_X','S_Y','S_Z'], [float]*3)))
-    s1n = np.sqrt(s1[c1]**2 + s1[c2]**2)
-    # if np.all((s1n==0) + (s0n == 0)):
-    #     return np.zeros(s1.shape)
+    else: # plane == 'V'
+        s0 = np.array([(0, 1/np.sqrt(2), 1/np.sqrt(2))], dtype=list(zip(['S_X','S_Y','S_Z'], [float]*3)))
+    s1n = norm3d(s1) #np.sqrt(s1[c1]**2 + s1[c2]**2)
+    s1 = {e:np.divide(s1[e], s1n, where=s1n!=0, out=np.zeros(s1.shape)) for e in [c1,c2]}
+    ## |s1| = |s0| = 1
     dp = s1[c1]*s0[c1] + s1[c2]*s0[c2]
-    cos_phi = np.divide(dp, s1n, where=s1n!=0, out=np.zeros(s1n.shape))
-    return np.arccos(cos_phi)
+    return dp
 
 def norm3d(svec):
     sx, sy, sz = [svec['S_'+e] for e in ['X','Y','Z']]
@@ -209,9 +220,10 @@ def synchrotron_osc(dat, plot=False):
 if __name__ == '__main__':
     ps0 = load_ps(HOMEDIR+DATADIR, 'TRPRAY:TREL.dat')
     sp0 = load_sp(HOMEDIR+DATADIR, 'TRPSPI:TREL.dat')
-    ps = ps0[:1+472,3::3]
-    sp = sp0[:1+472,3::3]
-    # plot_ps(ps,'T','D',-1)
-    # plot_pol(sp)
-    # plot_dm_angle(sp)
-    # plot_spin(sp)
+    ps = ps0[:1+472*10,:]#3::3]
+    sp = sp0[:1+472*10,:]#3::3]
+    plot_dm_angle3d(sp)
+    plot_spin(sp)
+    plot_dm_angle3d(sp, elem='SOL')
+    # plot_dm_angle3d(sp, elem='QUAD')
+    # plot_dm_angle3d(sp, elem='RB')
