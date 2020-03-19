@@ -4,15 +4,22 @@ from importlib import reload
 import analysis as ana
 reload(ana)
 from scipy.optimize import curve_fit
+from pandas import DataFrame
 
 HOMEDIR, load_ps, load_sp = ana.HOMEDIR, ana.load_ps, ana.load_sp
 
-DATADIR = 'data/DEPOL_SOURCES/WITHRF/LONGITUDINAL_SPIN/100turns/'
+DATADIR = 'data/DEPOL_SOURCES/WITHRF/LONGITUDINAL_SPIN/'
 
 ELNAMES = np.insert(np.load('nica_element_names.npy'),0,'INJ')
 ELNAMES = np.insert(ELNAMES, 1,'RF')
 #ELNAMES = np.array([e+' ['+ str(i) + ']' for i,e in enumerate(ELNAMES)])
 
+def fit_line(x,y):
+    line = lambda x,a,b: a + b*x
+    popt, pcov = curve_fit(line, x, y)
+    perr = np.sqrt(np.diag(pcov))
+    return popt, perr
+    
 def pick_elems(name, dat):
     lbls = tick_labels(dat)
     sub_ii = [i for i, e in enumerate(lbls) if name in e]
@@ -140,7 +147,30 @@ def plot_dm_angle3d(dat, deg=True, ii=slice(1,None), elem='all'):
     ax.set_title(title)
     plt.xticks(ticks=np.arange(len(jj)), labels=lbls, rotation=60)
     plt.grid(axis='x')
-    
+
+def delta_theta(spdat, psdat):
+    spc = spdat.copy()[[0,-1]]
+    psc = psdat.copy()[0]
+    dphia = np.insert(np.diff(np.arccos(dot3d(spc)), axis=0).flatten(), 0, 0)
+    dphih, dphiv, dphit = (np.diff(np.arccos(dot2d(spc, e)), axis=0).flatten() for e in ['H','V','T'])
+    dphia, phih, dphiv, dphit = (e - e[0] for e in [dphia, dphih, dphiv, dphit])
+    dict_i = {e:slice((i+1), None, 3) for i,e in enumerate(['X','Y','D'])}
+    tbl = {}
+    fig, ax = plt.subplots(3,4)
+    for i, it1 in enumerate(dict_i.items()):
+        vn, vi = it1
+        v = psc[vi][vn]
+        for j, it2 in enumerate(dict(A=dphia, H=phih, V=dphiv, T=dphit).items()):
+            fn, f = it2
+            print(vn, fn)
+            par, err = fit_line(abs(v), abs(f[vi]))
+            ax[i,j].plot(v, f[vi], '.')
+            ax[i,j].set_xlabel(vn); ax[i,j].set_ylabel(fn)
+            ax[i,j].ticklabel_format(style='sci', scilimits=(0,0), axis='both', useMathText=True)
+            slp, slp_err = par[1], err[1]
+            tbl.update({(fn,vn):(slp, slp_err, slp_err/slp)})
+    return tbl
+        
 
 def plot_pol(dat, diff=False):
     P = pol(dat)
@@ -194,36 +224,11 @@ def dot3d(spdat, ii=slice(1,None)):
     ## cos (s1, s2) = dp/|s1|/|s2| = dp
     return dp.T
 
-def synchrotron_osc(dat, plot=False):
-    fun = lambda x, a,b,p: a*np.sin(b*x + p)
-    nray = dat.shape[1]
-    stat = np.empty((nray, 3), dtype = list(zip(['EST','SE'], [float]*2)))
-    fig, ax = plt.subplots(1,1)
-    ax.ticklabel_format(axis='y', style='sci', scilimits=(0,0), useMathText=True)
-    ax.set_xlabel('turn')
-    ax.set_ylabel('D')
-    for i,ray in enumerate(dat.T):
-        #it = ray['iteration']
-        d = ray['D']
-        a0 = d.max()
-        f0 = guess_freq(it, d/a0)
-        p0 = guess_phase(it, d/a0)
-        popt, pcov = curve_fit(fun, it, d, [a0, f0, p0])
-        perr = np.sqrt(np.diag(pcov))
-        stat[i]['EST'] = popt
-        stat[i]['SE']  = perr
-        ax.plot(d, '.')
-        ax.plot(fun(it, *popt), '--r')
-    plt.xticks(ticks=np.arange(dat.shape[0]), labels=tick_labels(dat), rotation=60)
-    return stat
-
 if __name__ == '__main__':
     ps0 = load_ps(HOMEDIR+DATADIR, 'TRPRAY:TREL.dat')
     sp0 = load_sp(HOMEDIR+DATADIR, 'TRPSPI:TREL.dat')
-    ps = ps0[:1+472*10,:]#3::3]
-    sp = sp0[:1+472*10,:]#3::3]
-    plot_dm_angle3d(sp)
-    plot_spin(sp)
-    plot_dm_angle3d(sp, elem='SOL')
+    der = delta_theta(sp0, ps0)
+    # plot_dm_angle3d(sp)
+    # plot_dm_angle2d(sp)
     # plot_dm_angle3d(sp, elem='QUAD')
     # plot_dm_angle3d(sp, elem='RB')
