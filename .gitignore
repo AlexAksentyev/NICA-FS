@@ -13,6 +13,7 @@ madx-scripts/*
 !madx-scripts/**/*.madx
 !madx-scripts/**/*.seq
 !madx-scripts/**/*.py
+analysis/tbl/
 
 
 __pycache__/
