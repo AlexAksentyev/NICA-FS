@@ -52,6 +52,17 @@ PROCEDURE SPINTUNE WHERE OEID KZ1 KZ2 NTURN;
       WRITE OU STR ;
     ENDLOOP ;
   ENDPROCEDURE;
+  FUNCTION CHECK EID;
+    VARIABLE I 1; VARIABLE N 1;
+    IF (OEID|1)=0; {zero means output AFTER EVERY ELEMENT; DISREGARD all the rest of the vector}
+      CHECK := TRUE;
+    ELSEIF TRUE; {otherwise, go through all OEID elements and see if the current EID is in OEID}
+      CHECK := FALSE; {assume output not required}
+      LOOP I 1 LENGTH(OEID);
+        IF EID=(OEID|I); CHECK:=TRUE; ENDIF; {if encountered EID in OEID, output is required}
+      ENDLOOP;
+    ENDIF;
+  ENDFUNCTION;
 
   OV 3 3 0; SET_FOR_DEUTERONS HZ1 HZ2 QF QD;
   HZ1 := SNAKE_STR(G0); HZ2 := HZ1;
@@ -73,12 +84,14 @@ PROCEDURE SPINTUNE WHERE OEID KZ1 KZ2 NTURN;
   EL0 := 1; EL1 := 472;
   OPENF 3618 WHERE&'MU.dat' 'REPLACE';
   LOOP EL EL0 EL1;
-    UM; CR;
-    MAKEMAP EL0 EL1 EL; { OPENF 935 WHERE&'MAP'&MRK(EL) 'REPLACE'; PM 935; CLOSEF 935; }
-    TSS MU NBAR 0;
-    MUARR(1) := MU; MUARR(2) := NBAR(1); MUARR(3) := NBAR(2); MUARR(4) := NBAR(3);
-    INJECT 30 0 0 1; GET_TUNE_ENSEMBLE MUARR;
-    WST EL 3618;
+    IF CHECK(EL);
+      UM; CR;
+      MAKEMAP EL0 EL1 EL; { OPENF 935 WHERE&'MAP'&MRK(EL) 'REPLACE'; PM 935; CLOSEF 935; }
+      TSS MU NBAR 0;
+      MUARR(1) := MU; MUARR(2) := NBAR(1); MUARR(3) := NBAR(2); MUARR(4) := NBAR(3);
+      INJECT 30 0 0 1; GET_TUNE_ENSEMBLE MUARR;
+      WST EL 3618;
+    ENDIF;
   ENDLOOP;
   CLOSEF 3618;
 
@@ -94,8 +107,8 @@ PROCEDURE RUN;
   VARIABLE OEID 10; VARIABLE NTURN 1;
 
   OEID := 1&236&472; {outpud data only after these elements}
-  NTURN := 50000;
-  COMMON := 'data/SPINTUNE/50kTURNS/';
+  NTURN := 10000;
+  COMMON := 'data/SPINTUNE/10kTURNS/';
   DIRSET WHERE COMMON&'NO_NAVIG/';
   GROUTF 'img/dump/TR' 1;
   SPINTUNE WHERE OEID 0 0 NTURN;
