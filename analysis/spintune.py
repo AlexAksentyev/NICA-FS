@@ -19,6 +19,11 @@ def tick_labels(dat):
 
 def plot(dat, fun=lambda x: x.mean(1), elem='all'):
     dc = dat.copy()
+    ny = dc['NY']
+    nz = dc['NZ']
+    norm = np.sqrt(ny**2 + nz**2)
+    sin_psi = ny/norm
+    psi = np.rad2deg(np.arcsin(sin_psi))
     if elem=='all':
         jj = np.arange(dc.shape[0])
         lbls = tick_labels(dc)
@@ -30,14 +35,16 @@ def plot(dat, fun=lambda x: x.mean(1), elem='all'):
         for name in dc.dtype.names[2:]:
             dc[name] = np.diff(dc1[name], axis=0)
         del dc1
-    fig, ax = plt.subplots(2,1, sharex=True)
+    fig, ax = plt.subplots(3,1, sharex=True)
     ax[0].plot(fun(dc[jj,:]['NU']))
     ax[0].set_ylabel(ylab_pref + r'$f(\nu_s)$')
     ax[1].set_ylabel(ylab_pref + r'$f(\bar n_{\alpha})$')
     for v in ['NX','NY','NZ']:
         ax[1].plot(fun(dc[jj,:][v]), label=v)
     ax[1].legend()
-    for i in range(2):
+    ax[2].plot(fun(psi[jj,:]))
+    ax[2].set_ylabel(r'$\angle(\bar n,\vec v)$ [deg]')
+    for i in range(3):
         ax[i].ticklabel_format(axis='both', style='sci', scilimits=(0,0), useMathText=True)
         ax[i].grid(axis='x')
     plt.xticks(ticks=np.arange(len(jj)), labels=lbls, rotation=90)
