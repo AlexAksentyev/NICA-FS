@@ -106,7 +106,6 @@ class Particle:
         ax[2].plot(dat['S_Z']); ax[2].set_ylabel('S_Z')
         ax[2].grid(axis='x')
         ax[2].set_xlabel('(TURN, EID)')
-        ax[0].set_title(self._name.upper())
         lbls = tick_labels(dat, False)
         tks = np.arange(dat.shape[0])
         plt.xticks(ticks=tks[elem_ids], labels=lbls[elem_ids], rotation=90)
@@ -115,9 +114,11 @@ class Particle:
         plt.savefig("{}/spin-plot-{}{}.png".format(savedir,self._name, name),
                         bbox_inches = 'tight', pad_inches = 0.1,
                         dpi=600)
-    def plot_ps(self, varx, vary, turns):
+        return fig, ax
+    
+    def plot_ps(self, varx, vary, turns, pcl_ids):
         fig2, ax2 = plt.subplots(1,1)
-        ax2.plot(self._ps[varx][turns], self._ps[vary][turns], '.')
+        ax2.plot(self._ps[varx][turns, pcl_ids], self._ps[vary][turns, pcl_ids], '.')
         ax2.set_ylabel(vary)
         ax2.set_xlabel(varx)
         ax2.ticklabel_format(axis='both', style='sci', scilimits=(0,0), useMathText=True)
@@ -128,3 +129,17 @@ class Particle:
     @property
     def sp(self):
         return self._sp
+
+
+    
+def navigators(nu, psi, detector='MPD', gamma=1.14, G=-.142987):
+    ''' yields Kz1, Kz2 navigator solenoid strengths
+    given the required spin tune and polarization angle in MPD (SPD)'''
+    Lz1, Lz2 = .7, .4
+    alpha = 0.039984488639998664
+    phix = gamma*G*alpha
+    psi = np.deg2rad(psi)
+    psi = psi if detector=='MPD' else gamma*G*np.pi-psi
+    phiz1 = np.pi * nu * np.cos(psi)
+    phiz2 = np.pi * nu * np.sin(psi)/np.sin(phix)
+    return [e/(1+G) for e in [phiz1/Lz1, phiz2/Lz2]]
