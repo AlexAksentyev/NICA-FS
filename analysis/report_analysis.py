@@ -1,6 +1,6 @@
 import numpy as np
 import matplotlib.pyplot as plt; plt.ion()
-from analysis import HOMEDIR, Particle
+from analysis import HOMEDIR, Particle, tick_labels
 from pandas import DataFrame, ExcelWriter
 import spintune as st
 from numpy.linalg import norm
@@ -35,25 +35,64 @@ class ExtPart(Particle): # includes TSS data
     @property
     def polarization(self):
         return self._pol
+    
+    def plot_pol(self, L=503, gamma=1.14):
+        beta = np.sqrt(1 - 1/gamma**2)
+        v = beta*3e8
+        tau = L/v
+        y = self._pol
+        x = np.arange(len(y))
+        par, err = fit_line(x, y)
+        fig, ax = plt.subplots(1,1)
+        ax.plot(x,y, '--.')
+        ax.plot(x, par[0] + x*par[1], '-r', label=r'$slp = {:4.2e} \pm {:4.2e}$'.format(par[1], err[1]))
+        ax.set_ylabel(r'$\sum_i(\vec s_i, \bar n)$')
+        ax.ticklabel_format(axis='y', style='sci', scilimits=(0,0), useMathText=True)
+        ax.legend()
+        return fig, ax
+
+    def plot_tss(self, fun=lambda x: x[:, 0]):
+        norm1 = np.sqrt(self.ny**2 + self.nz**2)
+        sin_psi = self.ny/norm1
+        psi = np.rad2deg(np.arcsin(sin_psi))
+        fig, ax = plt.subplots(3,1, sharex=True)
+        ax[0].plot(fun(self._mu['NU']))
+        ax[0].set_ylabel(r'$f(\nu_s)$')
+        ax[1].set_ylabel(r'$f(\bar n_{\alpha})$')
+        for v in ['NX','NY','NZ']:
+            ax[1].plot(fun(self._mu[v]), label=v)
+        ax[1].legend()
+        ax[2].plot(fun(psi))
+        ax[2].set_ylabel(r'$\angle(\bar n,\vec v)$ [deg]')
+        for i in range(3):
+            ax[i].ticklabel_format(axis='both', style='sci', scilimits=(0,0), useMathText=True)
+            ax[i].grid(axis='x')
+        return fig, ax
 
     def __spin_nbar_prod(self, ftype='CO'): # either CO, or mean
+                                        # DON'T USE MEAN, I only generate data for one turn here
         def make_nbar_seq(component, repnum):
-            x = component.copy()
+            num_el = len(component)
+            pick_i = np.unique(self._sp['EID'][:,0])%num_el
+            global x
+            x = component[pick_i]
             x0 = x[0]
-            x = np.append(x[1:], x[:2])[:-1]
+            x = x[1:] #np.append(x[1:], x[:2])[:-1]
             x = np.tile(x, repnum) # x is 1d; [1,2,3,..., 1, 2, 3, ..., 1, 2, 3,... ]
             return np.insert(x, 0, x0)            
         def normalize(nbar):
             norm_nbar = np.sqrt(nbar['X']**2 + nbar['Y']**2 + nbar['Z']**2)
-            if abs(norm-1)>1e-6:
-                print('********** nbar norm is suspect! {}'.format(norm_nbar))
+            if np.any(abs(norm_nbar-1))>1e-6:
+                print('********** nbar norm is suspect! {}, {}'.format(norm_nbar.min(), norm_nbar.max()))
             return {lbl: nbar[lbl]/norm_nbar for lbl in ['X','Y','Z']}
         s = {lbl:self._sp['S_'+lbl] for lbl in ['X','Y','Z']}
+        global ntrn, n
         ntrn = np.unique(self._sp['iteration'][1:,0])[-1]
+        global n
         if ftype=='CO':
             n = {lbl:make_nbar_seq(self._mu['N'+lbl][:,0], ntrn) for lbl in ['X','Y','Z']}
         elif ftype=='mean':
-            n = {lbl:make_nbar_seq(np.mean(self._mu['N'+lbl],axis=1), ntrn) for lbl in ['X','Y','Z']}
+            n = {lbl:make_nbar_seq(np.mean(self._mu['N'+lbl], axis=1), ntrn) for lbl in ['X','Y','Z']}
         n = normalize(n)
         prod = {lbl: (s[lbl].T*n[lbl]).T for lbl in ['X','Y','Z']}
         self._sp_nb_proj = prod['X']+prod['Y']+prod['Z']
@@ -76,8 +115,9 @@ class ExtPart(Particle): # includes TSS data
                 print('nbar norm suspect! {}'.format(nnbar))
             # picking tracking data at EID location (multiple turns)
             jj = self._sp['EID']==eid
-            spc = self._sp[jj].reshape(-1, jj.shape[1])
-            psc = self._ps[jj].reshape(-1, jj.shape[1])
+            ntrn = np.unique(self._sp['iteration'][:,0])[-1]
+            spc = self._sp[jj].reshape(ntrn, -1)
+            psc = self._ps[jj].reshape(ntrn, -1)
             print(' spc shape: {}'.format(spc.shape))
             ps0c = self._ps[0].copy() # initial offsets
             #### here I compute the change to the angle
@@ -93,7 +133,6 @@ class ExtPart(Particle): # includes TSS data
             print('dphi shape: {}'.format(dphi.shape))
             # dictionary containing the indices for the X,Y,D bunch particles
             dict_i = {e:slice((i+1), None, 3) for i,e in enumerate(['X','Y','D'])}
-            tbl_short = np.zeros(3) # 
             var_dict = dict(X='x', Y='y', D=r'\delta')
             ylab_fun = lambda p,v: r'$\Delta\Theta_{}/\Delta {}$'.format(p,v)
             fig, ax = plt.subplots(1,3)
@@ -105,9 +144,7 @@ class ExtPart(Particle): # includes TSS data
                 xlab = '${}$'.format(var_dict[vn]); ylab = ylab_fun('{3d}', var_dict[vn])
                 ax[i].set_xlabel(xlab); ax[i].set_title(ylab)
                 ax[i].ticklabel_format(style='sci', scilimits=(0,0), axis='both', useMathText=True)
-                slp, slp_err = 0, 0# par[1], err[1]
-                tbl_short[i] = slp
-            return tbl_short
+            return dphi
             
 
 def analyze_decoherence(data_dir, particle_name):
@@ -142,12 +179,16 @@ def main(dirs):
             frame.to_excel(writer, sheet_name = name)
 
 if __name__ == '__main__':
-    common = 'data/SPINTUNE/50TURNS/'
+    common = 'data/SPINTUNE/1MTURN/'
     dirs = {'NO-NAVI': common+'NO_NAVIG/',
-                'MPD90': common+'NAVIG-PSI90n/',
-                'MPD30': common+'NAVIG-PSI30p/'}
+                'SPD-0': common+'NAVIG-SPD-0/',
+                'SPD-90': common+'NAVIG-SPD-90/'}
         
-    deu = ExtPart(HOMEDIR+dirs['NO-NAVI'], 'deuteron')
-    dphi=deu.decoherence_derivative(236)
+    deu = {name: ExtPart(HOMEDIR+d, 'deuteron') for name, d in dirs.items()}
+    for name, d in deu.items():
+        fig, ax = d.plot_tss()
+        ax[0].set_title(name)
+        fig, ax = d.plot_spin(pcl_ids=[0, 1], name=name)
+        ax[0].set_title(name)
     
     
