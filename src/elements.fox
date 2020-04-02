@@ -69,13 +69,15 @@ PROCEDURE QUAD L {m} TILT {rad} K1 {m^-2} ;
       {hence B_y(a) = K1 * a in the automatic converter}
   VARIABLE Bpt NM1; {magnetic induction (flux density @ pole tip)}
   VARIABLE A 1; {aperture}
-  { WRITE 6 '********** NICA FS QUAD DEFINITION'; }
+  VARIABLE TILT0 1;
+  TILT0 := RAD2DEG(TILT);
   A:=.05;
-  {this is the native COSY Infinity THICK LENS option}
   Bpt := K1*CONS(CHIM)*A; {in Tesla}
   { WRITE 6 'K1[m^-2]        B[Tl]          G[kG/cm]       ' }
   {          SF(CONS(K1), '(E15.7)')&SF(CONS(Bpt), '(E15.7)')&SF(CONS(Bpt)/A/10,'(E15.7)'); }
-  MQ L Bpt A;
+  ROTATE  TILT0;
+    MQ L Bpt A;
+  ROTATE -TILT0;
 ENDPROCEDURE; {QUAD}
 
 PROCEDURE SEXT L {m} TILT {rad} KNL {unit};
