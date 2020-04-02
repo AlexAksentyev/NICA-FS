@@ -19,11 +19,14 @@ def _read_header(fileaddress):
     with open(fileaddress) as f:
         nray_line = f.readline()
         dtype_line = f.readline()
-    nray = int(nray_line.strip().split(":")[1])
+    number = nray_line.strip().split(":")[1]
+    nray = int(number) if number.isdigit() else int(number.split()[0])
     dtype = dtype_line.strip().split()[1:]
-    # i only want the part about turns, elements and particle ids
-    dtype = [e for e in dtype if ((e not in PSVARS) and (e not in SPVARS))]
-    dtype = list(zip(dtype, [int]*len(dtype)))
+    for i, e in enumerate(dtype):
+        if (e in PSVARS) or (e in SPVARS):
+            dtype[i] = (e, float)
+        else:
+            dtype[i] = (e, int)
     return nray, dtype
 
 def _shape_up(dat, nrays):
@@ -33,17 +36,23 @@ def _shape_up(dat, nrays):
     
 def load_ps(path, filename='TRPRAY.dat', ndim=3):
     nray, d_type = _read_header(path+filename)
-    d_type += PSDTYPE[:2*ndim]
     ps = np.loadtxt(path+filename, d_type, skiprows=2)
     ps = _shape_up(ps, nray)
     return ps
 
 def load_sp(path, filename='TRPSPI.dat'):
     nray, d_type = _read_header(path+filename)
-    d_type += SPDTYPE
     sp = np.loadtxt(path+filename, d_type, skiprows=2)
     sp = _shape_up(sp, nray)
     return sp
+
+def load_tss(path=HOMEDIR+DIR+'MU.dat'):
+    case = path.split('/')[-2]
+    d_type = [('EID', int), ('PID', int)] + list(zip(['NU', 'NX','NY','NZ'], [float]*4))
+    dat = np.loadtxt(path, dtype=d_type)
+    nray = len(np.unique(dat['PID']))
+    dat.shape = (-1, nray)
+    return dat[:, 1:], case
 
 def tick_labels(dat, name=True):
     if dat.ndim>1:
@@ -93,6 +102,7 @@ class DAVEC:
 class Particle:
     def __init__(self, path, name):
         self._name = name
+        self._ps0= 
         self._ps = load_ps(path, 'TRPRAY.dat')
         self._sp = load_sp(path, 'TRPSPI.dat')
 

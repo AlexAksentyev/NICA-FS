@@ -50,15 +50,6 @@ def plot(dat, fun=lambda x: x.mean(1), elem='all'):
     plt.xticks(ticks=np.arange(len(jj)), labels=lbls, rotation=90)
     return fig, ax
 
-
-def load_tss(path=HOMEDIR+DIR+'MU.dat'):
-    case = path.split('/')[-2]
-    d_type = [('EID', int), ('PID', int)] + list(zip(['NU', 'NX','NY','NZ'], [float]*4))
-    dat = np.loadtxt(path, dtype=d_type)
-    nray = len(np.unique(dat['PID']))
-    dat.shape = (-1, nray)
-    return dat[:, 1:], case
-
 if __name__ == '__main__':
     bunch_num = 2 # 0 (X), 1 (Y), 2 (D)
     dat1, case1 = load_tss(HOMEDIR+'data/SPINTUNE/NO_NAVIG/'+'MU.dat')
