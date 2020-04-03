@@ -248,7 +248,7 @@ PROCEDURE LATTICE HZ1 HZ2 KZ1 KZ2 QF QD RFFLAG;
   DL 2.02954 ; {Drift_226}
   SBEND 1.370459105 0.039984488639998664 PI/2 0 0 0 0 0 0 ; {SBend_227}
   DL 0.2 ; {Drift_228}
-  DL 0.47 ; {Drift_229} {this is MPD}
+  DL 0.47 ; {Drift_229}
   DL 0.1 ; {Drift_230}
   QUAD 1. 0 0.4158533601 ; {Quadr_231}
   DL 0.3 ; {Drift_232}

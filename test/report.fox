@@ -168,9 +168,9 @@ PROCEDURE RUN;
   VARIABLE WHERE 100; VARIABLE COMMON 100;
   VARIABLE OEID 10; VARIABLE NTURN 1;
 
-  OEID := 0; { 236&472; } {outpud data only after these elements}
-  NTURN := 1;
-  COMMON := 'data/SPINTUNE/'&MRK(NTURN)&'TURN/';
+  OEID := 236&472; {outpud data only after these elements}
+  NTURN := 100000;
+  COMMON := 'data/SPINTUNE/100kTURN/';
   DIRSET WHERE COMMON&'NO_NAVIG/';
   GROUTF 'img/dump/TR' 1;
   SPINTUNE WHERE OEID 0 0 NTURN;
