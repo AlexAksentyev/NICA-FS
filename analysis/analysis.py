@@ -3,13 +3,13 @@ import matplotlib.pyplot as plt; plt.ion()
 import sympy
 from scipy.optimize import curve_fit
 
-## constants
+################# constants ##########################
 INTTYPE = ['iteration', 'PID', 'EID', 'ray']
 HOMEDIR = '/Users/alexaksentyev/REPOS/NICA-FS/'
 ELNAMES = np.insert(np.load('nica_element_names.npy'),0,'INJ')
 ELNAMES = np.insert(ELNAMES, 1,'RF')
 
-## function definintions
+############### function definintions #####################
 def _read_header(fileaddress):
     with open(fileaddress) as f:
         nray_line = f.readline()
@@ -35,8 +35,21 @@ def load_data(path, filename):
     ps = _shape_up(ps, nray)
     return ps
 
-class TSS_data:
-    def __init__(self, path, filename='MU.dat'):
+def navigators(nu, psi, detector='MPD', gamma=1.14, G=-.142987):
+    ''' yields Kz1, Kz2 navigator solenoid strengths
+    given the required spin tune and polarization angle in MPD (SPD)'''
+    Lz1, Lz2 = .7, .4
+    alpha = 0.039984488639998664
+    phix = gamma*G*alpha
+    psi = np.deg2rad(psi)
+    psi = psi if detector=='MPD' else gamma*G*np.pi-psi
+    phiz1 = np.pi * nu * np.cos(psi)
+    phiz2 = np.pi * nu * np.sin(psi)/np.sin(phix)
+    return [e/(1+G) for e in [phiz1/Lz1, phiz2/Lz2]]
+
+############## class definitions ####################
+class Data:
+    def __init__(self, path, filename):
         self._data = load_data(path, filename)
 
     @property
@@ -45,10 +58,10 @@ class TSS_data:
     @property
     def co(self):
         return self._data[:,0]
-
     def __getitem__(self, key):
         return self._data[key]
 
+class TSS(Data):
     def plot(self, fun=lambda x: x[:,0]):
         norma = np.sqrt(self['NY']**2 + self['NZ']**2)
         sin_psi = self['NY']/norma
@@ -66,37 +79,7 @@ class TSS_data:
             ax[i].ticklabel_format(axis='both', style='sci', scilimits=(0,0), useMathText=True)
             ax[i].grid(axis='x')
         return fig, ax
-
-# def load_sp(path, filename='TRPSPI.dat'):
-#     nray, d_type = _read_header(path+filename)
-#     sp = np.loadtxt(path+filename, d_type, skiprows=2)
-#     sp = _shape_up(sp, nray)
-#     return sp
-
-# def load_tss(path, filename):
-#     nray, 
-#     d_type = [('EID', int), ('PID', int)] + list(zip(['NU', 'NX','NY','NZ'], [float]*4))
-#     dat = np.loadtxt(path, dtype=d_type)
-#     nray = len(np.unique(dat['PID']))
-#     dat.shape = (-1, nray)
-#     return dat[:, 1:], case
-
-def tick_labels(dat, name=True):
-    if dat.ndim>1:
-        it = dat['iteration'][:,0]
-        eid = dat['EID'][:,0]
-    else:
-        it = dat['iteration']
-        eid = dat['EID']
-    nit = np.unique(it[1:])
-    elname = ELNAMES[eid]
-    if name:
-        res = ['{} ({}:{})'.format(*e) for e in list(zip(elname, it, eid))]
-    else:
-        res = ['({}:{})'.format(*e) for e in list(zip(it, eid))]
-    return res
         
-## class definitions
 class DAVEC:
     VARS = ['X','A','Y','B','T','D']
     def __init__(self, path):
@@ -125,58 +108,3 @@ class DAVEC:
 
     def __add__(self, other):
         return self.poly.add(other.poly)
-
-# class Particle:
-#     def __init__(self, path, name):
-#         self._name = name
-#         self._ps0= load_ps()
-#         self._ps = load_ps(path, 'TRPRAY.dat')
-#         self._sp = load_sp(path, 'TRPSPI.dat')
-
-#     def plot_spin(self, pcl_ids=slice(0,None), elem_ids=slice(0,None), savedir='img', name=''):
-#         dat = self._sp[:,pcl_ids]
-#         fig, ax = plt.subplots(3,1,sharex=True)
-#         ax[0].plot(dat['S_X']); ax[0].set_ylabel('S_X')
-#         ax[0].grid(axis='x')
-#         ax[1].plot(dat['S_Y']); ax[1].set_ylabel('S_Y')
-#         ax[1].grid(axis='x')
-#         ax[2].plot(dat['S_Z']); ax[2].set_ylabel('S_Z')
-#         ax[2].grid(axis='x')
-#         ax[2].set_xlabel('(TURN, EID)')
-#         lbls = tick_labels(dat, False)
-#         tks = np.arange(dat.shape[0])
-#         plt.xticks(ticks=tks[elem_ids], labels=lbls[elem_ids], rotation=90)
-#         if name!='':
-#             name = '-'+name
-#         plt.savefig("{}/spin-plot-{}{}.png".format(savedir,self._name, name),
-#                         bbox_inches = 'tight', pad_inches = 0.1,
-#                         dpi=600)
-#         return fig, ax
-    
-#     def plot_ps(self, varx, vary, turns, pcl_ids):
-#         fig2, ax2 = plt.subplots(1,1)
-#         ax2.plot(self._ps[varx][turns, pcl_ids], self._ps[vary][turns, pcl_ids], '.')
-#         ax2.set_ylabel(vary)
-#         ax2.set_xlabel(varx)
-#         ax2.ticklabel_format(axis='both', style='sci', scilimits=(0,0), useMathText=True)
-
-#     @property
-#     def ps(self):
-#         return self._ps
-#     @property
-#     def sp(self):
-#         return self._sp
-
-
-    
-def navigators(nu, psi, detector='MPD', gamma=1.14, G=-.142987):
-    ''' yields Kz1, Kz2 navigator solenoid strengths
-    given the required spin tune and polarization angle in MPD (SPD)'''
-    Lz1, Lz2 = .7, .4
-    alpha = 0.039984488639998664
-    phix = gamma*G*alpha
-    psi = np.deg2rad(psi)
-    psi = psi if detector=='MPD' else gamma*G*np.pi-psi
-    phiz1 = np.pi * nu * np.cos(psi)
-    phiz2 = np.pi * nu * np.sin(psi)/np.sin(phix)
-    return [e/(1+G) for e in [phiz1/Lz1, phiz2/Lz2]]
