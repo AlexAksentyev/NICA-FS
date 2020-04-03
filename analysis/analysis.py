@@ -47,6 +47,33 @@ def navigators(nu, psi, detector='MPD', gamma=1.14, G=-.142987):
     phiz2 = np.pi * nu * np.sin(psi)/np.sin(phix)
     return [e/(1+G) for e in [phiz1/Lz1, phiz2/Lz2]]
 
+def project_spin_nbar(spdata, tssdata, ftype='CO'): # either CO, or mean
+                                        # DON'T USE MEAN, I only generate data for one turn here
+   def make_nbar_seq(component, repnum):
+       num_el = len(component)
+       pick_i = np.unique(spdata['EID'][:,0])%num_el
+       x = component[pick_i]
+       x0 = x[0]
+       x = x[1:] #np.append(x[1:], x[:2])[:-1]
+       x = np.tile(x, repnum) # x is 1d; [1,2,3,..., 1, 2, 3, ..., 1, 2, 3,... ]
+       return np.insert(x, 0, x0)
+   def normalize(nbar):
+       norm_nbar = np.sqrt(nbar['X']**2 + nbar['Y']**2 + nbar['Z']**2)
+       if np.any(abs(norm_nbar-1))>1e-6:
+           print('********** nbar norm is suspect! {}, {}'.format(norm_nbar.min(), norm_nbar.max()))
+       return {lbl: nbar[lbl]/norm_nbar for lbl in ['X','Y','Z']}
+   s = {lbl:spdata['S_'+lbl] for lbl in ['X','Y','Z']}
+   ntrn = np.unique(spdata['iteration'][1:,0])[-1]
+   if ftype=='CO':
+       n = {lbl:make_nbar_seq(tssdata['N'+lbl][:,0], ntrn) for lbl in ['X','Y','Z']}
+   elif ftype=='mean':
+       n = {lbl:make_nbar_seq(np.mean(tssdata['N'+lbl], axis=1), ntrn) for lbl in ['X','Y','Z']}
+   n = normalize(n)
+   prod = {lbl: (s[lbl].T*n[lbl]).T for lbl in ['X','Y','Z']}
+   it = spdata['iteration'][:,0]
+   proj = prod['X']+prod['Y']+prod['Z']
+   return proj
+
 ############## class definitions ####################
 class Data:
     def __init__(self, path, filename):
@@ -108,3 +135,32 @@ class DAVEC:
 
     def __add__(self, other):
         return self.poly.add(other.poly)
+
+class Polarization(Data):
+    def __init__(self, spdata, tssdata):
+        sp_proj = project_spin_nbar(spdata, tssdata, ftype='CO')
+        nray = sp_proj.shape[1]
+        pol = sp_proj.sum(axis=1)/nray
+        it = spdata['iteration'][:,0]
+        eid = spdata['EID'][:,0]
+        self._data = np.array(list(zip(it, eid, pol)), dtype = [('iteration', int), ('EID', int), ('Value', float)])
+
+    @property
+    def co(self):
+        return self._data
+    def plot(self, eid, L=503, gamma=1.14):
+        beta = np.sqrt(1 - 1/gamma**2)
+        v = beta*3e8
+        tau = L/v
+        jj = self['EID']==eid
+        y = self['Value'][jj]
+        x = self['iteration'][jj]*tau
+        par, err = fit_line(x, y)
+        fig, ax = plt.subplots(1,1)
+        ax.plot(x,y, '.')
+        ax.plot(x, par[0] + x*par[1], '-r', label=r'$slp = {:4.2e} \pm {:4.2e}$ [u/sec]'.format(par[1], err[1]))
+        ax.set_ylabel(r'$\sum_i(\vec s_i, \bar n_{})$'.format(eid))
+        ax.set_xlabel('t [sec]')
+        ax.ticklabel_format(axis='y', style='sci', scilimits=(0,0), useMathText=True)
+        ax.legend()
+        return fig, ax

@@ -11,68 +11,6 @@ def fit_line(x,y): # this is used for evaluating the derivative
     perr = np.sqrt(np.diag(pcov))
     return popt, perr
 
-def project_spin_nbar(spdata, tssdata, ftype='CO'): # either CO, or mean
-                                        # DON'T USE MEAN, I only generate data for one turn here
-   def make_nbar_seq(component, repnum):
-       num_el = len(component)
-       pick_i = np.unique(spdata['EID'][:,0])%num_el
-       x = component[pick_i]
-       x0 = x[0]
-       x = x[1:] #np.append(x[1:], x[:2])[:-1]
-       x = np.tile(x, repnum) # x is 1d; [1,2,3,..., 1, 2, 3, ..., 1, 2, 3,... ]
-       return np.insert(x, 0, x0)
-   def normalize(nbar):
-       norm_nbar = np.sqrt(nbar['X']**2 + nbar['Y']**2 + nbar['Z']**2)
-       if np.any(abs(norm_nbar-1))>1e-6:
-           print('********** nbar norm is suspect! {}, {}'.format(norm_nbar.min(), norm_nbar.max()))
-       return {lbl: nbar[lbl]/norm_nbar for lbl in ['X','Y','Z']}
-   s = {lbl:spdata['S_'+lbl] for lbl in ['X','Y','Z']}
-   ntrn = np.unique(spdata['iteration'][1:,0])[-1]
-   if ftype=='CO':
-       n = {lbl:make_nbar_seq(tssdata['N'+lbl][:,0], ntrn) for lbl in ['X','Y','Z']}
-   elif ftype=='mean':
-       n = {lbl:make_nbar_seq(np.mean(tssdata['N'+lbl], axis=1), ntrn) for lbl in ['X','Y','Z']}
-   n = normalize(n)
-   prod = {lbl: (s[lbl].T*n[lbl]).T for lbl in ['X','Y','Z']}
-   it = spdata['iteration'][:,0]
-   proj = prod['X']+prod['Y']+prod['Z']
-   return proj
-
-def polarization(sp_nb_proj):
-    nray = sp_nb_proj.shape[1]
-    return sp_nb_proj.sum(axis=1)/nray
-
-class Polarization(Data):
-    def __init__(self, spdata, tssdata):
-        sp_proj = project_spin_nbar(spdata, tssdata, ftype='CO')
-        nray = sp_proj.shape[1]
-        pol = sp_proj.sum(axis=1)/nray
-        it = spdata['iteration'][:,0]
-        eid = spdata['EID'][:,0]
-        self._data = np.array(list(zip(it, eid, pol)), dtype = [('iteration', int), ('EID', int), ('Value', float)])
-
-    @property
-    def co(self):
-        return self._data
-    def plot(self, eid, L=503, gamma=1.14):
-        beta = np.sqrt(1 - 1/gamma**2)
-        v = beta*3e8
-        tau = L/v
-        jj = self['EID']==eid
-        y = self['Value'][jj]
-        x = self['iteration'][jj]*tau
-        par, err = fit_line(x, y)
-        fig, ax = plt.subplots(1,1)
-        ax.plot(x,y, '.')
-        ax.plot(x, par[0] + x*par[1], '-r', label=r'$slp = {:4.2e} \pm {:4.2e}$ [u/sec]'.format(par[1], err[1]))
-        ax.set_ylabel(r'$\sum_i(\vec s_i, \bar n_{})$'.format(eid))
-        ax.set_xlabel('t [sec]')
-        ax.ticklabel_format(axis='y', style='sci', scilimits=(0,0), useMathText=True)
-        ax.legend()
-        return fig, ax
-
-
-
 def decoherence_derivative(spdata, psdata, tssdata, eid): # this is the same thing as the decoherence_derivative in analysis.py
                                         # but the angle is comouted in the axes: nbar--nbar-orthogonal
     # first of all, check that I have sufficient data for comupation (I need at least two turns)
@@ -120,14 +58,6 @@ def decoherence_derivative(spdata, psdata, tssdata, eid): # this is the same thi
             ax[i].set_xlabel(xlab); ax[i].set_title(ylab)
             ax[i].ticklabel_format(style='sci', scilimits=(0,0), axis='both', useMathText=True)
         return dphi
-
-def plot_spin(spdata):
-    fig, ax = plt.subplots(3,1,sharex=True)
-    for i, var in enumerate(['S_X','S_Y','S_Z']):
-        ax[i].plot(spdata[var], '--.')
-        ax[i].set_ylabel(var)
-        ax[i].ticklabel_format(axis='y', style='sci', scilimits=(0,0), useMathText=True)
-    return fig, ax
 
 def analysis(path, name=''):
     print("data from",  path)
