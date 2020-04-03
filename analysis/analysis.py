@@ -35,6 +35,12 @@ def load_data(path, filename):
     ps = _shape_up(ps, nray)
     return ps
 
+def fit_line(x,y): # this is used for evaluating the derivative
+    line = lambda x,a,b: a + b*x
+    popt, pcov = curve_fit(line, x, y)
+    perr = np.sqrt(np.diag(pcov))
+    return popt, perr
+
 def navigators(nu, psi, detector='MPD', gamma=1.14, G=-.142987):
     ''' yields Kz1, Kz2 navigator solenoid strengths
     given the required spin tune and polarization angle in MPD (SPD)'''
@@ -70,9 +76,13 @@ def project_spin_nbar(spdata, tssdata, ftype='CO'): # either CO, or mean
        n = {lbl:make_nbar_seq(np.mean(tssdata['N'+lbl], axis=1), ntrn) for lbl in ['X','Y','Z']}
    n = normalize(n)
    prod = {lbl: (s[lbl].T*n[lbl]).T for lbl in ['X','Y','Z']}
-   it = spdata['iteration'][:,0]
-   proj = prod['X']+prod['Y']+prod['Z']
-   return proj
+   return prod['X']+prod['Y']+prod['Z']
+
+def project_spin_axis(spdata, axis=[0,0,1]):
+    s = {lbl:spdata['S_'+lbl] for lbl in ['X','Y','Z']}
+    n = dict(zip(['X','Y','Z'], axis))
+    prod = {lbl: (s[lbl].T*n[lbl]).T for lbl in ['X','Y','Z']}
+    return prod['X']+prod['Y']+prod['Z']
 
 ############## class definitions ####################
 class Data:
@@ -137,30 +147,58 @@ class DAVEC:
         return self.poly.add(other.poly)
 
 class Polarization(Data):
-    def __init__(self, spdata, tssdata):
+    def __init__(self, iteration, eid, value, spin_proj):
+        self._data = np.array(list(zip(iteration, eid, value)),
+                                  dtype = [('iteration', int), ('EID', int), ('Value', float)])
+        self._spin_proj = spin_proj
+
+    @classmethod
+    def on_nbar(cls, spdata, tssdata):
         sp_proj = project_spin_nbar(spdata, tssdata, ftype='CO')
-        nray = sp_proj.shape[1]
-        pol = sp_proj.sum(axis=1)/nray
+        return cls._initializer(spdata, sp_proj)
+
+    @classmethod
+    def on_axis(cls, spdata, axis=[0,0,1]):
+        sp_proj = project_spin_axis(spdata, axis)
+        return cls._initializer(spdata, sp_proj)
+
+    @classmethod
+    def _initializer(cls, spdata, sp_proj):
         it = spdata['iteration'][:,0]
         eid = spdata['EID'][:,0]
-        self._data = np.array(list(zip(it, eid, pol)), dtype = [('iteration', int), ('EID', int), ('Value', float)])
-
+        nray = sp_proj.shape[1]
+        pol = sp_proj.sum(axis=1)/nray
+        return cls(it, eid, pol, sp_proj)
+    
+    @property
+    def spin_proj(self):
+        return self._spin_proj
     @property
     def co(self):
         return self._data
-    def plot(self, eid, L=503, gamma=1.14):
+    def plot(self, eid, xlab='sec', L=503, gamma=1.14):
         beta = np.sqrt(1 - 1/gamma**2)
         v = beta*3e8
         tau = L/v
         jj = self['EID']==eid
         y = self['Value'][jj]
-        x = self['iteration'][jj]*tau
-        par, err = fit_line(x, y)
+        it = self['iteration'][jj]
+        t = it*tau
+        par, err = fit_line(t, y)
         fig, ax = plt.subplots(1,1)
+        if xlab=='sec':
+            x = t
+        elif xlab=='turn':
+            x = it
+            par, err =  (tau*e for e in [par, err])
+        else:
+            x = t
+            xlab = 'sec'
         ax.plot(x,y, '.')
-        ax.plot(x, par[0] + x*par[1], '-r', label=r'$slp = {:4.2e} \pm {:4.2e}$ [u/sec]'.format(par[1], err[1]))
+        ax.plot(x, par[0] + x*par[1], '-r',
+                    label=r'$slp = {:4.2e} \pm {:4.2e}$ [u/{}]'.format(par[1], err[1], xlab))
         ax.set_ylabel(r'$\sum_i(\vec s_i, \bar n_{})$'.format(eid))
-        ax.set_xlabel('t [sec]')
+        ax.set_xlabel(xlab)
         ax.ticklabel_format(axis='y', style='sci', scilimits=(0,0), useMathText=True)
         ax.legend()
         return fig, ax
