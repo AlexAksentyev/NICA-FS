@@ -1,15 +1,22 @@
 import numpy as np
 import matplotlib.pyplot as plt; plt.ion()
-from analysis import HOMEDIR, Data, TSS
+from analysis import HOMEDIR, Data, TSS, Polarization
 from pandas import DataFrame, ExcelWriter
 from numpy.linalg import norm
 from scipy.optimize import curve_fit
 
-def fit_line(x,y): # this is used for evaluating the derivative
-    line = lambda x,a,b: a + b*x
-    popt, pcov = curve_fit(line, x, y)
-    perr = np.sqrt(np.diag(pcov))
-    return popt, perr
+def plot_spin(spdata, L=503, gamma=1.14):
+    beta = np.sqrt(1 - 1/gamma**2)
+    v = beta*3e8
+    tau = L/v
+    t = spdata['iteration'][:,0]*tau
+    fig, ax = plt.subplots(3,1,sharex=True)
+    ax[2].set_xlabel('t [sec]')
+    for i, v in enumerate(['S_X','S_Y','S_Z']):
+        ax[i].plot(t, spdata[v])
+        ax[i].set_ylabel(v)
+        ax[i].ticklabel_format(axis='y', style='sci', scilimits=(0,0), useMathText=True)
+    return fig, ax
 
 def decoherence_derivative(spdata, psdata, tssdata, eid): # this is the same thing as the decoherence_derivative in analysis.py
                                         # but the angle is comouted in the axes: nbar--nbar-orthogonal
@@ -59,30 +66,42 @@ def decoherence_derivative(spdata, psdata, tssdata, eid): # this is the same thi
             ax[i].ticklabel_format(style='sci', scilimits=(0,0), axis='both', useMathText=True)
         return dphi
 
-def analysis(path, name=''):
+def analysis(path, eid, name=''):
     print("data from",  path)
     tss = TSS(path, 'MU.dat')
     sp = Data(path, 'TRPSPI.dat')
-    sp_nb_proj = project_spin_nbar(sp, tss)
-    pol = polarization(sp_nb_proj)
-    fsp, axsp = plot_spin(sp[0:None:1000, [0, 1]])
-    fpol, axpol = plot_pol(abs(pol[0:None:1000]))
+    pol = Polarization.on_axis(sp, [1,0,0])#tss)
+    jj = sp['EID'][:,0]==eid
+    fsp, axsp = plot_spin(sp[jj][:, [0, 1]])
+    fpol, axpol = pol.plot(eid, 'turn')
     ftss, axtss = tss.plot()
     axsp[0].set_title(name)
     axpol.set_title(name)
     axtss[0].set_title(name)
 
-def main():
-    common = HOMEDIR+'data/SPINTUNE/100kTURN/'
-    dirs = {'NO-NAVI': common+'NO_NAVIG/'
-                ,'SPD-0': common+'NAVIG-SPD-0/'
-                ,'SPD-90': common+'NAVIG-SPD-90/'
-                }
-        
+def one_turn_analysis(path, name):
+    sp = Data(path, 'TRPSPI.dat')
+    fsp, axsp = plt.subplots(3,1,sharex=True)
+    axsp[0].set_title(name)
+    for i, v in enumerate(['S_X','S_Y','S_Z']):
+        axsp[i].plot(sp[:,0][v])
+        axsp[i].set_ylabel(v)
+        axsp[i].ticklabel_format(axis='y', style='sci', scilimits=(0,0), useMathText=True)
+
+def main(dirs):        
     for name, path in dirs.items():
-        analysis(path, name)
+        analysis(path, 2, name)
+
+def main_one_turn(dirs):
+    for name, path in dirs.items():
+        one_turn_analysis(path, name)
     
 if __name__ == '__main__':
-    main()
+    common = HOMEDIR+'data/SPINTUNE_VARIED/100kTURN/RADIAL/'
+    dirs = {'NO-NAVI': common+'NO_NAVIG/'
+                ,'SPD-5': common+'NAVIG-SPD-5/'
+                ,'SPD-4': common+'NAVIG-SPD-4/'
+                }
+    main(dirs)
     
     
