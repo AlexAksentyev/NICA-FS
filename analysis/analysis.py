@@ -1,7 +1,7 @@
 import numpy as np
 import matplotlib.pyplot as plt; plt.ion()
 import sympy
-from scipy.optimize import curve_fit
+from scipy.optimize import curve_fit, least_squares
 
 ################# constants ##########################
 INTTYPE = ['iteration', 'PID', 'EID', 'ray']
@@ -36,8 +36,19 @@ def load_data(path, filename):
     return ps
 
 def fit_line(x,y): # this is used for evaluating the derivative
+    # resid = lambda p, x,y: p[0] + p[1]*x - y
+    # # initial parameter estimates
+    # a0 = y[0]; b0 = (y[-1]-y[0])/(x[-1]-x[0])
+    # # fitting
+    # result = least_squares(resid, [a0, b0], args=(x,y), loss='soft_l1', f_scale=.1)
+    # popt = result.x
+    # # computing the parameter errors
+    # J = result.jac
+    # pcov = np.linalg.inv(J.T.dot(J))*result.fun.std()
+    # perr = np.sqrt(np.diagonal(pcov))
+    ## same with curve_fit
     line = lambda x,a,b: a + b*x
-    popt, pcov = curve_fit(line, x, y)
+    popt, pcov = curve_fit(line, x[10:-10], y[10:-10])
     perr = np.sqrt(np.diag(pcov))
     return popt, perr
 
