@@ -10,7 +10,7 @@ endef
 
 core.bld: $(addprefix $(CORE-DIR)/bin/, $(CORE))
 	echo $(CORE) >> core.bld
-common.bld: $(addprefix bin/common/, $(COMMON))
+common.bld: bin/elements.bin $(addprefix bin/common/, $(COMMON))
 	echo $(COMMON) >> common.bld
 setups.bld: $(addprefix bin/setups/, $(SETUPS))
 	echo $(SETUPS) >> setups.bld
@@ -24,7 +24,7 @@ $(CORE-DIR)/bin/elements.bin: $(CORE-DIR)/src/elements.fox $(CORE-DIR)/bin/utili
 
 bin/elements.bin: src/elements.fox $(CORE-DIR)/bin/utilities.bin # local elements.fox
 	cosy $<;
-bin/common/%.bin: src/common/%.fox bin/elements.bin
+bin/common/%.bin: src/common/%.fox
 	cosy $<;
 bin/setups/%.bin: src/setups/%.fox common.bld
 	cosy $<;
