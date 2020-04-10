@@ -24,8 +24,8 @@ PROCEDURE INJECT NUM NU PSI; {inject only the x-offset particles}
   X := LINSPACE(-3E-3, 3E-3, NUM);
   SR 0 0 0 0 0 0 0 0 1; SSR 0 SY SZ;
   LOOP I 1 NUM;
-    SR X|I 0 0 0 0 0 0 0 1; SSR 0 SY SZ;
-    { SR 0 0 X|I 0 0 0 0 0 1; SSR 0 SY SZ; }
+    { SR X|I 0 0 0 0 0 0 0 1; SSR 0 SY SZ; }
+    SR 0 0 X|I 0 0 0 0 0 1; SSR 0 SY SZ;
     { SR 0 0 0 0 0 (X|I)/10 0 0 1; SSR 0 SY SZ; }
   ENDLOOP;
 ENDPROCEDURE;
@@ -153,17 +153,21 @@ PROCEDURE SPINTUNE WHERE OEID NU PSI NTURN;
   IF (OEID|1)#0;
     UM; MAKEMAP 1 OEID|1 1;
       SMAPS 1 SEGMARR SEGSARR; WRITE 6 'SEG 1: 1--'&ST(OEID|1);
-    LOOP EL 1 (LENGTH(OEID)-1); WRITE 6 'SEG '&ST(EL+1)&': '&ST(OEID|EL+1)&'--'&ST(OEID|(EL+1));
-      UM; MAKEMAP (OEID|EL+1) OEID|(EL+1) (OEID|EL+1);
-        SMAPS (EL+1) SEGMARR SEGSARR;
-    ENDLOOP;
-    EL := EL + 1;
-    IF OEID|EL<472; WRITE 6 'LAST SEGMENT:'&ST(OEID|EL+1)&'--472';
-      UM; MAKEMAP (OEID|EL+1) 472 (OEID|EL+1);
-        SMAPS (EL+1) SEGMARR SEGSARR;
+    IF (OEID|1)#472; {continue segmentation}
+      LOOP EL 1 (LENGTH(OEID)-1); WRITE 6 'SEG '&ST(EL+1)&': '&ST(OEID|EL+1)&'--'&ST(OEID|(EL+1));
+          UM; MAKEMAP (OEID|EL+1) OEID|(EL+1) (OEID|EL+1);
+            SMAPS (EL+1) SEGMARR SEGSARR;
+        ENDLOOP;
         EL := EL + 1;
-    ENDIF;
-  ENDIF;
+        IF OEID|EL<472; WRITE 6 'LAST SEGMENT:'&ST(OEID|EL+1)&'--472';
+          UM; MAKEMAP (OEID|EL+1) 472 (OEID|EL+1);
+            SMAPS (EL+1) SEGMARR SEGSARR;
+            EL := EL + 1;
+        ENDIF;
+    ELSEIF TRUE; {segmentation not required}
+      EL := 1;
+    ENDIF; {check that OEID|1 # 472}
+  ENDIF; {check that MAP SEGMENTATION is required}
 
   INJECT 10 NU PSI;
   OPENF 99 WHERE&'PRAY.dat' 'REPLACE';
@@ -182,18 +186,18 @@ PROCEDURE RUN;
   VARIABLE WHERE 100; VARIABLE COMMON 100;
   VARIABLE OEID 10; VARIABLE NTURN 1;
 
-  OEID := 236&472; {output data only after these elements}
+  OEID := 472; {output data only after these elements}
   NTURN := 100000;
-  COMMON := 'data/REPORT/NON-FS/100kTURN/';
+  COMMON := 'data/REPORT/NON-FS/100kTURN/Y-bunch/';
   { DIRSET WHERE COMMON&'FS/'; }
   { GROUTF 'img/dump/TR' 1; }
   { SPINTUNE WHERE OEID 0 0 NTURN; }
-  { DIRSET WHERE COMMON&'SPD-0-/'; }
-  { GROUTF 'img/dump/TR' 1; }
-  { SPINTUNE WHERE OEID 1E-4 0 NTURN; }
-  { DIRSET WHERE COMMON&'SPD-0+/'; }
-  { GROUTF 'img/dump/TR' 1; }
-  { SPINTUNE WHERE OEID -1E-4 0 NTURN; }
+  DIRSET WHERE COMMON&'SPD-0-/';
+  GROUTF 'img/dump/TR' 1;
+  SPINTUNE WHERE OEID 1E-4 0 NTURN;
+  DIRSET WHERE COMMON&'SPD-0+/';
+  GROUTF 'img/dump/TR' 1;
+  SPINTUNE WHERE OEID -1E-4 0 NTURN;
   DIRSET WHERE COMMON&'SPD-90-/';
   GROUTF 'img/dump/TR' 1;
   SPINTUNE WHERE OEID 1E-4 90 NTURN;
