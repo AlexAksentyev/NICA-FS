@@ -177,7 +177,10 @@ class Polarization(Data):
     @classmethod
     def _initializer(cls, spdata, sp_proj):
         it = spdata['iteration'][:,0]
-        eid = spdata['EID'][:,0]
+        try:
+            eid = spdata['EID'][:,0]
+        except:
+            eid = np.ones(it.shape)
         nray = sp_proj.shape[1]
         pol = sp_proj.sum(axis=1)/nray
         return cls(it, eid, pol, sp_proj)

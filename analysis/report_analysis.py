@@ -94,7 +94,10 @@ def analysis(path, eid, name='', axis=[1,0,0]):
     ps = Data(path, 'TRPRAY.dat')
     pol = get_polarization()
     # making the spin plot
-    jj = sp['EID'][:,0]==eid
+    try:
+        jj = sp['EID'][:,0]==eid
+    except:
+        jj = slice(0,None)
     pids = [0, 1, 4]
     labels = get_spin_labels()
     print("plotting spin vector components")
@@ -149,7 +152,10 @@ def pol_analysis(pol, eid):
     return f, ax
 
 def spin_offset_analysis(spdata, psdata, eid):
-    jj = spdata['EID'][:,0]==eid # SPD eid now is 1, b/c I didn't split the lattice map anywhere else
+    try:
+        jj = spdata['EID'][:,0]==eid # SPD eid now is 1, b/c I didn't split the lattice map anywhere else
+    except:
+        jj = slice(0, None)
     dm = psdata[jj]['D'].mean(0)
     sm = {lbl: spdata[jj][lbl].mean(0) for lbl in ['S_X','S_Y','S_Z']}
     fig, ax = plt.subplots(3,1, sharex=True)
@@ -166,7 +172,10 @@ def spin_offset_analysis(spdata, psdata, eid):
 
 def plot_pol_3D(spdat, eid, zero=True):
     num_of_subsets = 5
-    jj = spdat['EID'][:,0]==eid
+    try:
+        jj = spdat['EID'][:,0]==eid
+    except:
+        jj = slice(0, None)
     sub_idx_rng = int(jj.sum()/num_of_subsets)
     title = 'at SPD' if eid==2 else 'at MPD'
     axis = dict(X=[1,0,0], Y=[0,1,0], Z=[0,0,1])
@@ -195,8 +204,11 @@ def plot_spin_3D(spdat, eid, zero=True):
             ax.plot([0, S['S_X'][turn,0]], [0, S['S_Z'][turn,0]], [0, S['S_Y'][turn,0]], '--k')
             ax.plot([0,0], [0,0], [0,0], '*r')
         ax.plot(S['S_X'][turn,:], S['S_Z'][turn,:], S['S_Y'][turn,:], '.')
-    title = 'at SPD' if eid==2 else 'at MPD'
-    jj = spdat['EID'][:,0]==eid
+    title = 'at SPD' #if eid==2 else 'at MPD' # only outputting data at SPD
+    try:
+        jj = spdat['EID'][:,0]==eid
+    except:
+        jj = slice(0, None)
     S = {n: spdat[jj][n] for n in ['S_X','S_Y','S_Z']}
     nturn = S['S_X'].shape[0]
     fig = plt.figure()
@@ -235,7 +247,7 @@ def main(root):
 if __name__ == '__main__':
     common = HOMEDIR+'data/REPORT/NON-FS/100kTURN/'
     main(common+'X-bunch/')
-    main(common+'Y-bunch/')
-    main(common+'D-bunch/')
+    # main(common+'Y-bunch/')
+    # main(common+'D-bunch/')
     
     
