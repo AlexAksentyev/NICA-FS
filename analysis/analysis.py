@@ -48,7 +48,8 @@ def fit_line(x,y): # this is used for evaluating the derivative
     # perr = np.sqrt(np.diagonal(pcov))
     ## same with curve_fit
     line = lambda x,a,b: a + b*x
-    popt, pcov = curve_fit(line, x[10:-10], y[10:-10])
+    ii = slice(0, None) if len(x)<100 else slice(10,-10)
+    popt, pcov = curve_fit(line, x[ii], y[ii])
     perr = np.sqrt(np.diag(pcov))
     return popt, perr
 
