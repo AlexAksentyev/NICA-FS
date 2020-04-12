@@ -9,6 +9,12 @@ HOMEDIR = '/Users/alexaksentyev/REPOS/NICA-FS/'
 ELNAMES = np.insert(np.load('nica_element_names.npy'),0,'INJ')
 ELNAMES = np.insert(ELNAMES, 1,'RF')
 
+GAMMA = 1.14
+L = 503
+BETA = np.sqrt(1 - 1/GAMMA**2)
+CLIGHT = 3e8
+v = CLIGHT*BETA
+TAU = L/v
 ############### function definintions #####################
 def _read_header(fileaddress):
     with open(fileaddress) as f:
@@ -191,21 +197,18 @@ class Polarization(Data):
     @property
     def co(self):
         return self._data
-    def plot(self, eid, xlab='sec', L=503, gamma=1.14):
-        beta = np.sqrt(1 - 1/gamma**2)
-        v = beta*3e8
-        tau = L/v
+    def plot(self, eid, xlab='sec'):
         jj = self['EID']==eid
         y = self['Value'][jj]
         it = self['iteration'][jj]
-        t = it*tau
+        t = it*TAU
         par, err = fit_line(t, y)
         fig, ax = plt.subplots(1,1)
         if xlab=='sec':
             x = t
         elif xlab=='turn':
             x = it
-            par, err =  (tau*e for e in [par, err])
+            par, err =  (TAU*e for e in [par, err])
         else:
             x = t
             xlab = 'sec'

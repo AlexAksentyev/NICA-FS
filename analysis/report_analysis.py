@@ -1,6 +1,6 @@
 import numpy as np
 import matplotlib.pyplot as plt; plt.ion()
-from analysis import HOMEDIR, Data, TSS, Polarization, fit_line
+from analysis import HOMEDIR, Data, TSS, Polarization, fit_line, TAU
 from pandas import DataFrame, ExcelWriter
 from numpy.linalg import norm
 #from scipy.optimize import curve_fit
@@ -9,11 +9,8 @@ from mpl_toolkits.mplot3d import Axes3D
 import os
 from glob import glob
 
-def plot_spin(spdata, L=503, gamma=1.14):
-    beta = np.sqrt(1 - 1/gamma**2)
-    v = beta*3e8
-    tau = L/v
-    t = spdata['iteration'][:,0]*tau
+def plot_spin(spdata):
+    t = spdata['iteration'][:,0]*TAU
     fig, ax = plt.subplots(3,1,sharex=True)
     ax[2].set_xlabel('t [sec]')
     for i, v in enumerate(['S_X','S_Y','S_Z']):
@@ -86,6 +83,21 @@ def analysis(path, eid, name='', axis=[1,0,0]):
         else:
             pol = Polarization.on_nbar(sp, tss)
         return pol
+    def plot_spd():
+        t = pol['iteration']*TAU
+        spd = pol.spin_proj.std(axis=1)
+        fit = lowess(spd[0:None:100], t[0:None:100])
+        par, err = fit_line(t, spd)
+        fig, ax = plt.subplots(1,1)
+        ax.plot(t, spd, '.')
+        ax.plot(fit[:,0], fit[:, 1], '-k')
+        ax.plot(t, par[0]+par[1]*t, '-r', label=r'slp = {:4.2e} $\pm$ {:4.2e} [u/sec]'.format(par[1], err[1]))
+        ax.set_xlabel('sec')
+        ax.set_ylabel(r'$\sigma(\vec s_i, \bar n_{})$'.format(eid))
+        ax.grid()
+        ax.legend()
+        ax.ticklabel_format(axis='y', style='sci', scilimits=(0,0), useMathText=True)
+        return fig, ax
     # loading data
     print("data from",  path)
     tss = TSS(path, 'MU.dat')
@@ -113,6 +125,11 @@ def analysis(path, eid, name='', axis=[1,0,0]):
     axpol.set_title(name)
     plt.savefig(path+'img/polarization.png', dpi=450, bbox_inches='tight', pad_inches=.1)
     plt.close()
+    # plotting spin projection dispersion
+    spdfig, spdax = plot_spd()
+    spdax.set_title(name)
+    plt.savefig(path+'img/spin_proj_disp.png', dpi=450, bbox_inches='tight', pad_inches=.1)
+    plt.close()
     # making the TSS plot
     print("plotting TSS")
     ftss, axtss = tss.plot()
@@ -136,16 +153,10 @@ def one_turn_analysis(path, name):
         axsp[i].ticklabel_format(axis='y', style='sci', scilimits=(0,0), useMathText=True)
 
 def pol_analysis(pol, eid):
-    gamma = 1.14
-    L = 503
-    beta = np.sqrt(1 - 1/gamma**2)
-    v = beta*3e8
-    tau = L/v
     jj = pol['EID']==eid
-    t = pol['iteration'][jj]*tau
+    t = pol['iteration'][jj]*TAU
     p = pol['Value'][jj]
     fit = lowess(p[0:None:100], t[0:None:100])
-
     f, ax = pol.plot(eid)
     ax.grid(axis='y')
     ax.plot(fit[:,0], fit[:, 1], '-k')
@@ -174,10 +185,11 @@ def plot_pol_3D(spdat, eid, zero=True):
     num_of_subsets = 5
     try:
         jj = spdat['EID'][:,0]==eid
+        sub_idx_rng = int(jj.sum()/num_of_subsets)
     except:
         jj = slice(0, None)
-    sub_idx_rng = int(jj.sum()/num_of_subsets)
-    title = 'at SPD' if eid==2 else 'at MPD'
+        sub_idx_rng = int(spdat.data.shape[0]/num_of_subsets)
+    title = 'at SPD' #if eid==2 else 'at MPD' # data only taken at SPD
     axis = dict(X=[1,0,0], Y=[0,1,0], Z=[0,0,1])
     P = {n: Polarization.on_axis(spdat, x)['Value'][jj] for n, x in axis.items()}
     P0 = {n: P[n].mean() for n in ['X','Y','Z']}
@@ -245,9 +257,9 @@ def main(root):
         
     
 if __name__ == '__main__':
-    common = HOMEDIR+'data/REPORT/NON-FS/100kTURN/'
+    common = HOMEDIR+'data/REPORT/DEUTERON_50pcls/NON-FS/100kTURN/'
     main(common+'X-bunch/')
-    # main(common+'Y-bunch/')
-    # main(common+'D-bunch/')
+    main(common+'Y-bunch/')
+    main(common+'D-bunch/')
     
     
