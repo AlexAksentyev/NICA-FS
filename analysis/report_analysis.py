@@ -19,6 +19,30 @@ def plot_spin(spdata):
         ax[i].ticklabel_format(axis='y', style='sci', scilimits=(0,0), useMathText=True)
     return fig, ax, lines
 
+def analyze_spin(spdata):
+    t = spdata['iteration'][:,0]*TAU
+    fig, ax = plt.subplots(3,1,sharex=True)
+    ax[2].set_xlabel('sec')
+    for i, lab in enumerate(['S_X','S_Y','S_Z']):
+        ax[i].set_ylabel(lab)
+        ax[i].ticklabel_format(axis='y',style='sci', scilimits=(0,0),useMathText=True)
+        ax[i].grid()
+    for s in spdata.T:
+        for i, v in enumerate(['S_X','S_Y','S_Z']):
+            sc = s[v]
+            fit = lowess(sc, t)
+            par, err = fit_line(t, sc)
+            ax[i].plot(t, sc, '.',
+                           label='({:4.2e} $\pm$ {:4.2e}, {:4.2e} $\pm$ {:4.2e})'.format(par[0],
+                                                                                             err[0],
+                                                                                             par[1],
+                                                                                             err[1]))
+            ax[i].plot(t, par[0] + t*par[1], '-r')
+            ax[i].plot(fit[:,0], fit[:,1], '-k')
+            ax[i].legend()
+    return fig, ax
+        
+
 def decoherence_derivative(spdata, psdata, tssdata, eid): # this is the same thing as the decoherence_derivative in analysis.py
                                         # but the angle is comouted in the axes: nbar--nbar-orthogonal
     # first of all, check that I have sufficient data for comupation (I need at least two turns)
@@ -110,12 +134,12 @@ def analysis(path, eid, name='', axis=[1,0,0]):
         jj = sp['EID'][:,0]==eid
     except:
         jj = slice(0,None)
-    pids = [0, 1, 4]
+    pids = [1, 50, 150]
     labels = get_spin_labels()
     print("plotting spin vector components")
-    fsp, axsp, linsp = plot_spin(sp[jj][:, pids])
+    fsp, axsp = analyze_spin(sp[jj][:, pids])
     axsp[0].set_title(name)
-    plt.legend(linsp, labels)
+    # plt.legend(linsp, labels)
     plt.savefig(path+'img/spin.png', dpi=450, bbox_inches='tight', pad_inches=.1)
     plt.close()
     # making the polarization plot
@@ -201,7 +225,7 @@ def plot_pol_3D(spdat, eid, zero=True):
     for i in range(num_of_subsets):
         ii = slice(i*(sub_idx_rng+1), sub_idx_rng*(i+1))
         ax.plot(P['X'][ii], P['Z'][ii], P['Y'][ii], label=i)
-    plt.xlim((-1, 1))
+    plt.xlim((-.1, .1))
     plt.ylim((-1, 1))
     ax.legend()
     ax.set_title(title)
@@ -257,9 +281,9 @@ def main(root):
         
     
 if __name__ == '__main__':
-    common = HOMEDIR+'data/REPORT/DEUTERON_50pcls/NON-FS/100kTURN/'
+    common = HOMEDIR+'data/REPORT/DEUTERON/NON-FS/3MTURN/'
     main(common+'X-bunch/')
-    main(common+'Y-bunch/')
-    main(common+'D-bunch/')
+    # main(common+'Y-bunch/')
+    # main(common+'D-bunch/')
     
     
