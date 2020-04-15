@@ -82,10 +82,10 @@ PROCEDURE SPINTUNE WHERE OEID NU PSI NTURN BUNCH;
     VARIABLE J 1;
     WRITE 6 '* '&ST(START);
     LMAPS START MAPARR SPNRARR; {sets the MAP, SPNR transfer maps to those of the i-th element}
-    LOOP J (START+1) TO; { WRITE 6 '**       '&ST(J); }
+    LOOP J (START+1) TO; WRITE 6 '**       '&ST(J);
       PICK J; LOCSET 0 0 0 0 0 0; UPDATE 1 1;
       ENDLOOP;
-    LOOP J FROM (START-1); { WRITE 6 '**       '&ST(J); }
+    LOOP J FROM (START-1); WRITE 6 '**       '&ST(J);
       PICK J; LOCSET 0 0 0 0 0 0; UPDATE 1 1;
       ENDLOOP;
   ENDPROCEDURE;
@@ -107,6 +107,34 @@ PROCEDURE SPINTUNE WHERE OEID NU PSI NTURN BUNCH;
       ENDLOOP;
     ENDIF;
   ENDFUNCTION;
+  PROCEDURE SEGMENT MAPARR SPNRARR OEID SEGMARR SEGSARR SEGNUM;
+    WRITE 6 '---------- SEGMENT';
+    IF (OEID|1)<0; {do NOTHING, use element-by-element tracking through MAPARR SPNRARR}
+      SEGNUM := -1;
+    ELSEIF LENGTH(OEID)=1; {Map consists of one segment -- the map -- injection point specified by OEID}
+      IF (OEID|1)=472; VELSET OEID 1 0; ENDIF;
+      WRITE 6 'MAP: '&ST(OEID|1+1)&' -- 472 --'&ST(OEID|1);
+      UM; MAKEMAP 1 472 (OEID|1+1);  {this case covers OEID|1=0 }
+          SMAPS 1 SEGMARR SEGSARR;
+          SEGNUM := 1;
+    ELSEIF LO(1); {if LENGTH(OEID)>1, injection point is SPD, and OEID specifies output points in the ORIGINAL LATTICE}
+      WRITE 6 'SEG 1: 1--'&ST(OEID|1);
+      UM; MAKEMAP 1 OEID|1 1;
+          SMAPS 1 SEGMARR SEGSARR;
+          LOOP SEGNUM 1 (LENGTH(OEID)-1);
+            WRITE 6 'SEG '&ST(SEGNUM+1)&': '&ST(OEID|SEGNUM+1)&'--'&ST(OEID|(SEGNUM+1));
+            UM; MAKEMAP (OEID|SEGNUM+1) OEID|(SEGNUM+1) (OEID|SEGNUM+1);
+                SMAPS (SEGNUM+1) SEGMARR SEGSARR;
+          ENDLOOP;
+          SEGNUM := SEGNUM + 1;
+          IF OEID|SEGNUM<472; WRITE 6 'LAST SEGMENT:'&ST(OEID|SEGNUM+1)&'--472';
+            UM; MAKEMAP (OEID|SEGNUM+1) 472 (OEID|SEGNUM+1);
+                SMAPS (SEGNUM+1) SEGMARR SEGSARR;
+                SEGNUM := SEGNUM + 1;
+          ENDIF;
+    ENDIF;
+  ENDPROCEDURE;
+
 
   OV 3 3 0;
   
@@ -128,7 +156,7 @@ PROCEDURE SPINTUNE WHERE OEID NU PSI NTURN BUNCH;
   UM; RF VRF 0 FREQ 0 0.05;
     INSERT 1 MAPARR SPNRARR 471;
 
-  IF TRUE;
+  IF FALSE;
   EL0 := 1; EL1 := 472;
   OPENF 3618 WHERE&'MU.dat' 'REPLACE';
   WRITE 3618 'number of rays: 92 (see INJECT_FOR_TSS source code)';
@@ -154,6 +182,7 @@ PROCEDURE SPINTUNE WHERE OEID NU PSI NTURN BUNCH;
   ENDIF;
 
   {recomputing map segments}
+IF FALSE;
   IF (OEID|1)#0;
     UM; MAKEMAP 1 OEID|1 1;
       SMAPS 1 SEGMARR SEGSARR; WRITE 6 'SEG 1: 1--'&ST(OEID|1);
@@ -172,6 +201,10 @@ PROCEDURE SPINTUNE WHERE OEID NU PSI NTURN BUNCH;
       EL := 1;
     ENDIF; {check that OEID|1 # 472}
   ENDIF; {check that MAP SEGMENTATION is required}
+ENDIF;
+  SEGMENT MAPARR SPNRARR OEID SEGMARR SEGSARR EL;
+  WRITE 6 EL;
+  QUIT 0;
 
   INJECT BUNCH 300 NU PSI;
   OPENF 99 WHERE&'PRAY.dat' 'REPLACE';
@@ -181,8 +214,8 @@ PROCEDURE SPINTUNE WHERE OEID NU PSI NTURN BUNCH;
   IF (OEID|1)#0;
     IF (OEID|1)=472; {then the whole map is the segment, and I can just track via TR}
       WRITE 6 '++++++++++ TRACKING VIA TR';
-      UM; UMS;
-        LMAPS 1 SEGMARR SEGSARR;
+      { UM; UMS; }                      {UNNECESSARY, b/c MAP, SPNR}
+        { LMAPS 1 SEGMARR SEGSARR; }    {already hold these maps}
         TRPRAY 7; TRPSPI 8;
       TR NTURN INT(NTURN/5000) -1 -3 1.2 1.2 0 0 -12;
     ELSEIF TRUE; {otherwise the map has been segmented, track each segment}
@@ -212,8 +245,8 @@ PROCEDURE RUN;
     ENDIF;
   ENDFUNCTION;
 
-  OEID := 472; {output data only after these elements}
-  NTURN := 3000000;
+  OEID := -2; {output data only after these elements}
+  NTURN := 5000;
   BUNCH := 'D';
   COMMON := 'data/REPORT/DEUTERON/NON-FS/'&DIRNAME(NTURN)&BUNCH&'-bunch/';
   { DIRSET WHERE COMMON&'NO-NAVI/'; }
