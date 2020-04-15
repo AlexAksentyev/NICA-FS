@@ -133,7 +133,25 @@ PROCEDURE SPINTUNE WHERE OEID NU PSI NTURN BUNCH;
                 SEGNUM := SEGNUM + 1;
           ENDIF;
     ENDIF;
-  ENDPROCEDURE;
+  ENDPROCEDURE; { SEGMENT map}
+  PROCEDURE TRACK CHOICE NTURN;
+    OPENF 99 WHERE&'PRAY.dat' 'REPLACE';
+    PRAY 99; CLOSEF 99;
+    OPENF 7 WHERE&'TRPRAY.dat' 'REPLACE';
+    OPENF 8 WHERE&'TRPSPI.dat' 'REPLACE';
+    IF CHOICE<0;
+      WRITE 6 '++++++++++ ELEMENT-BY-ELEMENT TRACKING';
+      TREL MAPARR SPNRARR 1 472 NTURN 7 8 OEID;
+    ELSEIF CHOICE=1;
+      WRITE 6 '++++++++++ UNSEGMENTED MAP, TR TRACKING';
+      TRPRAY 7; TRPSPI 8;
+      TR NTURN INT(NTURN/5000) -1 -3 1.2 1.2 0 0 -12;
+    ELSEIF TRUE;
+      WRITE 6 '++++++++++ SEGMENTED MAP, TREL TRACKING';
+      TREL SEGMARR SEGSARR 1 EL NTURN 7 8;
+    ENDIF;
+    CLOSEF 7; CLOSEF 8;
+  ENDPROCEDURE; { TRACK }
 
 
   OV 3 3 0;
@@ -182,51 +200,10 @@ PROCEDURE SPINTUNE WHERE OEID NU PSI NTURN BUNCH;
   ENDIF;
 
   {recomputing map segments}
-IF FALSE;
-  IF (OEID|1)#0;
-    UM; MAKEMAP 1 OEID|1 1;
-      SMAPS 1 SEGMARR SEGSARR; WRITE 6 'SEG 1: 1--'&ST(OEID|1);
-    IF (OEID|1)#472; {continue segmentation}
-      LOOP EL 1 (LENGTH(OEID)-1); WRITE 6 'SEG '&ST(EL+1)&': '&ST(OEID|EL+1)&'--'&ST(OEID|(EL+1));
-          UM; MAKEMAP (OEID|EL+1) OEID|(EL+1) (OEID|EL+1);
-            SMAPS (EL+1) SEGMARR SEGSARR;
-        ENDLOOP;
-        EL := EL + 1;
-        IF OEID|EL<472; WRITE 6 'LAST SEGMENT:'&ST(OEID|EL+1)&'--472';
-          UM; MAKEMAP (OEID|EL+1) 472 (OEID|EL+1);
-            SMAPS (EL+1) SEGMARR SEGSARR;
-            EL := EL + 1;
-        ENDIF;
-    ELSEIF TRUE; {segmentation not required}
-      EL := 1;
-    ENDIF; {check that OEID|1 # 472}
-  ENDIF; {check that MAP SEGMENTATION is required}
-ENDIF;
   SEGMENT MAPARR SPNRARR OEID SEGMARR SEGSARR EL;
-  WRITE 6 EL;
-  QUIT 0;
 
   INJECT BUNCH 300 NU PSI;
-  OPENF 99 WHERE&'PRAY.dat' 'REPLACE';
-    PRAY 99; CLOSEF 99;
-  OPENF 7 WHERE&'TRPRAY.dat' 'REPLACE';
-  OPENF 8 WHERE&'TRPSPI.dat' 'REPLACE';
-  IF (OEID|1)#0;
-    IF (OEID|1)=472; {then the whole map is the segment, and I can just track via TR}
-      WRITE 6 '++++++++++ TRACKING VIA TR';
-      { UM; UMS; }                      {UNNECESSARY, b/c MAP, SPNR}
-        { LMAPS 1 SEGMARR SEGSARR; }    {already hold these maps}
-        TRPRAY 7; TRPSPI 8;
-      TR NTURN INT(NTURN/5000) -1 -3 1.2 1.2 0 0 -12;
-    ELSEIF TRUE; {otherwise the map has been segmented, track each segment}
-      WRITE 6 '++++++++++ SEGMENTED MAP, TREL TRACKING';
-      TREL SEGMARR SEGSARR 1 EL NTURN 7 8 OEID;
-    ENDIF;
-  ELSEIF TRUE;
-    WRITE 6 '++++++++++ ELEMENT-BY-ELEMENT TRACKING';
-    TREL MAPARR SPNRARR 1 EL NTURN 7 8 OEID;
-  ENDIF;
-  CLOSEF 7; CLOSEF 8;
+  TRACK EL NTURN;
 ENDPROCEDURE; {SPINTUNE}
 
 PROCEDURE RUN;
@@ -245,8 +222,8 @@ PROCEDURE RUN;
     ENDIF;
   ENDFUNCTION;
 
-  OEID := -2; {output data only after these elements}
-  NTURN := 5000;
+  OEID := 0; {output data only after these elements}
+  NTURN := 10;
   BUNCH := 'D';
   COMMON := 'data/REPORT/DEUTERON/NON-FS/'&DIRNAME(NTURN)&BUNCH&'-bunch/';
   { DIRSET WHERE COMMON&'NO-NAVI/'; }
