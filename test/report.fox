@@ -89,24 +89,13 @@ PROCEDURE SPINTUNE WHERE OEID NU PSI NTURN BUNCH;
       PICK J; LOCSET 0 0 0 0 0 0; UPDATE 1 1;
       ENDLOOP;
   ENDPROCEDURE;
-  PROCEDURE WST ELN OU;
+  PROCEDURE WST ELN OU; {used in TSS DATA OUTPUT block}
     VARIABLE I 1; VARIABLE J 1; VARIABLE STR 100;
     LOOP J 1 NRAY ; STR := SF(ELN, '(I6)')&' '&SF(J-1,'(I6)') ;
       LOOP I 1 4 ; STR := STR&SF((MUARR(I)|J),'(E15.7)') ; ENDLOOP ;
       WRITE OU STR ;
     ENDLOOP ;
-  ENDPROCEDURE;
-  FUNCTION CHECK EID;
-    VARIABLE I 1; VARIABLE N 1;
-    IF (OEID|1)=0; {zero means output AFTER EVERY ELEMENT; DISREGARD all the rest of the vector}
-      CHECK := TRUE;
-    ELSEIF TRUE; {otherwise, go through all OEID elements and see if the current EID is in OEID}
-      CHECK := FALSE; {assume output not required}
-      LOOP I 1 LENGTH(OEID);
-        IF EID=(OEID|I); CHECK:=TRUE; ENDIF; {if encountered EID in OEID, output is required}
-      ENDLOOP;
-    ENDIF;
-  ENDFUNCTION;
+  ENDPROCEDURE; { WST }
   PROCEDURE SEGMENT MAPARR SPNRARR OEID SEGMARR SEGSARR SEGNUM;
     WRITE 6 '---------- SEGMENT';
     IF (OEID|1)<0; {do NOTHING, use element-by-element tracking through MAPARR SPNRARR}
@@ -174,29 +163,28 @@ PROCEDURE SPINTUNE WHERE OEID NU PSI NTURN BUNCH;
   UM; RF VRF 0 FREQ 0 0.05;
     INSERT 1 MAPARR SPNRARR 471;
 
-  IF FALSE;
-  EL0 := 1; EL1 := 472;
-  OPENF 3618 WHERE&'MU.dat' 'REPLACE';
-  WRITE 3618 'number of rays: 92 (see INJECT_FOR_TSS source code)';
-  WRITE 3618 '# EID ray NU NX NY NZ';
-  LOOP EL EL0 EL1;
-    IF TRUE; { CHECK(EL); }
+ {TSS DATA OUTPUT}
+  IF TRUE; 
+    EL0 := 1; EL1 := 472;
+    OPENF 3618 WHERE&'MU.dat' 'REPLACE';
+    WRITE 3618 'number of rays: 92 (see INJECT_FOR_TSS source code)';
+    WRITE 3618 '# EID ray NU NX NY NZ';
+    LOOP EL EL0 EL1;
       UM; CR;
       MAKEMAP EL0 EL1 EL; { OPENF 935 WHERE&'MAP'&MRK(EL) 'REPLACE'; PM 935; CLOSEF 935; }
       TSS MU NBAR 0;
       MUARR(1) := MU; MUARR(2) := NBAR(1); MUARR(3) := NBAR(2); MUARR(4) := NBAR(3);
       INJECT_FOR_TSS; GET_TUNE_ENSEMBLE MUARR;
       WST EL 3618;
-    ENDIF;
-  ENDLOOP;
-  CLOSEF 3618;
+    ENDLOOP;
+    CLOSEF 3618;
   ENDIF;
 
   {resetting for TRACKING: now can set OPTIMIZED for FS HZ1, HZ2}
   IF FALSE; {so far this hasn't worked well: simplectification error grows much faster than at lax FS}
-  SET_FOR_DEUTERONS HZ1 HZ2 QF QD;
-    MAPPARAMS(1) := HZ1; MAPPARAMS(2) := HZ2;
-    LATTICE MAPPARAMS MAPARR SPNRARR; {RECOMPUTES element matrices at NEW snake field strengths}
+    SET_FOR_DEUTERONS HZ1 HZ2 QF QD;
+      MAPPARAMS(1) := HZ1; MAPPARAMS(2) := HZ2;
+      LATTICE MAPPARAMS MAPARR SPNRARR; {RECOMPUTES element matrices at NEW snake field strengths}
   ENDIF;
 
   {recomputing map segments}
@@ -223,8 +211,8 @@ PROCEDURE RUN;
   ENDFUNCTION;
 
   OEID := 0; {output data only after these elements}
-  NTURN := 10;
-  BUNCH := 'D';
+  NTURN := 3000000;
+  BUNCH := 'Y';
   COMMON := 'data/REPORT/DEUTERON/NON-FS/'&DIRNAME(NTURN)&BUNCH&'-bunch/';
   { DIRSET WHERE COMMON&'NO-NAVI/'; }
     { GROUTF 'img/dump/TR' 1; }
