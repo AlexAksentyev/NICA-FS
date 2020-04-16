@@ -1,13 +1,34 @@
 import numpy as np
 import matplotlib.pyplot as plt; plt.ion()
-from analysis import HOMEDIR, Data, TSS, Polarization, fit_line, TAU
+from analysis import HOMEDIR, Data, TSS, Polarization, fit_line, TAU, guess_freq, guess_phase
 from pandas import DataFrame, ExcelWriter
 from numpy.linalg import norm
-#from scipy.optimize import curve_fit
+from scipy.optimize import curve_fit
 from statsmodels.nonparametric.smoothers_lowess import lowess
 from mpl_toolkits.mplot3d import Axes3D
 import os
 from glob import glob
+
+def fit_model(x, y):
+    i0 = y.mean()
+    s0 = 0
+    a0 = abs(y.max()-y.min())/2
+    lam0 = 0
+    f0 = guess_freq(x, y-y.mean())
+    p0 = guess_phase(x, y)
+    print('guess freq: ', f0)
+    print('guess phase: ', p0)
+    print('guess amplitude', a0)
+    model = lambda x, i,s,a,lam,f,p: i + s*x + a*np.exp(lam*x)*np.sin(2*np.pi*f*x + p)
+    pest, pcov = curve_fit(model, x, y, p0=[i0,s0,a0,lam0,f0,p0])
+    perr = np.sqrt(np.diag(pcov))
+    fig, ax = plt.subplots(1,1)
+    ax.plot(x, y, '-.')
+    ax.plot(x, model(x, *pest), '-r')
+    pairs = list(zip(pest, perr))
+    names = ['icpt','slp','ampl','pow', 'freq','phase']
+    df = DataFrame(dict(zip(names, pairs)), index=['est','se'])
+    return df, fig, ax
 
 def plot_spin(spdata):
     t = spdata['iteration'][:,0]*TAU
@@ -282,8 +303,8 @@ def main(root):
     
 if __name__ == '__main__':
     common = HOMEDIR+'data/REPORT/DEUTERON/NON-FS/3MTURN/'
-    main(common+'X-bunch/')
-    # main(common+'Y-bunch/')
+    # main(common+'X-bunch/')
+    main(common+'Y-bunch/')
     # main(common+'D-bunch/')
     
     

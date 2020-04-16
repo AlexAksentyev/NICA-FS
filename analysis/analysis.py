@@ -41,6 +41,20 @@ def load_data(path, filename):
     ps = _shape_up(ps, nray)
     return ps
 
+def guess_freq(time, signal): # estimating the initial frequency guess
+    zci = np.where(np.diff(np.sign(signal)))[0] # find indexes of signal zeroes
+    delta_phase = np.pi*(len(zci)-1)
+    delta_t = time[zci][-1]-time[zci][0]
+    guess = delta_phase/delta_t/2/np.pi
+    return guess
+
+def guess_phase(time, sine):
+    ds = sine[1]-sine[0]
+    dt = time[1]-time[0]
+    sg = np.sign(ds/dt)
+    phase0 = np.arcsin(sine[0]) if sg>0 else np.pi-np.arcsin(sine[0])
+    return phase0
+
 def fit_line(x,y): # this is used for evaluating the derivative
     # resid = lambda p, x,y: p[0] + p[1]*x - y
     # # initial parameter estimates
