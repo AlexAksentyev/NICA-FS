@@ -180,22 +180,22 @@ PROCEDURE SPINTUNE WHERE OEID NU PSI NTURN BUNCH;
     CLOSEF 3618;
   ENDIF;
 
-  {ONE TURN TRACKING}
-  INJECT BUNCH 10 NU PSI;
-  TRACK -1 1 'ONE_TURN';
-  
-  {resetting for TRACKING: now can set OPTIMIZED for FS HZ1, HZ2}
-  IF FALSE; {so far this hasn't worked well: simplectification error grows much faster than at lax FS}
-    SET_FOR_PROTONS HZ1 HZ2 QF QD;
-      MAPPARAMS(1) := HZ1; MAPPARAMS(2) := HZ2;
-      LATTICE MAPPARAMS MAPARR SPNRARR; {RECOMPUTES element matrices at NEW snake field strengths}
-  ENDIF;
-
   {recomputing map segments}
   SEGMENT MAPARR SPNRARR OEID SEGMARR SEGSARR EL;
 
   INJECT BUNCH 300 NU PSI;
   TRACK EL NTURN 'MAIN';
+
+  {resetting for TRACKING: now can set OPTIMIZED for FS HZ1, HZ2}
+  IF TRUE; {so far this hasn't worked well: simplectification error grows much faster than at lax FS}
+    SET_FOR_PROTONS HZ1 HZ2 QF QD;  {***** i will use it for ONE TURN TRACKING though *****}
+      MAPPARAMS(1) := HZ1; MAPPARAMS(2) := HZ2;
+      LATTICE MAPPARAMS MAPARR SPNRARR; {RECOMPUTES element matrices at NEW snake field strengths}
+  ENDIF;
+  
+  {ONE TURN TRACKING}
+  INJECT BUNCH 10 NU PSI;
+  TRACK -1 1 'ONE_TURN';
 ENDPROCEDURE; {SPINTUNE}
 
 PROCEDURE RUN;
