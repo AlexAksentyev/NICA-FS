@@ -16,19 +16,54 @@ def fit_model(x, y):
     lam0 = 0
     f0 = guess_freq(x, y-y.mean())
     p0 = guess_phase(x, y)
-    print('guess freq: ', f0)
-    print('guess phase: ', p0)
-    print('guess amplitude', a0)
+    # print('guess freq: ', f0)
+    # print('guess phase: ', p0)
+    # print('guess amplitude', a0)
     model = lambda x, i,s,a,lam,f,p: i + s*x + a*np.exp(lam*x)*np.sin(2*np.pi*f*x + p)
     pest, pcov = curve_fit(model, x, y, p0=[i0,s0,a0,lam0,f0,p0])
     perr = np.sqrt(np.diag(pcov))
-    fig, ax = plt.subplots(1,1)
-    ax.plot(x, y, '-.')
-    ax.plot(x, model(x, *pest), '-r')
+    # fig, ax = plt.subplots(1,1)
+    # ax.plot(x, y, '-.')
+    # ax.plot(x, model(x, *pest), '-r')
     pairs = list(zip(pest, perr))
     names = ['icpt','slp','ampl','pow', 'freq','phase']
     df = DataFrame(dict(zip(names, pairs)), index=['est','se'])
-    return df, fig, ax
+    return df#, fig, ax
+
+def fitpar_analysis(spdata, psdata, fitpar='slp'):
+    SPC = ['S_X','S_Y','S_Z']
+    dm = psdata['D'].mean(axis=0)
+    dms_total = dm.std()
+    dm_total = dm.mean()
+    fig, ax = plt.subplots(3,1, sharex=True)
+    # ax[0].set_title('fit parameter plotted: '+fitpar)
+    ax[2].set_xlabel(r'$\langle\delta\rangle$')
+    for i in range(3):
+        ax[i].set_ylabel(r'$\langle$'+ r'${}$'.format(SPC[i]) + r'$\rangle$: '+ fitpar)
+        ax[i].ticklabel_format(axis='both', style='sci', scilimits=(0,0), useMathText=True)
+        ax[i].grid()
+    for j in range(spdata.data.shape[1]):
+        ray = spdata[:,j]
+        rayd = psdata[:,j]['D']
+        dm = rayd.mean()
+        if (dm-dm_total)>3*dms_total:
+            print('delta energy outlier; pid ', j,
+                      'delta excess: {:4.2e}'.format(dm),
+                      'in sigmas: {:4.2e}'.format((dm-dm_total)/dms_total))
+            continue
+        ds = rayd.std()/np.sqrt(rayd.shape[0])
+        t = ray['iteration']*TAU
+        try:
+            par = {lbl: fit_model(t, ray[lbl]) for lbl in SPC}
+            for i, lbl in enumerate(SPC):
+                if np.divide(par[lbl][fitpar]['se'], par[lbl][fitpar]['est'])>.5:
+                    continue
+                ax[i].errorbar(dm, par[lbl][fitpar]['est'], yerr=par[lbl][fitpar]['se'], xerr=ds, fmt='.b')
+                # print('pid', j, 'component', lbl)
+                # print(par[lbl])
+        except:
+            print('failed at pid', j)
+    return fig, ax
 
 def plot_spin(spdata):
     t = spdata['iteration'][:,0]*TAU
@@ -36,9 +71,19 @@ def plot_spin(spdata):
     ax[2].set_xlabel('t [sec]')
     for i, v in enumerate(['S_X','S_Y','S_Z']):
         lines = ax[i].plot(t, spdata[v])
-        ax[i].set_ylabel(v)
+        ax[i].set_ylabel(r'${}$'.format(v))
         ax[i].ticklabel_format(axis='y', style='sci', scilimits=(0,0), useMathText=True)
     return fig, ax, lines
+
+def plot_spin_1turn(spdata):
+    fig, ax = plt.subplots(3,1,sharex=True)
+    ax[2].set_xlabel('EID')
+    for i, v in enumerate(['S_X', 'S_Y' , 'S_Z']):
+        ax[i].set_ylabel(r'${}$'.format(v))
+        ax[i].plot(spdata[v])
+        ax[i].grid()
+        ax[i].ticklabel_format(axis='y', style='sci', scilimits=(0,0), useMathText=True)
+    return fig, ax
 
 def analyze_spin(spdata):
     t = spdata['iteration'][:,0]*TAU
@@ -150,19 +195,13 @@ def analysis(path, eid, name='', axis=[1,0,0]):
     sp = Data(path, 'TRPSPI.dat')
     ps = Data(path, 'TRPRAY.dat')
     pol = get_polarization()
-    # making the spin plot
-    try:
-        jj = sp['EID'][:,0]==eid
-    except:
-        jj = slice(0,None)
-    pids = [1, 50, 150]
-    labels = get_spin_labels()
-    print("plotting spin vector components")
-    fsp, axsp = analyze_spin(sp[jj][:, pids])
-    axsp[0].set_title(name)
-    # plt.legend(linsp, labels)
-    plt.savefig(path+'img/spin.png', dpi=450, bbox_inches='tight', pad_inches=.1)
-    plt.close()
+    # making the fitpar_analysis plots
+    print("plotting spin vector component fitpar plots")
+    for parname in ['icpt' ,'slp', 'freq', 'pow']:
+        fsp, axsp = fitpar_analysis(sp, ps, parname)
+        axsp[0].set_title(name)
+        plt.savefig(path+'img/fitpar_{}.png'.format(parname), dpi=450, bbox_inches='tight', pad_inches=.1)
+        plt.close()
     # making the polarization plot
     print("plotting polarization")
     fpol, axpol = pol.plot(eid, 'sec')
@@ -180,12 +219,6 @@ def analysis(path, eid, name='', axis=[1,0,0]):
     ftss, axtss = tss.plot()
     axtss[0].set_title(name)
     plt.savefig(path+'img/tss.png', dpi=450, bbox_inches='tight', pad_inches=.1)
-    plt.close()
-    # making the plot of spin vector cpmponents' dependence on particle mean energy offset
-    print("plotting spin vs gamma effective")
-    spofffig, spoffax = spin_offset_analysis(sp, ps, eid)
-    spoffax[0].set_title(name)
-    plt.savefig(path+'img/mean_spin_vs_gamma.png', dpi=450, bbox_inches='tight', pad_inches=.1)
     plt.close()
 
 def one_turn_analysis(path, name):
@@ -302,9 +335,9 @@ def main(root):
         
     
 if __name__ == '__main__':
-    common = HOMEDIR+'data/REPORT/DEUTERON/NON-FS/3MTURN/'
+    common = HOMEDIR+'data/REPORT/PROTON/LAX-FS/30kTURN/'
     # main(common+'X-bunch/')
-    main(common+'Y-bunch/')
+    # main(common+'Y-bunch/')
     # main(common+'D-bunch/')
     
     
