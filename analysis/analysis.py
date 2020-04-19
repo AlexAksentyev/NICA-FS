@@ -85,6 +85,9 @@ def navigators(nu, psi, detector='MPD', gamma=1.14, G=-.142987):
     phiz2 = np.pi * nu * np.sin(psi)/np.sin(phix)
     return [e/(1+G) for e in [phiz1/Lz1, phiz2/Lz2]]
 
+def snake_str(G):
+    return 1/12 * np.pi/(1 + G)*1/.7
+
 def project_spin_nbar(spdata, tssdata, ftype='CO'): # either CO, or mean
                                         # DON'T USE MEAN, I only generate data for one turn here
    def make_nbar_seq(component, repnum):
