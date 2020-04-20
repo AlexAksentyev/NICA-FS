@@ -85,6 +85,13 @@ def plot_spin_1turn(spdata):
         ax[i].ticklabel_format(axis='y', style='sci', scilimits=(0,0), useMathText=True)
     return fig, ax
 
+def dotprod(s1, s2):
+    prod = [s1[lbl]*s2[lbl] for lbl in ['S_X','S_Y','S_Z']]
+    return np.sum(prod)
+
+def norm(s):
+    return np.sqrt(dotprod(s,s))
+
 def analyze_spin(spdata):
     t = spdata['iteration'][:,0]*TAU
     fig, ax = plt.subplots(3,1,sharex=True)
@@ -191,10 +198,17 @@ def analysis(path, eid, name='', axis=[1,0,0]):
     # loading data
     print("data from",  path)
     tss = TSS(path, 'MU.dat')
-    pray = Data(path, 'PRAY.dat')
-    sp = Data(path, 'TRPSPI.dat')
-    ps = Data(path, 'TRPRAY.dat')
+    pray = Data(path, 'PRAY:MAIN.dat')
+    sp = Data(path, 'TRPSPI:MAIN.dat')
+    sp1 = Data(path, 'TRPSPI:ONE_TURN.dat')
+    ps = Data(path, 'TRPRAY:MAIN.dat')
     pol = get_polarization()
+    # making the spin one-turn plot
+    print("plotting spin for one turn")
+    sp1fig, sp1ax = plot_spin_1turn(sp1)
+    sp1ax[0].set_title(name)
+    plt.savefig(path+'img/spin_1turn.png', dpi=450, bbox_inches='tight', pad_inches=.1)
+    plt.close()
     # making the fitpar_analysis plots
     print("plotting spin vector component fitpar plots")
     for parname in ['icpt' ,'slp', 'freq', 'pow']:
@@ -335,8 +349,8 @@ def main(root):
         
     
 if __name__ == '__main__':
-    common = HOMEDIR+'data/REPORT/PROTON/LAX-FS/30kTURN/'
-    # main(common+'X-bunch/')
+    common = HOMEDIR+'data/REPORT/PROTON/LAX-FS/3MTURN/'
+    main(common+'X-bunch/')
     # main(common+'Y-bunch/')
     # main(common+'D-bunch/')
     
