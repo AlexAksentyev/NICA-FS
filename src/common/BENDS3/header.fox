@@ -26,6 +26,14 @@ PROCEDURE SET_FOR_PROTONS HzSPD HzMPD QF QD;
   WRITE 6 '+++++++++++++++++++++++++++++++++++';
 ENDPROCEDURE;
 
+PROCEDURE NAVIGATORS NU NX NZ rdHzSPD rdHzMPD; {rdHz* = dHz*/Hz*,}
+{so, this value will have to get multiplied by Hz* befire passing into LATTICE}
+  VARIABLE GAMMA 1;
+  GAMMA := CONS(1 + E0/(M0*AMUMEV));
+  rdHzSPD := 2*NU*(NZ - NX/TAN(GAMMA*G0*PI));
+  rdHzMPD := 2*NU*NX/SIN(GAMMA*G0*PI);
+ENDPROCEDURE;
+
 PROCEDURE INSERT POS MAPARR SPNRARR NFILLED;
            {inserts MAP, SPNR into lattice MAPARR, SPNRARR at POS; NFILLED elements in arrays}
   VARIABLE I 1; VARIABLE J 1; VARIABLE K 1;
