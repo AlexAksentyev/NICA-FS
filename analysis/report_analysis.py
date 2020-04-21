@@ -349,9 +349,9 @@ def main(root):
         
     
 if __name__ == '__main__':
-    common = HOMEDIR+'data/REPORT/PROTON/LAX-FS/3MTURN/'
-    main(common+'X-bunch/')
-    main(common+'Y-bunch/')
-    main(common+'D-bunch/')
+    common = HOMEDIR+'data/REPORT/PROTON/BENDS3/0kTURN/'
+    # main(common+'X-bunch/')
+    # main(common+'Y-bunch/')
+    # main(common+'D-bunch/')
     
     
