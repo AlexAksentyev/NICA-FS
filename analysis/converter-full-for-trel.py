@@ -1,11 +1,11 @@
 import re
 
 HOME = '/Users/alexaksentyev/REPOS/NICA-FS/'
-INFILE = 'madx-scripts/nica_24sol_rbend.seq'
-OUTFILE = 'src/setups/nica_24sol_rbend-sequence-select.fox'
+INFILE = 'madx-scripts/NICA_SOL_shifted_RBEND.seq'
+OUTFILE = 'src/setups/BENDS3/SEQFULL.fox'
 NUM_ACC = 1 # current array position of the element to be written
 
-SELECT_ELEMENTS = ['DL', 'QUADRUPOLE', 'RBEND'] # elements to appear in the lattice file
+SELECT_ELEMENTS = []  # elements to be swapped for DL
 
 el_dict = {
     'MONITOR': ('DL', 1),
@@ -116,7 +116,7 @@ def write_dict(line):
     print('**', lbl+': '+elem)
     elem = identify_mult(lbl, elem)
     elem = parse_element(elem)
-    out_string = form_string(elem) if elem[0] in SELECT_ELEMENTS else swap_for_DL(elem)
+    out_string = swap_for_DL(elem) if elem[0] in SELECT_ELEMENTS else form_string(elem)
     out_string += ' {' + lbl + '}\n' # adding comment to procedure string
     lbl_dict.update({lbl : out_string}) # filling the label dictionary
     
@@ -136,16 +136,16 @@ def write_file(line, fout):
 fout = open(HOME+OUTFILE,'w')
 with open(HOME+INFILE, 'r') as fin:
     for cnt, line in enumerate(fin):
-        if cnt<0: # 6
+        if cnt<2: # 6
             pass
-        elif cnt<471: # 138
+        elif cnt<616: # 138
             print(cnt)
             write_dict(line)
-        elif cnt<472: # 143
+        elif cnt<617: # 143
             print('++', cnt)
             print(line)
             pass
-        elif cnt>472: # 142
+        elif cnt>617: # 142
             print('##',cnt)
             print(line)
             if (line[0]!='\n' and line[0]!='/'):
