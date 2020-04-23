@@ -1,8 +1,6 @@
 import numpy as np
 import matplotlib.pyplot as plt; plt.ion()
-from analysis import HOMEDIR, DAVEC, load_ps, load_sp
-
-DIR  = 'data/TEST/'
+from analysis import HOMEDIR, Data
 
 def plot_spin(data, turns):
     fig1, ax1 = plt.subplots(4,1, sharex=True)
@@ -19,13 +17,19 @@ def plot_spin(data, turns):
 def plot_ps(data, varx, vary, turns=slice(0,None)):
     fig2, ax2 = plt.subplots(1,1)
     ax2.plot(data[varx][turns], data[vary][turns], '-.')
-    ax2.set_ylabel(vary)
-    ax2.set_xlabel(varx)
     ax2.ticklabel_format(axis='both', style='sci', scilimits=(0,0), useMathText=True)
+    return fig2, ax2
 
 
 if __name__ == '__main__':
-    ps0 =  load_ps(HOMEDIR+DIR, 'TRPRAY.dat', ndim=3)
-    ps = ps0[:, :17]
-    plot_ps(ps, 'T','D')
+    path = HOMEDIR+'data/SEPSEARCH/DEUTERON/'
+    ps0 =  Data(path, 'TRPRAY.dat')
+    ps = ps0[:, 0:25:3]
+    fig, ax = plot_ps(ps, 'T','D')
+    ax.set_xlabel(r'$-(t-t_0)v_0\frac{\gamma}{1+\gamma}$')
+    ax.set_ylabel(r'$\delta_K$')
+    ax.set_title('Deuteron separatrix')
+    # ax.grid()
+    plt.savefig(path+'separatrix.png', dpi=450, bbox_inches='tight', pad_inches=.1)
+    
 
