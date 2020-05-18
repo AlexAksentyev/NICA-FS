@@ -2,6 +2,7 @@ import numpy as np
 import matplotlib.pyplot as plt; plt.ion()
 import sympy
 from scipy.optimize import curve_fit, least_squares
+from statsmodels.nonparametric.smoothers_lowess import lowess
 
 ################# constants ##########################
 INTTYPE = ['iteration', 'PID', 'EID', 'ray']
@@ -68,7 +69,9 @@ def fit_line(x,y): # this is used for evaluating the derivative
     # perr = np.sqrt(np.diagonal(pcov))
     ## same with curve_fit
     line = lambda x,a,b: a + b*x
-    ii = slice(0, None) if len(x)<100 else slice(10,-10)
+    data_size = len(x)
+    n_skip = int(.1*data_size)
+    ii = slice(0, None) if len(x)<100 else slice(n_skip,-1*n_skip)
     popt, pcov = curve_fit(line, x[ii], y[ii])
     perr = np.sqrt(np.diag(pcov))
     return popt, perr
@@ -220,6 +223,7 @@ class Polarization(Data):
         it = self['iteration'][jj]
         t = it*TAU
         par, err = fit_line(t, y)
+        fit = lowess(y[0:None:100], t[0:None:100])
         fig, ax = plt.subplots(1,1)
         if xlab=='sec':
             x = t
@@ -230,6 +234,7 @@ class Polarization(Data):
             x = t
             xlab = 'sec'
         ax.plot(x,y, '.')
+        ax.plot(fit[:,0], fit[:,1], '-k')
         ax.plot(x, par[0] + x*par[1], '-r',
                     label=r'$slp = {:4.2e} \pm {:4.2e}$ [u/{}]'.format(par[1], err[1], xlab))
         ax.set_ylabel(r'$\sum_i(\vec s_i, \bar n_{})$'.format(eid))
