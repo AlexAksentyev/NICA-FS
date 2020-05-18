@@ -1,6 +1,7 @@
 import numpy as np
 import matplotlib.pyplot as plt; plt.ion()
-from analysis import HOMEDIR, Data, TSS, Polarization, fit_line, TAU, guess_freq, guess_phase
+from matplotlib import ticker
+from analysis import HOMEDIR, Data, TSS, Polarization, fit_line, TAU, guess_freq, guess_phase, DAVEC
 from pandas import DataFrame, ExcelWriter
 from numpy.linalg import norm
 from scipy.optimize import curve_fit
@@ -8,6 +9,20 @@ from statsmodels.nonparametric.smoothers_lowess import lowess
 from mpl_toolkits.mplot3d import Axes3D
 import os
 from glob import glob
+
+class NBAR:
+    def __init__(self, path):
+        var_dict = {'X':'NBAR1', 'Y':'NBAR2', 'Z':'NBAR3'}
+        self._da = {lbl: DAVEC(path+var_dict[lbl]+'.da') for lbl in ['X','Y','Z']}
+
+    def __getitem__(self, lbl):
+        return self._da[lbl]
+
+    def __call__(self, psvec, fun=lambda x:x):
+        VARS = ['X','A','Y','B','T','D']
+        return {lbl: fun(self[lbl](psvec[VARS])) for lbl in ['X','Y','Z']}
+    def mean(self, psvec):
+        return self(psvec, lambda x:np.mean(x))
 
 def fit_model(x, y):
     i0 = y.mean()
@@ -67,12 +82,15 @@ def fitpar_analysis(spdata, psdata, fitpar='slp'):
 
 def plot_spin(spdata):
     t = spdata['iteration'][:,0]*TAU
+    mean_sp = {lbl: spdata[lbl].mean(axis=0) for lbl in ['S_X','S_Y','S_Z']}
     fig, ax = plt.subplots(3,1,sharex=True)
     ax[2].set_xlabel('t [sec]')
     for i, v in enumerate(['S_X','S_Y','S_Z']):
         lines = ax[i].plot(t, spdata[v])
         ax[i].set_ylabel(r'${}$'.format(v))
         ax[i].ticklabel_format(axis='y', style='sci', scilimits=(0,0), useMathText=True)
+    for i, v in enumerate(['S_X','S_Y','S_Z']):
+        ax[i].hlines(mean_sp[v], t[0], t[-1], linewidths=2, ls='dashed')
     return fig, ax, lines
 
 def plot_spin_1turn(spdata):
@@ -195,43 +213,49 @@ def analysis(path, eid, name='', axis=[1,0,0]):
         ax.legend()
         ax.ticklabel_format(axis='y', style='sci', scilimits=(0,0), useMathText=True)
         return fig, ax
-    # loading data
+    ### loading data
     print("data from",  path)
     tss = TSS(path, 'MU.dat')
-    pray = Data(path, 'PRAY:MAIN.dat')
-    sp = Data(path, 'TRPSPI:MAIN.dat')
-    sp1 = Data(path, 'TRPSPI:ONE_TURN.dat')
-    ps = Data(path, 'TRPRAY:MAIN.dat')
+    pray = Data(path, 'PRAY.dat')
+    sp = Data(path, 'TRPSPI.dat')
+    # sp1 = Data(path, 'TRPSPI:ONE_TURN.dat')
+    ps = Data(path, 'TRPRAY.dat')
     pol = get_polarization()
-    # making the spin one-turn plot
-    print("plotting spin for one turn")
-    sp1fig, sp1ax = plot_spin_1turn(sp1)
-    sp1ax[0].set_title(name)
-    plt.savefig(path+'img/spin_1turn.png', dpi=450, bbox_inches='tight', pad_inches=.1)
+    ### making the spin one-turn plot
+    # print("plotting spin for one turn")
+    # sp1fig, sp1ax = plot_spin_1turn(sp1)
+    # sp1ax[0].set_title(name)
+    # plt.savefig(path+'img/spin_1turn.png', dpi=450, bbox_inches='tight', pad_inches=.1)
+    # plt.close()
+    ### making the spin_analysis plot
+    print("spin analysis")
+    fsa, axsa = analyze_spin(sp[:,1:150:50])
+    axsa[0].set_title(name)
+    plt.savefig(path+'img/spin_analysis.png', dpi=450, bbox_inches='tight', pad_inches=.1)
     plt.close()
-    # making the fitpar_analysis plots
+    ### making the fitpar_analysis plots
     print("plotting spin vector component fitpar plots")
     for parname in ['icpt' ,'slp', 'freq', 'pow']:
         fsp, axsp = fitpar_analysis(sp, ps, parname)
         axsp[0].set_title(name)
         plt.savefig(path+'img/fitpar_{}.png'.format(parname), dpi=450, bbox_inches='tight', pad_inches=.1)
         plt.close()
-    # making the polarization plot
+    ### making the polarization plot
     print("plotting polarization")
     fpol, axpol = pol.plot(eid, 'sec')
     axpol.grid(axis='y')
     axpol.set_title(name)
     plt.savefig(path+'img/polarization.png', dpi=450, bbox_inches='tight', pad_inches=.1)
     plt.close()
-    # plotting spin projection dispersion
+    ### plotting spin projection dispersion
     spdfig, spdax = plot_spd()
     spdax.set_title(name)
     plt.savefig(path+'img/spin_proj_disp.png', dpi=450, bbox_inches='tight', pad_inches=.1)
     plt.close()
-    # making the TSS plot
+    ### making the TSS plot
     print("plotting TSS")
     ftss, axtss = tss.plot()
-    axtss[0].set_title(name)
+    axtss[0].set_title(name.split(":")[1].strip())
     plt.savefig(path+'img/tss.png', dpi=450, bbox_inches='tight', pad_inches=.1)
     plt.close()
 
@@ -301,6 +325,37 @@ def plot_pol_3D(spdat, eid, zero=True):
     ax.set_ylabel(r'$P_z$')
     ax.set_zlabel(r'$P_y$')
 
+def ensemble_mean_svec(spdat):
+    nray = spdat.shape[1]
+    mean_sv = np.zeros(nray, dtype = list(zip(['X','Y','Z'], [float]*3)))
+    for i, ray in enumerate(spdat.T):
+        mean_sv[i] = ray['S_X'].mean(), ray['S_Y'].mean(), ray['S_Z'].mean()
+    return mean_sv
+    
+def plot_svec_means_3D(spdat, pray, var='X', eid=1):
+    num_vec = spdat.shape[1]
+    pids = [int(e) for e in spdat['vector'][0]]
+    x0 = pray[0, pids][var]
+    try:
+        jj = spdat['EID'][:,0]==eid
+    except:
+        jj = slice(0, None)
+    title = 'at SPD'
+    P0 = ensemble_mean_svec(spdat)
+    fig = plt.figure()
+    ax = fig.add_subplot(111, projection='3d')
+    ax.plot([0,0], [0,0], [0,0], '*r')
+    for i in range(num_vec):
+        ax.plot([0, P0['X'][i]], [0, P0['Z'][i]], [0, P0['Y'][i]], '--k')
+        ax.plot([0, P0['X'][i]], [0, P0['Z'][i]], [0, P0['Y'][i]], '.',
+                    label='{:4.2f} mm'.format(x0[i]*1e3))
+    # plt.xlim((-.1, .1))
+    # plt.ylim((-1, 1))
+    ax.legend()
+    ax.set_title(title)
+    ax.set_xlabel(r'$S_x$')
+    ax.set_ylabel(r'$S_z$')
+    ax.set_zlabel(r'$S_y$')
 
 def plot_spin_3D(spdat, eid, zero=True):
     def plot_one(turn):
@@ -328,11 +383,129 @@ def plot_spin_3D(spdat, eid, zero=True):
     plt.xlim((-1, 1))
     plt.ylim((-1, 1))
 
+def ensemble_nbar(nbar, psdat):
+    enbar = np.zeros(psdat.shape, dtype = list(zip(['X','Y','Z'], [float]*3)))
+    for i, ray in enumerate(psdat.T):
+        x = nbar(ray)
+        enbar[:,i]['X'] = x['X']
+        enbar[:,i]['Y'] = x['Y']
+        enbar[:,i]['Z'] = x['Z']
+    return enbar
+
+def plot_ensemble_nbar(enbar, zero=True):
+    fig = plt.figure()
+    ax = fig.add_subplot(111, projection='3d')
+    ax.set_title('at SPD')
+    ax.set_xlabel(r'$\bar n_x$')
+    ax.set_ylabel(r'$\bar n_z$')
+    ax.set_zlabel(r'$\bar n_y$')
+    for n0 in enbar.T:
+        ax.plot(n0['X'], n0['Z'], n0['Y'], '.')
+    if zero:
+        n0m = {lbl: enbar[lbl].mean(axis=0) for lbl in ['X','Y','Z']}
+        for i in range(n0m['X'].shape[0]):
+            ax.plot([0, n0m['X'][i]], [0, n0m['Z'][i]], [0, n0m['Y'][i]], '--k')
+            ax.plot([0, n0m['X'][i]], [0, n0m['Z'][i]], [0, n0m['Y'][i]], '.k')
+        
+
+    
+def ensemble_mean_nbar(nbar, psdat):
+    nray = psdat.shape[1]
+    mean_nbar = np.zeros(nray, dtype = list(zip(['X','Y','Z'], [float]*3)))
+    for i, ray in enumerate(psdat.T):
+        x = nbar.mean(ray)
+        mean_nbar[i] = x['X'], x['Y'], x['Z']
+    return mean_nbar
+
+def plot_nbar_3D(mean_nbar):
+    fig = plt.figure()
+    ax = fig.add_subplot(111, projection='3d')
+    ax.set_title('at SPD')
+    ax.set_xlabel(r'$\bar n_x$')
+    ax.set_ylabel(r'$\bar n_z$')
+    ax.set_zlabel(r'$\bar n_y$')
+    for N0 in mean_nbar:
+        ax.plot([0, N0['X']], [0, N0['Z']], [0, N0['Y']], '--k')
+        ax.plot([0, N0['X']], [0, N0['Z']], [0, N0['Y']], '.')
+
+def plot_3D_both(mean_nbar, mean_svec, svdata=None, zero=True):
+    if svdata==None:
+        zero = True
+    fig = plt.figure()
+    ax = fig.add_subplot(111, projection='3d')
+    ax.set_title('at SPD')
+    if svdata != None:
+        for ray in svdata.T:
+            ax.plot(ray['S_X'], ray['S_Z'], ray['S_Y'], '.')
+    if zero == True:
+        ax.set_xlabel(r'$\bar n_x~[s_x]$')
+        ax.set_ylabel(r'$\bar n_z~[s_z]$')
+        ax.set_zlabel(r'$\bar n_y~[s_y]$')
+        for N0 in mean_nbar:
+            ax.plot([0, N0['X']], [0, N0['Z']], [0, N0['Y']], '-r')
+            ax.plot([0, N0['X']], [0, N0['Z']], [0, N0['Y']], '.r')
+        for S0 in mean_svec:
+            ax.plot([0, S0['X']], [0, S0['Z']], [0, S0['Y']], '-k')
+            ax.plot([0, S0['X']], [0, S0['Z']], [0, S0['Y']], '.k')
+    else:
+        ax.set_xlabel(r'$s_x$')
+        ax.set_ylabel(r'$s_z$')
+        ax.set_zlabel(r'$s_y$')
+
+def plot_mu_3D(path, psdat, zvar, xvar='T', yvar='D', fmt='-.'):
+    var_dict = {'NU':'NU', 'NX':'NBAR1', 'NY':'NBAR2', 'NZ':'NBAR3'}
+    zlab = {'NU':r'$\nu_s$', 'NX':r'$\bar n_x$', 'NY': r'$\bar n_y$', 'NZ': r'$\bar n_z$'}
+    xylab = {'X': 'X [mm]', 'A': 'A [mrad]',
+                'Y': 'Y [mm]', 'B': 'B [mrad]',
+                'T': r'$\ell$ [mm]', 'D': r'$\delta$ [%]'}
+    xftr = 1e3 if xvar!='D' else 1e2
+    yftr = 1e3 if yvar!='D' else 1e2
+    davec = DAVEC(path+var_dict[zvar]+'.da')
+    VARS = ['X','A','Y','B','T','D']
+    fig = plt.figure()
+    ax = fig.add_subplot(111, projection='3d')
+    ax.set_xlabel(xylab[xvar],labelpad=10)
+    ax.set_ylabel(xylab[yvar],labelpad=10)
+    ax.set_zlabel(zlab[zvar], labelpad=20, rotation=90)
+    for ray in psdat.T:
+        mudat = davec(ray[VARS])
+        ax.plot(ray[xvar]*xftr, ray[yvar]*yftr, mudat, fmt)
+    formatter = ticker.ScalarFormatter(useMathText=True, useOffset=True)
+    formatter.set_scientific(True)
+    formatter.set_powerlimits((-0,0))
+    ax.w_zaxis.set_major_formatter(ticker.ScalarFormatter(useMathText=True, useOffset=False))
+    ax.w_yaxis.set_major_formatter(formatter)
+    ax.w_xaxis.set_major_formatter(formatter)
+    return fig, ax
+
+def mu_3D_analysis(path, name):
+    ps = Data(path, 'TRPRAY:MAIN.dat')
+    for var in ['NU', 'NZ']:
+        fig, ax = plot_mu_3D(path, ps[0:None:45, 1:150:25], var, fmt='-')
+        ax.set_title(name)
+        plt.savefig(path+'img/%s_3D_TD.png' %var, dpi=450)#, bbox_inches='tight', pad_inches=.3)
+        plt.close()
+
+def depol_sources_analysis(path, name):
+    sp1 = Data(path, 'TRPSPI:ONE_TURN.dat')
+    dispS = {lbl: sp1[lbl].std(axis=1) for lbl in ['S_X','S_Y','S_Z']}
+    eid = sp1['EID'][:,0]
+    fig, ax = plt.subplots(3,1,sharex=True)
+    ax[2].set_xlabel('EID')
+    for i, lbl in enumerate(['S_X','S_Y', 'S_Z']):
+        ax[i].plot(eid, dispS[lbl], '--.')
+        ax[i].set_ylabel(r'$%s$' % lbl)
+        ax[i].ticklabel_format(axis='y', style='sci', scilimits=(0,0), useMathText=True)
+    return fig, ax
+
 
 def main(root):
     def get_axis(psi):
-        sign = int(psi[-1]+'1')
-        psi = np.deg2rad(float(psi[-1]+psi[4:-1]))
+        try:
+            sign = int(psi[-1]+'1')
+            psi = np.deg2rad(float(psi[-1]+psi[4:-1]))
+        except:
+            return [0,0,1]
         if psi!=0:
             axis = [0, np.sin(psi), np.cos(psi)]
         else:
@@ -344,12 +517,21 @@ def main(root):
             os.makedirs(d+'img/')
         bunch, psi = d.split('/')[-3:-1]
         name = ': '.join([bunch, psi])
+        print(name)
         axis = get_axis(psi)
         analysis(d, 1, name, axis)
+        # fig, ax = depol_sources_analysis(d, name)
+        # plt.savefig(d+'img/spin_disp_1turn.png', dpi=450, bbox_inches='tight', pad_inches=.1)
+        # plt.close()
+        # mu_3D_analysis(d, name)
         
     
 if __name__ == '__main__':
-    common = HOMEDIR+'data/REPORT/PROTON/BENDS3/0kTURN/'
+    # common = HOMEDIR+'data/REPORT/PROTON/BENDS24/3MTURN/'
+    # main(common+'X-bunch/')
+    # main(common+'Y-bunch/')
+    # main(common+'D-bunch/')
+    common = HOMEDIR+'data/REPORT/DEUTERON/BENDS24/3MTURN/'
     # main(common+'X-bunch/')
     # main(common+'Y-bunch/')
     # main(common+'D-bunch/')
