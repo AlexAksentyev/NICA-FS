@@ -212,7 +212,7 @@ PROCEDURE SPINTUNE PNAME WHERE OEID NU PSI NTURN BUNCH;
 
   {resetting for TRACKING: now can set OPTIMIZED for FS HZ1, HZ2}
   IF TRUE; {so far this hasn't worked well: simplectification error grows much faster than at lax FS}
-    SET_FOR_PARTICLE HZ1 HZ2 QF QD;  {***** i will use it for ONE TURN TRACKING though *****}
+    SET_FOR_PARTICLE PNAME HZ1 HZ2 QF QD;  {***** i will use it for ONE TURN TRACKING though *****}
       MAPPARAMS(1) := HZ1; MAPPARAMS(2) := HZ2;
       LATTICE MAPPARAMS MAPARR SPNRARR; {RECOMPUTES element matrices at NEW snake field strengths}
   ENDIF;
@@ -240,11 +240,11 @@ PROCEDURE RUN;
 
   DIRSET_AUTO 0;
   OEID := 0; {output data only after these elements}
-  NTURN := 4*3000000;
+  NTURN := 3000;
   BUNCH := 'X'&'Y'&'D';
-  PARTICLE := 'DEUTERON';
+  PARTICLE := 'PROTON';
   LOOP I 2 2;
-    COMMON := 'data/REPORT/'&PARTICLE&'/BENDS24/'&DIRNAME(NTURN)&(BUNCH|I)&'-bunch/';
+    { COMMON := 'data/REPORT/TEST/'&PARTICLE&'/BENDS24/'&DIRNAME(NTURN)&(BUNCH|I)&'-bunch/'; }
     { DIRSET WHERE COMMON&'NO-NAVI/'; }
     {   GROUTF 'img/dump/TR' 1; }
     {   SPINTUNE PARTICLE WHERE OEID 0 0 NTURN (BUNCH|I); }
