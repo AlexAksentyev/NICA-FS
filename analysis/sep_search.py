@@ -22,13 +22,14 @@ def plot_ps(data, varx, vary, turns=slice(0,None)):
 
 
 if __name__ == '__main__':
-    path = HOMEDIR+'data/SEPSEARCH/DEUTERON/'
+    name = 'PROTON'
+    path = HOMEDIR+'data/SEPSEARCH/%s/' %name
     ps0 =  Data(path, 'TRPRAY.dat')
     ps = ps0[:, 0:25:3]
     fig, ax = plot_ps(ps, 'T','D')
     ax.set_xlabel(r'$-(t-t_0)v_0\frac{\gamma}{1+\gamma}$')
     ax.set_ylabel(r'$\delta_K$')
-    ax.set_title('Deuteron separatrix')
+    ax.set_title('%s separatrix' %name)
     # ax.grid()
     plt.savefig(path+'separatrix.png', dpi=450, bbox_inches='tight', pad_inches=.1)
     
