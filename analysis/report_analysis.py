@@ -216,10 +216,10 @@ def analysis(path, eid, name='', axis=[1,0,0]):
     ### loading data
     print("data from",  path)
     tss = TSS(path, 'MU.dat')
-    pray = Data(path, 'PRAY.dat')
-    sp = Data(path, 'TRPSPI.dat')
+    pray = Data(path, 'PRAY:MAIN.dat')
+    sp = Data(path, 'TRPSPI:MAIN.dat')
     # sp1 = Data(path, 'TRPSPI:ONE_TURN.dat')
-    ps = Data(path, 'TRPRAY.dat')
+    ps = Data(path, 'TRPRAY:MAIN.dat')
     pol = get_polarization()
     ### making the spin one-turn plot
     # print("plotting spin for one turn")
@@ -527,13 +527,13 @@ def main(root):
         
     
 if __name__ == '__main__':
-    common = HOMEDIR+'data/REPORT/PROTON/BENDS24/3MTURN/'
+    # common = HOMEDIR+'data/REPORT/PROTON/BENDS24/3MTURN/'
     # main(common+'X-bunch/')
     # main(common+'Y-bunch/')
     # main(common+'D-bunch/')
-    # common = HOMEDIR+'data/REPORT/DEUTERON/BENDS24/12MTURN/'
+    common = HOMEDIR+'data/REPORT/DEUTERON/BENDS24/24MTURN/'
     # main(common+'X-bunch/')
-    # main(common+'Y-bunch/')
+    main(common+'Y-bunch/')
     # main(common+'D-bunch/')
     
     
