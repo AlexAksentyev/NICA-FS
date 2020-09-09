@@ -531,9 +531,9 @@ if __name__ == '__main__':
     # main(common+'X-bunch/')
     # main(common+'Y-bunch/')
     # main(common+'D-bunch/')
-    common = HOMEDIR+'data/REPORT/DEUTERON/BENDS24/24MTURN/'
-    # main(common+'X-bunch/')
-    main(common+'Y-bunch/')
+    common = HOMEDIR+'data/REPORT/DEUTERON/BENDS24/18MTURN/'
+    main(common+'X-bunch/')
+    # main(common+'Y-bunch/')
     # main(common+'D-bunch/')
     
     
