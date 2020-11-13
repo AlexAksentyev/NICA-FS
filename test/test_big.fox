@@ -1,4 +1,4 @@
-INCLUDE 'bin/setups/BENDS24/SEQFULL';
+INCLUDE 'bin/setups/BENDS24/FULL';
 
 PROCEDURE INJECT BUNCH NUM NU PSI; {inject only the x-offset particles}
   VARIABLE X 500; VARIABLE I 1;
@@ -162,64 +162,27 @@ PROCEDURE SPINTUNE PNAME WHERE OEID NU PSI NTURN BUNCH;
 
     NAVIGATORS NU PSI 'SPD' KZ1 KZ2;
     
-    MAPPARAMS(1) := HZ1; MAPPARAMS(2) := HZ2;
-    MAPPARAMS(3) := KZ1; MAPPARAMS(4) := KZ2;
-    MAPPARAMS(5) := QF;  MAPPARAMS(6) := QD;
-    LATTICE MAPPARAMS MAPARR SPNRARR; {computes element matrices}
+    { MAPPARAMS(1) := HZ1; MAPPARAMS(2) := HZ2; }
+    { MAPPARAMS(3) := KZ1; MAPPARAMS(4) := KZ2; }
+    { MAPPARAMS(5) := QF;  MAPPARAMS(6) := QD; }
+    { LATTICE MAPPARAMS MAPARR SPNRARR; } {computes element matrices}
+
+    LATTICE HZ1 HZ2 KZ1 KZ2 QF QD 1; EL := 1;
 
   {SETTING RF PARAMETERS}
-  HNUM := 66;
-  VRF(1, 1) := 100/HNUM; {RF Voltage [kV]}
-  FREQ := HNUM*REVFREQ(ACCLEN(1)); {RF Frequency}
-  UM; RF VRF 0 FREQ 0 0.05;
-    INSERT 1 MAPARR SPNRARR 471;
-
- {TSS DATA OUTPUT}
-  IF FALSE; 
-    EL0 := 1; EL1 := 472;
-    OPENF 3618 WHERE&'MU.dat' 'REPLACE';
-    WRITE 3618 'number of rays: 92 (see INJECT_FOR_TSS source code)';
-    WRITE 3618 '# EID ray NU NX NY NZ';
-    LOOP EL EL0 EL1;
-      UM; CR;
-      MAKEMAP EL0 EL1 EL; { OPENF 935 WHERE&'MAP'&MRK(EL) 'REPLACE'; PM 935; CLOSEF 935; }
-      TSS MU NBAR 0;
-      MUARR(1) := MU; MUARR(2) := NBAR(1); MUARR(3) := NBAR(2); MUARR(4) := NBAR(3);
-      INJECT_FOR_TSS; GET_TUNE_ENSEMBLE MUARR;
-      WST EL 3618;
-    ENDLOOP;
-    CLOSEF 3618;
-    {computing the TSS DA vectors for the primary map}
-    UM; CR;
-    MAKEMAP 1 472 1;
-    TSS MU NBAR 0;
-    OPENF 3618 WHERE&'NU.da' 'REPLACE';
-      WRITE 3618 MU;
-    CLOSEF 3618;
-    LOOP EL 1 3;
-      OPENF 3618 WHERE&'NBAR'&MRK(EL)&'.da' 'REPLACE';
-        WRITE 3618 NBAR(EL);
-      CLOSEF 3618;
-    ENDLOOP;
-  ENDIF;
+  { HNUM := 66; }
+  { VRF(1, 1) := 100/HNUM; } {RF Voltage [kV]}
+  { FREQ := HNUM*REVFREQ(ACCLEN(1));  }{RF Frequency}
+  { UM; RF VRF 0 FREQ 0 0.05; }
+  {   INSERT 1 MAPARR SPNRARR 471; }
 
   {computing map segments}
-  SEGMENT MAPARR SPNRARR OEID SEGMARR SEGSARR EL; quit 0;
+  { SEGMENT MAPARR SPNRARR OEID SEGMARR SEGSARR EL; }
 
   {MAIN TRACKING}
   INJECT BUNCH 10 NU PSI;
   TRACK EL NTURN 'MAIN';
 
-  {resetting for TRACKING: now can set OPTIMIZED for FS HZ1, HZ2}
-  IF TRUE; {so far this hasn't worked well: simplectification error grows much faster than at lax FS}
-    SET_FOR_PARTICLE PNAME HZ1 HZ2 QF QD;  {***** i will use it for ONE TURN TRACKING though *****}
-      MAPPARAMS(1) := HZ1; MAPPARAMS(2) := HZ2;
-      LATTICE MAPPARAMS MAPARR SPNRARR; {RECOMPUTES element matrices at NEW snake field strengths}
-  ENDIF;
-  
-  {ONE TURN TRACKING}
-  INJECT BUNCH 10 NU PSI;
-  TRACK -1 1 'ONE_TURN';
 ENDPROCEDURE; {SPINTUNE}
 
 PROCEDURE RUN;
@@ -247,32 +210,16 @@ PROCEDURE RUN;
 
   DIRSET_AUTO 1;
   OEID := 0; {output data only after these elements}
-  NTURN := 6*3000000;
+  NTURN := 300000;
   BUNCH := 'X'&'Y'&'D';
   PARTICLE := 'DEUTERON';
   NANG := 5;
   LOOP I 1 1;
     COMMON := 'data/REPORT/'&PARTICLE&'/BENDS24-ORD5/'&DIRNAME(NTURN)&(BUNCH|I)&'-bunch/';
-    { DIRSET WHERE COMMON&'NO-NAVI/'; }
-    {   GROUTF 'img/dump/TR' 1; }
-    {   SPINTUNE PARTICLE WHERE OEID 0 0 NTURN (BUNCH|I); }
-    { DIRSET WHERE COMMON&'SPD-0-/'; }
-    {   GROUTF 'img/dump/TR' 1; }
-    {   SPINTUNE PARTICLE WHERE OEID MINST(PARTICLE) 0 NTURN (BUNCH|I); }
-    { DIRSET WHERE COMMON&'SPD-90+/'; }
-    {   GROUTF 'img/dump/TR' 1; }
-    {   SPINTUNE PARTICLE WHERE OEID MINST(PARTICLE) -90 NTURN (BUNCH|I); }
-    { DIRSET WHERE COMMON&'SPD-0+/'; }
-    {   GROUTF 'img/dump/TR' 1; }
-    {   SPINTUNE PARTICLE WHERE OEID -1*MINST(PARTICLE) 0 NTURN (BUNCH|I); }
-    { DIRSET WHERE COMMON&'SPD-90-/'; }
-    {   GROUTF 'img/dump/TR' 1; }
-    {   SPINTUNE PARTICLE WHERE OEID MINST(PARTICLE) 90 NTURN (BUNCH|I); }
     LOOP J 1 NANG;
-      POLANG := 5 + (90-5)/(NANG-1)*(J-1);
+      POLANG := 30 + (90-5)/(NANG-1)*(J-1);
       DIRSET WHERE COMMON&'SPD-'&MRK(POLANG)&'-/';
-        GROUTF 'img/dump/TR' 1;
-        SPINTUNE PARTICLE WHERE OEID 5*MINST(PARTICLE) POLANG NTURN (BUNCH|I);
+        SPINTUNE PARTICLE WHERE OEID 1*MINST(PARTICLE) POLANG NTURN (BUNCH|I);
     ENDLOOP;
   ENDLOOP;
 ENDPROCEDURE;

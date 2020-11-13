@@ -1,0 +1,8 @@
+INCLUDE '/Users/alexaksentyev/REPOS/COSYINF-CORE/bin/cosy';
+
+PROCEDURE MAIN;
+  VARIABLE V ;
+  OV 3 3 5;
+  WRITE 6 'DD' DD(19) DD(20);
+ENDPROCEDURE;
+MAIN; END;

@@ -1,4 +1,4 @@
-INCLUDE 'bin/setups/BENDS3/FULL';
+INCLUDE 'bin/setups/BENDS24/FULL';
 
 PROCEDURE INJECT NUM;
   VARIABLE X 100; VARIABLE I 1;
@@ -10,6 +10,17 @@ PROCEDURE INJECT NUM;
   ENDLOOP;
 ENDPROCEDURE;
 
+PROCEDURE SET_FOR_PARTICLE NAME HZ1 HZ2 QF QD;
+  IF NAME='PROTON';
+    SET_FOR_PROTONS HZ1 HZ2 QF QD; {located in src/common/BENDS##/header.fox}
+  ELSEIF NAME='DEUTERON';
+    SET_FOR_DEUTERONS HZ1 HZ2 QF QD; {same as the other one}
+  ELSEIF LO(1);
+    WRITE 6 '+++++++++++++++ PARTICLE NAME UNRECOGNIZED!';
+    QUIT 1;
+  ENDIF;
+ENDPROCEDURE;
+
 PROCEDURE MAIN;
   VARIABLE WHERE 100;
   {lattice parameters}
@@ -19,20 +30,20 @@ PROCEDURE MAIN;
   DIRSET WHERE 'data/TEST/';
   GROUTF 'img/dump/TR' 1;
 
-  OV 3 3 0; SET_FOR_PROTONS HZ1 HZ2 QF QD;
-  NAVIGATORS 1E-2 0 1 KZ1 KZ2;
-    KZ1 := KZ1*HZ1; KZ2 := KZ2*HZ2;
+  OV 3 3 0; {parameters: matrix computation order, phase space dimension, parameter number}
+  SET_FOR_PARTICLE 'DEUTERON' HZ1 HZ2 QF QD; {see above definition}
+  NAVIGATORS 1E-4 0 'SPD' KZ1 KZ2; {located in src/common/BENDS##/header.fox}
 
-  LATTICE HZ1 HZ2 KZ1 KZ2 QF QD 1;
+  LATTICE HZ1 HZ2 KZ1 KZ2 QF QD 1; {located in src/setups/BENDS##/FULL.fox}
 
-  INJECT 10;
-  WRITE 6 '******************** STARTING TRACKING';
+  INJECT 10; {see definition above}
+  WRITE 6 '******************* * STARTING TRACKING';
   OPENF 99 WHERE&'PRAY.dat' 'REPLACE';
-  PRAY 99; CLOSEF 99;
+  PRAY 99; CLOSEF 99; {prints initial phase space coordinates into PRAY.dat}
   OPENF 772 WHERE&'TRPRAY.dat' 'REPLACE';
   OPENF 893 WHERE&'TRPSPI.dat' 'REPLACE';
-  TRPRAY 772; TRPSPI 893;
-  TR 30000 NINT(30000/5000) -1 -3 1.2 1.2 -2 0 -12;
+  TRPRAY 772; TRPSPI 893; {sets files 772 and 893 to be TR data output}
+  TR 30000 NINT(30000/5000) -1 -3 1.2 1.2 -2 0 -12; {tracking proper; located in }
   CLOSEF 772; CLOSEF 893;
 
 ENDPROCEDURE; {MAIN}
