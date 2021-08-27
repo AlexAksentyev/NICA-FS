@@ -2,7 +2,7 @@ import numpy as np
 import matplotlib.pyplot as plt; plt.ion()
 from analysis import HOMEDIR
 
-DATADIR = 'data/BETA-FUNCTION/BENDS24/SEQFULL/'
+DATADIR = 'data/BETA-FUNCTION/BENDS3/SEQFULL/'
 
 ELNAMES = np.load('nica_element_names.npy')
 ELNAMES = np.array([e+' ['+ str(i+1) + ']' for i,e in enumerate(ELNAMES)])
@@ -21,7 +21,7 @@ ax1[1].plot(beta['EL'], beta['2IM'], '--r', label=r'$\Im(\beta_y)$')
 ax1[1].set_ylabel(r'$\beta_y$')
 for i in range(2):
     ax1[i].legend()
-plt.xticks(ticks=beta['EL'], labels=ELNAMES[beta['EL']-1], rotation=60)
+#plt.xticks(ticks=beta['EL'], labels=ELNAMES[beta['EL']-1], rotation=60)
 
 fig, ax2 = plt.subplots(2,1,sharex=True)
 ax2[0].plot(mu['EL'], mu['1RE'], '-b',  label=r'$\Re(\mu_x)$')
@@ -32,4 +32,4 @@ ax2[1].plot(mu['EL'], mu['2IM'], '--r', label=r'$\Im(\mu_y)$')
 ax2[1].set_ylabel(r'$\mu_y$')
 for i in range(2):
     ax2[i].legend()
-plt.xticks(ticks=mu['EL'], labels=ELNAMES[mu['EL']-1], rotation=60)
+#plt.xticks(ticks=mu['EL'], labels=ELNAMES[mu['EL']-1], rotation=60)
