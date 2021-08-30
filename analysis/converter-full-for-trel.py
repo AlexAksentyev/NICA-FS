@@ -1,8 +1,8 @@
 import re
 
 HOME = '/Users/alexaksentyev/REPOS/NICA-FS/'
-INFILE = 'madx-scripts/NICA_SOL_shifted_RBEND.seq'
-OUTFILE = 'src/setups/BENDS3/SEQFULL.fox'
+INFILE = 'madx-scripts/ST-mode/First-ST-NICA-MAD.seq'
+OUTFILE = 'src/setups/First-ST/SEQFULL.fox'
 NUM_ACC = 1 # current array position of the element to be written
 
 SELECT_ELEMENTS = []  # elements to be swapped for DL
@@ -138,14 +138,14 @@ with open(HOME+INFILE, 'r') as fin:
     for cnt, line in enumerate(fin):
         if cnt<2: # 6
             pass
-        elif cnt<616: # 138
+        elif cnt<544: # 138
             print(cnt)
             write_dict(line)
-        elif cnt<617: # 143
+        elif cnt<546: # 143
             print('++', cnt)
             print(line)
             pass
-        elif cnt>617: # 142
+        elif cnt>545: # 142
             print('##',cnt)
             print(line)
             if (line[0]!='\n' and line[0]!='/'):
