@@ -1,10 +1,9 @@
 
-call, file='support/main.madx'; // contains definitions for shared procedures
+call, file='support/sup1ST.madx'; // contains definitions for shared procedures
 ! ********** TEST PROPER **********
-EXEC, inject_protons(1.14);
+EXEC, inject_protons(130); // argument = energy in [MeV]
 
-
-call file = "NICA_SOL_shifted_RBEND.seq";
+call file = "ST-mode/First-ST-NICA-MAD.seq";
 use, sequence=NICA;
 
 
@@ -21,8 +20,8 @@ START, x=1e-3;
 START, x=.8e-3;
 START, y=1e-3;
 START, y=.8e-3;
-DYNAP, TURNS=1000, FASTUNE=TRUE;
-RUN, turns=1500, ffile=1;
+//DYNAP, TURNS=1000, FASTUNE=TRUE;
+RUN, turns=3000, ffile=30;
 ENDTRACK;
 
 PLOT, file=img/track_plot, table=trackone, trackfile=tbl/basis, multiple,
@@ -43,7 +42,7 @@ VALUE, TABLE(dynaptune, tunx);
 VALUE, TABLE(dynaptune, tuny);
 VALUE, TABLE(summ, q1);
 VALUE, TABLE(summ, q2);
-value, Quadr_26->K1;
-
+value, XSFW;
+value, Quadr_4->K1;
 stop;
 

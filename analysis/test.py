@@ -2,7 +2,7 @@ import numpy as np
 import matplotlib.pyplot as plt; plt.ion()
 from analysis import HOMEDIR, DAVEC, load_data
 
-DIR  = '../data/TEST/'
+DIR  = '../data/TEST/FIRST-ST/'
 
 def load_tss(path=HOMEDIR+DIR+'MU.dat'):
     d_type = [('EL', int), ('PID', int)] + list(zip(['NU', 'NX','NY','NZ'], [float]*4))
@@ -13,6 +13,9 @@ def load_tss(path=HOMEDIR+DIR+'MU.dat'):
 
 if __name__ == '__main__':
     dat = load_data(DIR, 'TRPRAY.dat')
-    fig, ax = plt.subplots(1,2)
-    ax[0].plot(dat['X'], dat['A'])
-    ax[1].plot(dat['Y'], dat['B'])
+    spdat = load_data(DIR, 'TRPSPI.dat')
+    fig, ax = plt.subplots(2,2)
+    ax[0,0].plot(dat[:,1]['X'], dat[:,1]['A'])
+    ax[0,1].plot(dat[:,1]['Y'], dat[:,1]['B'])
+    ax[1,0].plot(dat[:,3]['X'], dat[:,3]['A'])
+    ax[1,1].plot(dat[:,3]['Y'], dat[:,3]['B'])
