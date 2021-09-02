@@ -1,8 +1,8 @@
-call, file='support/main.madx';
-exec, inject_protons(1.14);
+call, file='support/sup1ST.madx';
+exec, inject_protons(130);
+call file = "ST-mode/First-ST-NICA-MAD.seq";
 
-ELEM: OCTUPOLE, L=.1, K3=.3;
-
+ELEM: RBEND L=1.9395014178063565, ANGLE=10*0.0785398163399978;
 CELL: LINE=(ELEM);
 
 USE, SEQUENCE=CELL;
@@ -14,4 +14,9 @@ PTC_NORMAL,closed_orbit,maptable,icase=6,no=1;
 
 ptc_end;
 
-write,table="map_table",file="elmap/map_table_oct";
+write,table="map_table",file="elmap/map_table_RB";
+
+value, KoeffSolSPD;
+value, XSFW;
+value, X2;
+value, XSQW;

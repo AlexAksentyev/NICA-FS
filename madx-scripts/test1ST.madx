@@ -8,7 +8,7 @@ use, sequence=NICA;
 
 PTC_CREATE_UNIVERSE;
 PTC_CREATE_LAYOUT,model=2,method=6,nst=10,exact;
-PTC_NORMAL,closed_orbit,maptable,icase=6,no=1;
+//PTC_NORMAL,closed_orbit,maptable,icase=6,no=1;
 PTC_END;
 write,table="map_table", file="elmap/map_table_1ST";
 

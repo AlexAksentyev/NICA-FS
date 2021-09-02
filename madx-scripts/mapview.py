@@ -1,12 +1,12 @@
 import numpy as np
 
 ### maps to compare
-mad_name = 'oct'
-cosy_name = 'OCT'
+mad_name = 'RB'
+cosy_name = 'RB'
 
 
 HOME = '/Users/alexaksentyev/REPOS/NICA-FS/'
-DIR  = 'data/ELEMENT_MAPS/'
+DIR  = 'data/ELEMENT_MAPS/FIRST-ST/'
 
 O = np.zeros((3,3))
 I = np.eye(3)

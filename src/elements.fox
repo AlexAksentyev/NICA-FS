@@ -156,10 +156,10 @@ PROCEDURE RBEND L {m} ANGLE {rad} TILT {rad};
   TILT0 := TILT/DEGRAD;
   R := L/ABS(ANGLE);
   { WRITE 6 'ANGLE[rad]      ANGLE[deg]      R[m]            B[Tl]' }
-  {          SF(ANGLE,'(E15.7)')&SF(ANGLE_DEG, '(E15.7)')&SF(R, '(E15.7)')&' '&SF(B, '(E15.7)'); }
+  {          SF(ANGLE,'(F15.7)')&SF(ANGLE_DEG, '(F15.7)')&SF(R, '(F15.7)')&' '&SF(B, '(F15.7)'); }
   IF ANGLE<0; CB; WRITE 6 'CB'; ENDIF;
   ROTATE TILT0;
-    DP R ANGLE_DEG .1;
+    DP R ANGLE_DEG .05;
   ROTATE -TILT0;
   IF ANGLE<0; CB; ENDIF;
 ENDPROCEDURE; {RBEND}
