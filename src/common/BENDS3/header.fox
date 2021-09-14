@@ -20,9 +20,9 @@ PROCEDURE SET_FOR_PROTONS HzSPD HzMPD QF QD;
   QD  := -0.021;
   WRITE 6 '++++++++++ SETTING UP FOR PROTONS:';
   WRITE 6 'EKIN           GAMMA          ';
-  WRITE 6 SF(EKIN, '(E15.7)')&SF(GAMMA, '(E15.7)');
+  WRITE 6 SF(EKIN, '(F15.7)')&SF(GAMMA, '(F15.7)');
   WRITE 6 'HzSPD            HzMPD            QF               QD';
-  WRITE 6 SF(HzSPD, '(E15.7)')&SF(HzMPD, '(E15.7)')&SF(QF, '(E15.7)')&SF(QD, '(E15.7)');
+  WRITE 6 SF(HzSPD, '(F15.7)')&SF(HzMPD, '(F15.7)')&SF(QF, '(F15.7)')&SF(QD, '(F15.7)');
   WRITE 6 '+++++++++++++++++++++++++++++++++++';
 ENDPROCEDURE;
 
