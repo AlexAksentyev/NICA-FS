@@ -2,7 +2,7 @@ import numpy as np
 import matplotlib.pyplot as plt; plt.ion()
 from analysis import HOMEDIR, DAVEC, load_data
 
-DIR  = '../data/TEST/BENDS3/SEQ/'
+DIR  = '../data/TEST/FIRST-ST/BARE/300000/'
 
 def load_tss(path=HOMEDIR+DIR+'MU.dat'):
     d_type = [('EL', int), ('PID', int)] + list(zip(['NU', 'NX','NY','NZ'], [float]*4))
