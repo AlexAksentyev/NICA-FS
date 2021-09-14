@@ -23,7 +23,7 @@ PROCEDURE SET_FOR_PROTONS EKIN X XM XS;  {FROM 1.4.1, p. 9}
   XS(1) := -.015; XS(2) := -.02; XS(3) := 0; XS(4) := -.015;
 
   WRITE 6 '++++++++++ SETTING UP FOR PROTONS:';
-  WRITE 6 'EKIN           GAMMA          ';
+  WRITE 6 'EKIN [MeV]          GAMMA          ';
   WRITE 6 SF(EKIN, '(F15.7)')&SF(GAMMA, '(F15.7)');
   WRITE 6 '+++++++++++++++++++++++++++++++++++';
 ENDPROCEDURE;
