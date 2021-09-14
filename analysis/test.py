@@ -2,7 +2,7 @@ import numpy as np
 import matplotlib.pyplot as plt; plt.ion()
 from analysis import HOMEDIR, DAVEC, load_data
 
-DIR  = '../data/TEST/BENDS3/3000000/'
+DIR  = '../data/TEST/BENDS3/300000/'
 
 def load_tss(path=HOMEDIR+DIR+'MU.dat'):
     d_type = [('EL', int), ('PID', int)] + list(zip(['NU', 'NX','NY','NZ'], [float]*4))
@@ -24,10 +24,19 @@ def plot(dat, spdat, rng = slice(0,-1,50), pid = [1,2,3]):
     ax[1,1].set_xlabel('turn [x1000]'); ax[1,1].set_ylabel('S_Z')
     #ax[1,1].ticklabel_format(style='sci', scilimits=(0,0), useMathText=True, axis='x')
 
-def plot_seq(dat, spdat, pid = [1,2,3], itn=1):
-    ps1 = dat[dat[:,0]['iteration']<itn+1]
-    sp1 = spdat[spdat[:,0]['iteration']<itn+1]
-    eid = ps1['EID'][:, pid] if itn<2 else np.arange(ps1['EID'].max()*itn+1)
+def plot_seq(dat, spdat, pid = [1,2,3], itn=(1,)):
+    if len(itn)==1:
+        ps1 = dat[dat[:,0]['iteration']<itn+1]
+        sp1 = spdat[spdat[:,0]['iteration']<itn+1]
+        eid = ps1['EID'][:, pid] if itn<2 else np.arange(ps1['EID'].max()*itn+1)
+    else:
+        itrow = dat[:,0]['iteration']
+        ii = np.logical_and(itrow>itn[0], itrow<itn[1]+1)
+        itrng = itn[1]-itn[0]
+        ps1 = dat[ii]
+        sp1 = spdat[ii]
+        eid_max = ps1['EID'].max()
+        eid = eid_max*itn[0] + np.arange(eid_max*itrng)
     fig, ax = plt.subplots(3,1)
     ax[0].plot(eid, ps1[:,pid]['X']*1000)
     ax[0].set_xlabel('EID'); ax[0].set_ylabel('X [mm]')
