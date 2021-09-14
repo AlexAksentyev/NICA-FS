@@ -87,9 +87,9 @@ PROCEDURE LATTICE MAPPARAMS MAPARR SPNRARR ;
      SMAPS 31 MAPARR SPNRARR;
   UM; DL 4.5675 ; {Drift_32}
      SMAPS 32 MAPARR SPNRARR;
-  UM; DL 1.9325 ; {Drift_33}
+  UM; DL 1.9325-.1 ; {Drift_33}                 {!!!! correction for aberration}
      SMAPS 33 MAPARR SPNRARR;
-  UM; DL 1.9325 ; {Drift_34}
+  UM; DL 1.9325+.1 ; {Drift_34}                  {!!!!! otherwise M0 map not zero at 270 MeV}
      SMAPS 34 MAPARR SPNRARR;
   UM; DL 4.4825 ; {Drift_35}
      SMAPS 35 MAPARR SPNRARR;
@@ -1293,5 +1293,14 @@ PROCEDURE FIRST50 KoeffSolSPD XSFW X2 XSQW; WRITE 6 '^^^^^^^^^^ FIRST 50';
   DL 0.266 ; {Drift_53}    {49}
   DL 4.86224 ; {Drift_54}  {50}
 ENDPROCEDURE; {FIRST 50 ELEMENTS}
+
+PROCEDURE ABERMAP X2 XMQE;  WRITE 6 '^^^^^^^^^^ ABER-MAP';
+  WRITE 6 'X2: '&SF(X2, '(F15.7)');
+  WRITE 6 'XMQE: '&SF(XMQE, '(F15.7)');
+  UM;
+  DL 1.841-.01 ; {Drift_387}                       {!!!!!! correction required by COSY ...}
+  DL 1.8125+.01 ; {Drift_388}                      {!!!!!! .... otherwise M0 map not zero}
+  
+ENDPROCEDURE;
 
 SAVE 'bin/setups/FIRST-ST/SEQFULL';
