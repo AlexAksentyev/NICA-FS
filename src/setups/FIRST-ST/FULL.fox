@@ -36,7 +36,7 @@ PROCEDURE LATTICE X {2 stuck} XM {4} XS {4} KS {2} RFFLAG {1} ;
   {BEGIN LATTICE}
 
   DL 2.35 ; {Drift_1}
-  SOLENOID 1. 1.12487085889*KoeffSolSPD ; {Solen_2}
+  SOLENOID 1. 1.12487085889*KoeffSolSPD ; {Solen_2}                    {SPD solenoid, 1 m}
   DL 1.9 ; {Drift_3}
   QUAD 0.945 0 (-0.4320256018*(1+XSFW)) ; {Quadr_4}
   DL 0.3225 ; {Drift_5}
@@ -51,7 +51,7 @@ PROCEDURE LATTICE X {2 stuck} XM {4} XS {4} KS {2} RFFLAG {1} ;
   DL 0.25 ; {Drift_14}
   DL 0.334615 ; {Drift_15}
   DL 0.1 ; {Drift_16}
-  SOLENOID 1. 0. ; {Solen_17}
+  SOLENOID 1. 0. ; {Solen_17}                                          {drift space, 1 m}
   DL 2.88475 ; {Drift_18}
   DL 2.085 ; {Drift_19}
   DL 3.98475 ; {Drift_20}
@@ -277,7 +277,7 @@ PROCEDURE LATTICE X {2 stuck} XM {4} XS {4} KS {2} RFFLAG {1} ;
   DL 0.25 ; {Drift_320}
   QUAD 0.69 0 (0.5185577457*(1+X2)) ; {Quadr_321}
   DL 3.415 ; {Drift_322}
-  SOLENOID 6. 0. ; {Solen_323}
+  SOLENOID 6. 0. ; {Solen_323}                                              {drift space 6 m}
   DL 3.5 ; {Drift_324}
   QUAD 0.67 0 (-0.5166681483*(1+X2+XMQW)) ; {Quadr_325}
   DL 0.25 ; {Drift_326}
@@ -291,7 +291,7 @@ PROCEDURE LATTICE X {2 stuck} XM {4} XS {4} KS {2} RFFLAG {1} ;
   DL 8.1 ; {Drift_334}
   DL 1.94 ; {Drift_335}
   DL 8.9545 ; {Drift_336}
-  SOLENOID 1. 0. ; {Solen_337}
+  SOLENOID 1. 0. ; {Solen_337}                                            {drift space 1 m}
   DL 0.1 ; {Drift_338}
   DL 0.334615 ; {Drift_339}
   DL 0.25 ; {Drift_340}
@@ -307,7 +307,7 @@ PROCEDURE LATTICE X {2 stuck} XM {4} XS {4} KS {2} RFFLAG {1} ;
   QUAD 0.945 0 (0.4320256018*(1+XMFW)) ; {Quadr_350}
   DL 1.3125 ; {Drift_351}
   DL 1.3125 ; {Drift_352}
-  SOLENOID 5.25 0.214261115979*KoeffSolMPD ; {Solen_353}
+  SOLENOID 5.25 0.214261115979*KoeffSolMPD ; {Solen_353}                            {MPD soolenoid, 5.25 m}
   DL 1.3125 ; {Drift_354}
   DL 1.3125 ; {Drift_355}
   QUAD 0.945 0 (-0.4320256018*(1+XMFE)) ; {Quadr_356}
@@ -323,7 +323,7 @@ PROCEDURE LATTICE X {2 stuck} XM {4} XS {4} KS {2} RFFLAG {1} ;
   DL 0.25 ; {Drift_366}
   DL 0.334615 ; {Drift_367}
   DL 0.1 ; {Drift_368}
-  SOLENOID 1. 0. ; {Solen_369}
+  SOLENOID 1. 0. ; {Solen_369}                                                  {drift space 1 m}
   DL 8.9545 ; {Drift_370}
   DL 1.94 ; {Drift_371}
   DL 8.1 ; {Drift_372}
@@ -341,8 +341,8 @@ PROCEDURE LATTICE X {2 stuck} XM {4} XS {4} KS {2} RFFLAG {1} ;
   DL 1.841 ; {Drift_384}
   DL 1.841 ; {Drift_385}
   DL 1.841 ; {Drift_386}
-  DL 1.841 ; {Drift_387}          {!!!! correction required by COSY}
-  DL 1.8125 ; {Drift_388}         {!!!!  otherwise M0 map not zero}
+  DL 1.841 ; {Drift_387}
+  DL 1.8125 ; {Drift_388}
   QUAD 0.69 0 (0.5185577457*(1+X2)) ; {Quadr_389}
   DL 0.25 ; {Drift_390}
   DL 0.26787 ; {Drift_391}
@@ -562,7 +562,7 @@ PROCEDURE LATTICE X {2 stuck} XM {4} XS {4} KS {2} RFFLAG {1} ;
   DL 8.1 ; {Drift_685}
   DL 1.94 ; {Drift_686}
   DL 8.9545 ; {Drift_687}
-  SOLENOID 1. 0. ; {Solen_688}
+  SOLENOID 1. 0. ; {Solen_688}                                      {drift space 1 m}
   DL 0.1 ; {Drift_689}
   DL 0.334615 ; {Drift_690}
   DL 0.25 ; {Drift_691}
@@ -579,5 +579,5 @@ PROCEDURE LATTICE X {2 stuck} XM {4} XS {4} KS {2} RFFLAG {1} ;
   DL 5.25 ; {Drift_702}
 ENDPROCEDURE; {FIRST-ST SETUP}
 
-{number of elements (w/o RF): 541}
+{number of elements (w/o RF): 542}
 SAVE 'bin/setups/FIRST-ST/FULL';
