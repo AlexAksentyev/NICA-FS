@@ -2,7 +2,7 @@ import numpy as np
 import matplotlib.pyplot as plt; plt.ion()
 from analysis import HOMEDIR, DAVEC, load_data
 
-DIR  = '../data/TEST/FIRST-ST/BARE/300000/'
+DIR  = '../data/TEST/BENDS3/3000000/'
 
 def load_tss(path=HOMEDIR+DIR+'MU.dat'):
     d_type = [('EL', int), ('PID', int)] + list(zip(['NU', 'NX','NY','NZ'], [float]*4))
@@ -24,16 +24,16 @@ def plot(dat, spdat, rng = slice(0,-1,50), pid = [1,2,3]):
     ax[1,1].set_xlabel('turn [x1000]'); ax[1,1].set_ylabel('S_Z')
     #ax[1,1].ticklabel_format(style='sci', scilimits=(0,0), useMathText=True, axis='x')
 
-def plot_seq(dat, spdat, rng = slice(0,-1,50), pid = [1,2,3]):
-    ps1 = dat[dat[:,0]['iteration']<2]
-    sp1 = spdat[spdat[:,0]['iteration']<2]
-    eid = ps1['EID'][rng, pid]
+def plot_seq(dat, spdat, pid = [1,2,3], itn=1):
+    ps1 = dat[dat[:,0]['iteration']<itn+1]
+    sp1 = spdat[spdat[:,0]['iteration']<itn+1]
+    eid = ps1['EID'][:, pid] if itn<2 else np.arange(ps1['EID'].max()*itn+1)
     fig, ax = plt.subplots(3,1)
-    ax[0].plot(eid, ps1[rng,pid]['X']*1000)
+    ax[0].plot(eid, ps1[:,pid]['X']*1000)
     ax[0].set_xlabel('EID'); ax[0].set_ylabel('X [mm]')
-    ax[1].plot(eid, ps1[rng,pid]['Y']*1000)
+    ax[1].plot(eid, ps1[:,pid]['Y']*1000)
     ax[1].set_xlabel('EID'); ax[1].set_ylabel('Y[mm]')
-    ax[2].plot(eid, sp1[rng,pid]['S_Z'])
+    ax[2].plot(eid, sp1[:,pid]['S_Z'])
     ax[2].set_xlabel('EID'); ax[2].set_ylabel('S_Z')
     for i in range(3):
         ax[i].grid()
