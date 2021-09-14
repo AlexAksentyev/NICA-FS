@@ -1,8 +1,8 @@
 import re
 
 HOME = '/Users/alexaksentyev/REPOS/NICA-FS/'
-INFILE = 'madx-scripts/ST-mode/First-ST-NICA-MAD.seq'
-OUTFILE = 'src/setups/First-ST/SEQFULL.fox'
+INFILE = 'madx-scripts/ST-mode/Second-ST-NICA-MAD.seq'
+OUTFILE = 'src/setups/SECOND-ST/SEQFULL.fox'
 NUM_ACC = 1 # current array position of the element to be written
 
 SELECT_ELEMENTS = []  # elements to be swapped for DL
@@ -136,16 +136,16 @@ def write_file(line, fout):
 fout = open(HOME+OUTFILE,'w')
 with open(HOME+INFILE, 'r') as fin:
     for cnt, line in enumerate(fin):
-        if cnt<2: # 6
+        if cnt<2: #
             pass
-        elif cnt<544: # 138
+        elif cnt<548: # 544 for First
             print(cnt)
             write_dict(line)
-        elif cnt<546: # 143
+        elif cnt<550: # 546 for First
             print('++', cnt)
             print(line)
             pass
-        elif cnt>545: # 142
+        elif cnt>549: # 545 for First
             print('##',cnt)
             print(line)
             if (line[0]!='\n' and line[0]!='/'):
