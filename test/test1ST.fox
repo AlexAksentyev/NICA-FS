@@ -40,7 +40,7 @@ PROCEDURE MAIN;
   OV 3 3 0;
   { SET lattice parameters }
   SET_FOR_PROTONS 130 X XM XS;
-  NAVIGATORS 3e-2 0 1 KS;
+  NAVIGATORS 0 0 1 KS;
   LATTICE X XM XS KS 1;
      {print transfer map}
       OPENF 636 WHERE&'TrMAP' 'REPLACE';
