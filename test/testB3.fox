@@ -24,21 +24,21 @@ PROCEDURE MAIN;
   
   
   OV 3 3 0;
+  {SET lattice parameters}
   SET_FOR_PROTONS HZ1 HZ2 QF QD;
   NAVIGATORS 1e-2 0 1 rHz1 rHz2;
   LATTICE Hz1 Hz2 rHz1*HZ1 rHz2*HZ2 QF QD 1;
-
   {print useful stuff}
-  {transfer map}
-  OPENF 636 WHERE&'TrMAP' 'REPLACE';
-  PM 636; CLOSEF 636;
-  {print aberrations}
-  OPENF 636 WHERE&'ABERRATIONS' 'REPLACE';
-  PA 636; CLOSEF 636;
-  {other stats about the map}
-  MAPSE := SE(MAP);
-  OPENF 636 WHERE&'MAP-SYM-ERR' 'REPLACE';
-  WRITE 636 MAPSE; CLOSEF 636;
+    {transfer map}
+      OPENF 636 WHERE&'TrMAP' 'REPLACE';
+      PM 636; CLOSEF 636;
+    {print aberrations}
+      OPENF 636 WHERE&'ABERRATIONS' 'REPLACE';
+      PA 636; CLOSEF 636;
+    {other stats about the map}
+      MAPSE := SE(MAP);
+      OPENF 636 WHERE&'MAP-SYM-ERR' 'REPLACE';
+      WRITE 636 MAPSE; CLOSEF 636;
 
   INJECT 10;
   WRITE 6 '******************** STARTING TRACKING';
