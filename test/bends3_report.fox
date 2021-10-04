@@ -197,6 +197,7 @@ PROCEDURE RUN;
     ENDIF;
   ENDFUNCTION;
 
+  DIRSET_AUTO 1;
   OEID := 0; {output data only after these elements}
   NTURN := 30000;
   BUNCH := 'X';

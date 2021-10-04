@@ -2,7 +2,7 @@ import numpy as np
 import matplotlib.pyplot as plt; plt.ion()
 from analysis import HOMEDIR, DAVEC, load_data
 
-DIR  = '../data/TEST/FIRST-ST/3000000/NAVI-ON/'
+DIR  = '../data/TEST/FIRST-ST/Z-ALIGNED-SEQ/'
 
 def load_tss(path=HOMEDIR+DIR+'MU.dat'):
     d_type = [('EL', int), ('PID', int)] + list(zip(['NU', 'NX','NY','NZ'], [float]*4))
@@ -25,8 +25,8 @@ def plot(dat, spdat, rng = slice(0,-1,50), pid = [1,2,3], fmt='.-'):
     #ax[1,1].ticklabel_format(style='sci', scilimits=(0,0), useMathText=True, axis='x')
     return fig,ax
 
-def plot_seq(dat, spdat, pid = [1,2,3], itn=(1,)):
-    if len(itn)==1:
+def plot_seq(dat, spdat, pid = [1,2,3], itn=(0,1)):
+    if type(itn)==int:
         ps1 = dat[dat[:,0]['iteration']<itn+1]
         sp1 = spdat[spdat[:,0]['iteration']<itn+1]
         eid = ps1['EID'][:, pid] if itn<2 else np.arange(ps1['EID'].max()*itn+1)

@@ -40,11 +40,14 @@ PROCEDURE MAIN;
   OV 3 3 0;
   { SET lattice parameters }
   SET_FOR_PROTONS 130 X XM XS;
-  NAVIGATORS 0 0 1 KS;
+  NAVIGATORS 1e-2 0 1 KS;
   LATTICE 1;  { X XM XS KS 1; }           {the BARE lattice doesn't requre any parameters (except RFFLAG)}
      {print transfer map}
       OPENF 636 WHERE&'TrMAP' 'REPLACE';
       PM 636; CLOSEF 636;
+      {prin spin transfer map}
+      OPENF 636 WHERE&'SpTrMAP' 'REPLACE';
+      PSM 636; CLOSEF 636;
       {print aberrations}
       OPENF 636 WHERE&'ABERRATIONS' 'REPLACE';
       PA 636; CLOSEF 636;
