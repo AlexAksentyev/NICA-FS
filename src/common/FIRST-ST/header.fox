@@ -10,9 +10,10 @@ ENDFUNCTION;
 
 PROCEDURE SET_FOR_PROTONS EKIN X XM XS;  {FROM 1.4.1, p. 9}
                       {max EKIN 1.6 [GeV] (taken from p. 3)}
-  VARIABLE RESTMASSAMU 1; VARIABLE GAMMA 1;
+  VARIABLE RESTMASSAMU 1; VARIABLE GAMMA 1; VARIABLE BETA 1;
   RESTMASSAMU := 1.00728; 
   GAMMA := 1 + EKIN/(RESTMASSAMU*AMUMEV);
+  BETA := SQRT(GAMMA*GAMMA - 1)/GAMMA;
   RP EKIN RESTMASSAMU 1;
   RPS 1 1.792847;
   {X2}          {X3}
@@ -23,8 +24,8 @@ PROCEDURE SET_FOR_PROTONS EKIN X XM XS;  {FROM 1.4.1, p. 9}
   XS(1) := -.015; XS(2) := -.02; XS(3) := 0; XS(4) := -.015;
 
   WRITE 6 '++++++++++ SETTING UP FOR PROTONS:';
-  WRITE 6 'EKIN [MeV]          GAMMA          ';
-  WRITE 6 SF(EKIN, '(F15.7)')&SF(GAMMA, '(F15.7)');
+  WRITE 6 'EKIN [MeV]          GAMMA          BETA';
+  WRITE 6 SF(EKIN, '(F15.7)')&SF(GAMMA, '(F15.7)')&SF(BETA, '(F15.7)');
   WRITE 6 '+++++++++++++++++++++++++++++++++++';
 ENDPROCEDURE;
 
@@ -32,11 +33,11 @@ PROCEDURE NAVIGATORS NU NX NZ KS;
   VARIABLE GAMMA 1; VARIABLE PHIY 1;
   GAMMA := CONS(1 + E0/(M0*AMUMEV));
   PHIY := GAMMA*G0*PI;
-  KS(1) := 2*NU*(NZ - NX/TAN(PHIY)); {SPD}
-  KS(2) := 2*NU*NX/SIN(PHIY);        {MPD}
+  KS(1) := 1+ 2*NU*(NZ - NX/TAN(PHIY)); {SPD}
+  KS(2) := 1+ 2*NU*NX/SIN(PHIY);        {MPD}
   WRITE 6 '+++++++ NAVIGATOR strength coefficients +++++++';
-  WRITE 6 '        KsSPD: '&SF(KS(1), '(E15.7)');
-  WRITE 6 '        KsMPS: '&SF(KS(2), '(E15.7)');
+  WRITE 6 '        KsSPD: '&SF(KS(1), '(F15.7)');
+  WRITE 6 '        KsMPD: '&SF(KS(2), '(F15.7)');
 ENDPROCEDURE;
 
 PROCEDURE INSERT POS MAPARR SPNRARR NFILLED;
