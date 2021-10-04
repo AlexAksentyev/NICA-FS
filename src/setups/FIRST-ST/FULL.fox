@@ -1,5 +1,11 @@
-INCLUDE 'bin/common/FIRST-ST/header';
+{lattice converted from MADX sequence file: ST-moode/First-ST-NICA-MAD.seq}
+{NOTE: in the .seq file above it is said in the comments section that the number of objects is 702}
+{the actual number of objects is 542}
+{missing elements start at numbers: 42, 44, 46, 48; 65, 67, 69, 71; &c}
+{elements are CONSISTENTLY missing around the RBEND elements}
 
+
+INCLUDE 'bin/common/FIRST-ST/header';
 
 {ARGUMENTS: KsSPD XSFW XSQW X2 X3 XMQW XMFW KsMPD XMFE XMQE XSQE XSFE RFFLAG}
 

@@ -1,3 +1,9 @@
+{lattice converted from MADX sequence file: ST-mode/Second-ST-NICA-MAD.seq}
+{NOTE: in the sequence file, the comments section, the number of elements is indicated as 706}
+{the actual number of lattice elements is 546}
+{elements are missing CONSISTENTLY, around the RBEND elements, beginning with 43, 45, 47, 49; 66, 68, ... &c}
+
+
 INCLUDE 'bin/common/SECOND-ST/header';
 
 {this won't work b/c XQFF6-1W are used but I pass XM, XS (as in the report file in doc/)}
