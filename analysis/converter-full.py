@@ -2,8 +2,8 @@ import re
 import numpy as np
 
 HOME = '/Users/alexaksentyev/REPOS/NICA-FS/'
-INFILE = 'madx-scripts/NICA_SOL_shifted_RBEND.seq'
-OUTFILE = 'src/setups/BENDS3.fox'
+INFILE = 'madx-scripts/ST-mode/Second-ST-NICA-MAD.seq'
+OUTFILE = 'src/setups/SECOND-ST/FULL.fox'
 
 SELECT_ELEMENTS = [] # elements to be swapped for DL
 
@@ -125,6 +125,7 @@ def write_file(line, fout):
     seq = "".join(line.split())[:-1] # remove trailing comma
     seq = seq.strip(');')
     seq = seq.split(',')
+    np.save(HOME+OUTFILE[:-4], seq)
     for element in seq:
         out_line = lbl_dict[element]
         fout.write(out_line)
@@ -133,16 +134,16 @@ def write_file(line, fout):
 fout = open(HOME+OUTFILE,'w')
 with open(HOME+INFILE, 'r') as fin:
     for cnt, line in enumerate(fin):
-        if cnt<2: # 6 for NICA_full.seq
+        if cnt<2: #
             pass
-        elif cnt<616: # 138
+        elif cnt<548: # 544 for First
             print(cnt)
             write_dict(line)
-        elif cnt<617: # 143
+        elif cnt<550: # 546 for First
             print('++', cnt)
             print(line)
             pass
-        elif cnt>617: # 142
+        elif cnt>549: # 545 for First
             print('##',cnt)
             print(line)
             if (line[0]!='\n' and line[0]!='/'):

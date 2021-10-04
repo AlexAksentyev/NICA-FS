@@ -75,36 +75,52 @@ PROCEDURE QUAD L {m} TILT {rad} K1 {m^-2} ;
   Bpt := K1*CONS(CHIM)*A; {in Tesla}
   { WRITE 6 'K1[m^-2]        B[Tl]          G[kG/cm]       ' }
   {          SF(CONS(K1), '(E15.7)')&SF(CONS(Bpt), '(E15.7)')&SF(CONS(Bpt)/A/10,'(E15.7)'); }
-  ROTATE  TILT0;
-    MQ L Bpt A;
-  ROTATE -TILT0;
+  IF Bpt=0; DL L;
+  ELSEIF TRUE;
+    ROTATE  TILT0;
+      MQ L Bpt A;
+   ROTATE -TILT0;
+ ENDIF;
 ENDPROCEDURE; {QUAD}
 
 PROCEDURE SEXT L {m} TILT {rad} KNL {unit};
-  VARIABLE Bpt 1;
+  VARIABLE Bpt 1; VARIABLE TILT0 1;
   VARIABLE L0 1;
   Bpt := BMULT(KNL, L);
+  TILT0 := RAD2DEG(TILT);
   IF Bpt=0; DL L;
-  ELSEIF TRUE; MH L Bpt .05;
+  ELSEIF TRUE;
+    ROTATE TILT0;
+      MH L Bpt .05;
+    ROTATE -TILT0;
   ENDIF;
 ENDPROCEDURE; {SEXT}
 
 PROCEDURE OCT L {m} TILT {rad} KNL {unit};
-  VARIABLE Bpt 1;
+  VARIABLE Bpt 1; VARIABLE TILT0 1;
   Bpt := BMULT(KNL, L);
-  MO L Bpt .05;
+  IF Bpt=0; DL L;
+  ELSEIF TRUE;
+    ROTATE TILT0;
+      MO L Bpt .05;
+    ROTATE -TILT0;
+  ENDIF;
 ENDPROCEDURE; {OCT}
 
 PROCEDURE MULT TILT {rad} KNL {unit} N;
   VARIABLE Bpt 1 N; VARIABLE I 1;
   VARIABLE L0 1; VARIABLE FLAG 1; {used to check magnetic field components against 0}
+  VARIABLE TILT0 1;
   L0 := .1;
-  LOOP I 1 N;
-    Bpt(I) := BMULT(KNL(I), L0);
-    IF Bpt(I)#0; FLAG:=1; ENDIF;
-  ENDLOOP;
-  IF FLAG#0; MM L0 Bpt N .05;
-  ELSEIF TRUE; DL L0; WRITE 6 'MULTIPOLE IS OFF';
+  TILT0 := RAD2DEG(TILT);
+  IF N=2;
+    QUAD L0 TILT (KNL(2)/L0); WRITE 6 'QUAD';
+  ELSEIF N=3;
+    SEXT L0 TILT (KNL(3)/L0); WRITE 6 'SEXT';
+  ELSEIF N=4;
+    OCT L0 TILT (KNL(4)/L0); WRITE 6 'OCT';
+  ELSEIF TRUE;
+    WRITE 6 '*** UNDEFINED ELEMENT ERROR ***';
   ENDIF;
 ENDPROCEDURE;
 
@@ -140,10 +156,10 @@ PROCEDURE RBEND L {m} ANGLE {rad} TILT {rad};
   TILT0 := TILT/DEGRAD;
   R := L/ABS(ANGLE);
   { WRITE 6 'ANGLE[rad]      ANGLE[deg]      R[m]            B[Tl]' }
-  {          SF(ANGLE,'(E15.7)')&SF(ANGLE_DEG, '(E15.7)')&SF(R, '(E15.7)')&' '&SF(B, '(E15.7)'); }
+  {          SF(ANGLE,'(F15.7)')&SF(ANGLE_DEG, '(F15.7)')&SF(R, '(F15.7)')&' '&SF(B, '(F15.7)'); }
   IF ANGLE<0; CB; WRITE 6 'CB'; ENDIF;
   ROTATE TILT0;
-    DP R ANGLE_DEG .1;
+    DP R ANGLE_DEG .05;
   ROTATE -TILT0;
   IF ANGLE<0; CB; ENDIF;
 ENDPROCEDURE; {RBEND}

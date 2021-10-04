@@ -62,8 +62,8 @@ PROCEDURE LATTICE HzSPD HzMPD dHzSPD dHzMPD QF QD RFFLAG;
   DL 0.245 ; {Drift_35}
   QUAD 0.67 0 (-0.5166681483-QD) ; {Quadr_36}
   DL 4.5675 ; {Drift_37}
-  DL 1.9325 ; {Drift_38}
-  DL 1.9325 ; {Drift_39}
+  DL 1.9325+.1 ; {Drift_38} {!!! correction required by COSY}
+  DL 1.9325-.1 ; {Drift_39} {!!! otherwise didnt simplectify (see #342 below also)}
   DL 4.4825 ; {Drift_40}
   QUAD 0.69 0 (0.5185577457+QF) ; {Quadr_41}
   DL 0.245 ; {Drift_42}
@@ -366,8 +366,8 @@ PROCEDURE LATTICE HzSPD HzMPD dHzSPD dHzMPD QF QD RFFLAG;
   DL 0.01 ; {Drift_339}
   DL 0.245 ; {Drift_340}
   QUAD 0.67 0 (-0.512387831-QD) ; {Quadr_341}
-  DL 1.8975 ; {Drift_342}
-  DL 1.841 ; {Drift_343}
+  DL 1.8975+.0001 ; {Drift_342} {!!! correction required by COSY}
+  DL 1.841-.0001 ; {Drift_343} {!!! just like ##38,39 above}
   DL 1.841 ; {Drift_344}
   DL 1.841 ; {Drift_345}
   DL 1.841 ; {Drift_346}

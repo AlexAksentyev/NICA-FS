@@ -8,30 +8,32 @@ FUNCTION SNAKE_STR G L; {L here is either the SPD or MPD detector length; resp. 
   SNAKE_STR := PI/(1 + G)*1/L;
 ENDFUNCTION;
 
-PROCEDURE SET_FOR_PROTONS HzSPD HzMPD QF QD;
-  VARIABLE EKIN 1; VARIABLE GAMMA 1; VARIABLE RESTMASSAMU 1;
-  GAMMA := 1.14;
-  RESTMASSAMU := 1.00728; EKIN := (GAMMA-1)*RESTMASSAMU*AMUMEV;
+PROCEDURE SET_FOR_PROTONS EKIN X XM XS;  {FROM 1.4.2, p. 11}
+                      {max EKIN 3.2 [GeV] (taken from p. 3)}
+  VARIABLE RESTMASSAMU 1; VARIABLE GAMMA 1;
+  RESTMASSAMU := 1.00728; 
+  GAMMA := 1 + EKIN/(RESTMASSAMU*AMUMEV);
   RP EKIN RESTMASSAMU 1;
   RPS 1 1.792847;
-  HzSPD := SNAKE_STR(G0, .7);
-  HzMPD := SNAKE_STR(G0, 5);
-  QF  := -0.018;
-  QD  := -0.021;
+  X(1) := .0035; X(2) := .00275;
+  XM(1) := .009; XM(2) := .018; XM(3) := .018; XM(4) := .009;
+  XS(1) := .009; XS(2) := .018; XS(3) := .018; XS(4) := .009;
+
   WRITE 6 '++++++++++ SETTING UP FOR PROTONS:';
   WRITE 6 'EKIN           GAMMA          ';
-  WRITE 6 SF(EKIN, '(F15.7)')&SF(GAMMA, '(F15.7)');
-  WRITE 6 'HzSPD            HzMPD            QF               QD';
-  WRITE 6 SF(HzSPD, '(F15.7)')&SF(HzMPD, '(F15.7)')&SF(QF, '(F15.7)')&SF(QD, '(F15.7)');
+  WRITE 6 SF(EKIN, '(E15.7)')&SF(GAMMA, '(E15.7)');
   WRITE 6 '+++++++++++++++++++++++++++++++++++';
 ENDPROCEDURE;
 
-PROCEDURE NAVIGATORS NU NX NZ rdHzSPD rdHzMPD; {rdHz* = dHz*/Hz*,}
-{so, this value will have to get multiplied by Hz* befire passing into LATTICE}
-  VARIABLE GAMMA 1;
+PROCEDURE NAVIGATORS NU NX NZ KS;
+  VARIABLE GAMMA 1; VARIABLE PHIY 1;
   GAMMA := CONS(1 + E0/(M0*AMUMEV));
-  rdHzSPD := 2*NU*(NZ - NX/TAN(GAMMA*G0*PI));
-  rdHzMPD := 2*NU*NX/SIN(GAMMA*G0*PI);
+  PHIY := GAMMA*G0*PI;
+  KS(1) := 2*NU*(NZ - NX/TAN(PHIY)); {SPD}
+  KS(2) := 2*NU*NX/SIN(PHIY);        {MPD}
+  WRITE 6 '+++++++ NAVIGATOR strength coefficients +++++++';
+  WRITE 6 '        KsSPD: '&SF(KS(1), '(E15.7)');
+  WRITE 6 '        KsMPS: '&SF(KS(2), '(E15.7)');
 ENDPROCEDURE;
 
 PROCEDURE INSERT POS MAPARR SPNRARR NFILLED;
@@ -48,4 +50,4 @@ PROCEDURE INSERT POS MAPARR SPNRARR NFILLED;
   SMAPS POS MAPARR SPNRARR;
 ENDPROCEDURE;
 
-SAVE '~/REPOS/NICA-FS/bin/common/BENDS3/header';
+SAVE '~/REPOS/NICA-FS/bin/common/FIRST-ST/header';

@@ -1,26 +1,11 @@
-call, file='support/main.madx';
-exec, inject_protons(1.14);
+call, file='support/sup1ST.madx';
+exec, inject_protons(130);
+call file = "ST-mode/First-ST-NICA-MAD.seq";
 
-//call file = "nica_24sol_rbend-clean.seq";
-//use, sequence=BH_seq;
+ELEM: RBEND L=1.9395014178063565, ANGLE=10*0.0785398163399978;
+CELL: LINE=(ELEM);
 
-SNK01: SOLENOID, L=.07, KS:=HZ1;//*.1;
-SNK02: SOLENOID, L=.14, KS:=HZ1;//*.2;
-SNK03: SOLENOID, L=.21, KS:=HZ1;//*.3;
-SNK04: SOLENOID, L=.28, KS:=HZ1;//*.4;
-SNK05: SOLENOID, L=.35, KS:=HZ1;//*.5;
-SNK06: SOLENOID, L=.42, KS:=HZ1;//*.6;
-SNK10: SOLENOID, L=.7, KS:=HZ1;
-
-CELL1: LINE=(SNK01);
-CELL2: LINE=(SNK02);
-CELL3: LINE=(SNK03);
-CELL4: LINE=(SNK04);
-CELL5: LINE=(SNK05);
-CELL6: LINE=(SNK06);
-CELL10: LINE=(SNK10);
-
-USE, SEQUENCE=CELL10;
+USE, SEQUENCE=CELL;
 
 ptc_create_universe;
 ptc_create_layout,model=2,method=6,nst=10,exact;
@@ -29,5 +14,9 @@ PTC_NORMAL,closed_orbit,maptable,icase=6,no=1;
 
 ptc_end;
 
-write,table="map_table",file="elmap/len_vary/SNK_10";
-value, SNK10->KS;
+write,table="map_table",file="elmap/map_table_RB";
+
+value, KoeffSolSPD;
+value, XSFW;
+value, X2;
+value, XSQW;

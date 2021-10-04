@@ -1,12 +1,12 @@
 import numpy as np
 
 ### maps to compare
-mad_name = 'BV2'
-cosy_name = '12'
+mad_name = 'RB'
+cosy_name = 'RB'
 
 
 HOME = '/Users/alexaksentyev/REPOS/NICA-FS/'
-DIR  = 'data/ELEMENT_MAPS/AUTO/'
+DIR  = 'data/ELEMENT_MAPS/FIRST-ST/'
 
 O = np.zeros((3,3))
 I = np.eye(3)
@@ -123,25 +123,25 @@ if __name__ == '__main__':
     print('++ Difference')
     print(transfer_COSY[2:4,2:4]-transfer_MADX[2:4,2:4])
 
-    eldict = {'BH':'50','BV1':'10','BV2':'12','MQD1':'22','MQF1':'20','QD1':'2','QD2':'6','QF2':'4','SNK1':'26'}
-    maparr = np.empty(len(eldict), dtype=object)
-    for i, names in enumerate(eldict.items()):
-        maparr[i] = (load_madx(names[0]), load_cosy(names[1]))
+    # eldict = {'BH':'50','BV1':'10','BV2':'12','MQD1':'22','MQF1':'20','QD1':'2','QD2':'6','QF2':'4','SNK1':'26'}
+    # maparr = np.empty(len(eldict), dtype=object)
+    # for i, names in enumerate(eldict.items()):
+    #     maparr[i] = (load_madx(names[0]), load_cosy(names[1]))
 
-    for i, names in enumerate(eldict.items()):
-        print('')
-        print('{} (MADX) / {} (COSY)'.format(*names))
-        compare(maparr[i][0], maparr[i][1])
+    # for i, names in enumerate(eldict.items()):
+    #     print('')
+    #     print('{} (MADX) / {} (COSY)'.format(*names))
+    #     compare(maparr[i][0], maparr[i][1])
 
-    BH = load_madx('BH'); E50 = load_cosy('50')
-    BV1 = load_madx('BV1'); E10 = load_cosy('10')
-    BV2 = load_madx('BV2'); E12 = load_cosy('12')
-    MQD1 = load_madx('MQD1'); E22 = load_cosy('22')
-    MQF1 = load_madx('MQF1'); E20 = load_cosy('20')
-    QD1 = load_madx('QD1'); E2 = load_cosy('2')
-    QD1 = load_madx('QD2'); E6 = load_cosy('6')
-    QF2 = load_madx('QF2'); E4 = load_cosy('4')
-    SNK1 = load_madx('SNK1'); E26 = load_cosy('26')
+    # BH = load_madx('BH'); E50 = load_cosy('50')
+    # BV1 = load_madx('BV1'); E10 = load_cosy('10')
+    # BV2 = load_madx('BV2'); E12 = load_cosy('12')
+    # MQD1 = load_madx('MQD1'); E22 = load_cosy('22')
+    # MQF1 = load_madx('MQF1'); E20 = load_cosy('20')
+    # QD1 = load_madx('QD1'); E2 = load_cosy('2')
+    # QD1 = load_madx('QD2'); E6 = load_cosy('6')
+    # QF2 = load_madx('QF2'); E4 = load_cosy('4')
+    # SNK1 = load_madx('SNK1'); E26 = load_cosy('26')
 
-    hz1 = 0.3739991
+    # hz1 = 0.3739991
 
