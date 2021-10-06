@@ -8,7 +8,7 @@ use, sequence=NICA;
 
 PTC_CREATE_UNIVERSE;
 PTC_CREATE_LAYOUT,model=2,method=6,nst=10,exact;
-//PTC_NORMAL,closed_orbit,maptable,icase=6,no=1;
+PTC_NORMAL,closed_orbit,maptable,icase=6,no=1;
 PTC_END;
 write,table="map_table", file="elmap/map_table_1ST";
 
@@ -25,7 +25,7 @@ START, x=1e-3;
 START, x=.8e-3;
 START, y=1e-3;
 START, y=.8e-3;
-//DYNAP, TURNS=1000, FASTUNE=TRUE;
+DYNAP, TURNS=1000, FASTUNE=TRUE;
 RUN, turns=3000, ffile=30;
 ENDTRACK;
 
