@@ -38,7 +38,10 @@ PROCEDURE LATTICE X {2 stuck} XM {4} XS {4} KS {2} RFFLAG {1} ;
   WRITE 6 'RF FREQUENCY: '&ST(FREQ/1E6)&' MHZ';
 
   UM;
-  IF RFFLAG=1; RF VRF 0 FREQ 0 0.05; WRITE 6 'INSERTING RF...'; ENDIF; {inserted by @AA}
+  IF RFFLAG=1; RF VRF 0 FREQ 0 0.05;
+    WRITE 6 'INSERTING RF...';
+    WRITE 6 'RF MAP(6):' MAP(6);
+  ENDIF; {inserted by @AA}
   {BEGIN LATTICE}
 
   DL 2.35 ; {Drift_1}
