@@ -1,16 +1,17 @@
 
 call, file='support/sup1ST.madx'; // contains definitions for shared procedures
 ! ********** TEST PROPER **********
-EXEC, inject_protons(130); // argument = energy in [MeV]
+EXEC, inject_protons_ST(130); // argument = energy in [MeV]
+EXEC, navigators(1e-2, 0, 1); // if inject_protons_SO[paque] is used above, does nothing
 
 call file = "ST-mode/First-ST-NICA-MAD.seq";
 use, sequence=NICA;
 
-PTC_CREATE_UNIVERSE;
-PTC_CREATE_LAYOUT,model=2,method=6,nst=10,exact;
-PTC_NORMAL,closed_orbit,maptable,icase=6,no=1;
-PTC_END;
-write,table="map_table", file="elmap/map_table_1ST";
+! PTC_CREATE_UNIVERSE;
+! PTC_CREATE_LAYOUT,model=2,method=6,nst=10,exact;
+! PTC_NORMAL,closed_orbit,maptable,icase=6,no=1;
+! PTC_END;
+! write,table="map_table", file="elmap/map_table_1ST";
 
 
 SELECT, FLAG=TWISS, COLUMN= _name, q1, q2, betx, bety;

@@ -1,0 +1,32 @@
+proton_G = 1.792847;
+ST_flag = 0; // flag reqiured by navigators(*); if zero, S/MPD solenoids are off
+
+// If the ST parameters (XMQW, XSQW &c PLUS the KoeffSolSPD/MPD parameters are out of operation
+// (use inject_protons_SO[paque]) BOTH tracking and TWISS in test1ST.madx produce results.
+// If the parameters are present (use inject_protons_ST[ransparent]),
+// results depend on the spin tune parameter value (the invariant axis is always assumed [0,0,1]):
+// if NU=0, the TWISS plot is not produced, though tracking is algright;
+// if NU!=0 (but small, meaning the minimum value 1e-2), then neither the TWISS nor the TRACK modules
+// produce reasonable results (TWISS doesn't produce at all; TRACKing unstable);
+// if NU==5e-2, TWISS produces something, but TRACKing is still unstable.
+inject_protons_ST(kenergy_): MACRO = { // energy given in MeV
+	           ST_flag = 1;
+		   X2 = -.03; X3 = -.005;
+		   XMQW = .02; XMFW = -.02; XMFE = .02; XMQE = -.01;
+		   XSQW=-.015; XSFW = -.02; XSFE = 0;   XSQE = -.015;
+		   beam, PARTICLE=PROTON, ENERGY=PROTON->MASS+kenergy_/1000;
+};
+
+inject_protons_SO(kenergy_): MACRO = {
+        beam, PARTICLE=PROTON, ENERGY=PROTON->MASS+kenergy_/1000;
+};
+
+navigators(nu, nx, nz): MACRO = {
+	       if (ST_flag==1){
+	         phiy = beam->GAMMA*proton_G*pi;
+	       	 KoeffSolSPD = 1 + 2*nu*(nz-nx/tan(phiy));
+	       	 KoeffSolMPD = 1 + 2*nu*nx/sin(phiy);
+		 }
+};
+
+! ##################################################
