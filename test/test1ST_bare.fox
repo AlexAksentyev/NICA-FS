@@ -39,9 +39,9 @@ PROCEDURE MAIN;
   
   OV 3 3 0;
   { SET lattice parameters }
-  SET_FOR_PROTONS 130 X XM XS;
-  NAVIGATORS 1e-2 0 1 KS;
-  LATTICE 1;  { X XM XS KS 1; }           {the BARE lattice doesn't requre any parameters (except RFFLAG)}
+  SET_FOR_PROTONS 130 X XM XS;           {these all}
+  NAVIGATORS 1e-2 0 1 KS;                  {will be ignored because}
+  LATTICE 1;  { X XM XS KS 1; }              {the BARE lattice doesn't requre any parameters (except RFFLAG)}
      {print transfer map}
       OPENF 636 WHERE&'TrMAP' 'REPLACE';
       PM 636; CLOSEF 636;
