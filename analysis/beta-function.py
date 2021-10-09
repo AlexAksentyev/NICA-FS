@@ -2,7 +2,7 @@ import numpy as np
 import matplotlib.pyplot as plt; plt.ion()
 from analysis import HOMEDIR
 
-DATADIR = 'data/BETA-FUNCTION/FIRST-ST/SEQFULL/'
+DATADIR = 'data/BETA-FUNCTION/FIRST-ST/SEQBARE/'
 
 ELNAMES = np.load('nica_element_names.npy')
 ELNAMES = np.array([e+' ['+ str(i+1) + ']' for i,e in enumerate(ELNAMES)])

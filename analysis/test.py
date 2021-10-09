@@ -2,7 +2,7 @@ import numpy as np
 import matplotlib.pyplot as plt; plt.ion()
 from analysis import HOMEDIR, DAVEC, load_data
 
-DIR  = '../data/TEST/FIRST-ST/Z-ALIGNED-SEQ/'
+DIR  = '../data/TEST/FIRST-ST/NAVI-5deci/300000/'
 
 def load_tss(path=HOMEDIR+DIR+'MU.dat'):
     d_type = [('EL', int), ('PID', int)] + list(zip(['NU', 'NX','NY','NZ'], [float]*4))
@@ -15,7 +15,7 @@ def plot(dat, spdat, rng = slice(0,-1,50), pid = [1,2,3], fmt='.-'):
     fig, ax = plt.subplots(2,2)
     ax[0,0].plot(dat[rng,pid]['X']*1000, dat[rng,pid]['A']*1000, fmt)
     ax[0,0].set_xlabel('X [mm]'); ax[0,0].set_ylabel('A [mrad]')
-    ax[0,1].plot(dat[rng,pid]['Y']*1000, dat[rng,pid]['B']*1000, fmt)
+    ax[0,1].plot(dat[rng,pid]['Y']*100, dat[rng,pid]['B']*1000, fmt)
     ax[0,1].set_xlabel('Y [mm]'); ax[0,1].set_ylabel('B [mrad]')
     ax[1,0].plot(dat[rng,pid]['T'], dat[rng,pid]['D'], fmt)
     ax[1,0].set_xlabel('T'); ax[1,0].set_ylabel('D');
