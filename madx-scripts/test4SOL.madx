@@ -1,0 +1,28 @@
+X2:= 0.0035 ;
+X3:= 0.00275 ;
+
+
+XSFW:=0.018;
+XSQW:=0.009;
+
+KoeffSolMPD:=1;
+KoeffSolSPD:=-1;
+
+
+
+call file="ST-mode/HI-NICA-6T-4sol-SIMMETRY_mad.txt";
+beam, particle=proton,sequence=NICA,energy=1.8;
+
+create, table=tab, column={gammatr, Q1, Q2, dq1, dq2};
+use, 	sequence=NICA;
+select,flag=twiss,column=name,s,betx,bety, alfx,alfy,dx,dy,dpx,dpy, mux, muy;
+TWISS, file=tbl/twiss.out,CHROM;
+gammatr=table(summ gammatr);
+Q1=table(summ q1);
+Q2=table(summ q2);
+dq1=table(summ dq1);
+dq2=table(summ dq2);
+FILL, TABLE=tab, row=a;
+WRITE, TABLE=tab, file=gamma_analisis_out.txt;
+
+
