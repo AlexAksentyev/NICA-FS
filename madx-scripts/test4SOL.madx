@@ -1,28 +1,63 @@
-X2:= 0.0035 ;
-X3:= 0.00275 ;
+! X2:= 0.0035 ;
+! X3:= 0.00275 ;
 
 
-XSFW:=0.018;
-XSQW:=0.009;
+! XSFW:=0.018;
+! XSQW:=0.009;
 
-KoeffSolMPD:=1;
-KoeffSolSPD:=-1;
+! KoeffSolMPD:=1;
+! KoeffSolSPD:=-1;
 
 
+call, file='support/sup4SOL.madx';
 
-call file="ST-mode/HI-NICA-6T-4sol-SIMMETRY_mad.txt";
-beam, particle=proton,sequence=NICA,energy=1.8;
+! beam, particle=proton,sequence=NICA,energy=1.8;
+EXEC, inject_protons_ST(130); // argument = energy in [MeV]
+EXEC, navigators(0, 0, 1); // if inject_protons_SO[paque] is used above, does nothing
+
+call file="ST-mode/NICA4SOL.seq";
 
 create, table=tab, column={gammatr, Q1, Q2, dq1, dq2};
 use, 	sequence=NICA;
 select,flag=twiss,column=name,s,betx,bety, alfx,alfy,dx,dy,dpx,dpy, mux, muy;
 TWISS, file=tbl/twiss.out,CHROM;
+
+plot, haxis=s, vaxis=betx,bety,dx,colour=100, style=100,file=img/twiss_plot;
+survey, file=tbl/survey.out;
+
+TRACK, file=tbl/basis, onetable, dump;
+START, x=1e-3;
+START, x=.8e-3;
+START, y=1e-3;
+START, y=.8e-3;
+DYNAP, TURNS=1000, FASTUNE=TRUE;
+RUN, turns=3000, ffile=30;
+ENDTRACK;
+
+PLOT, file=img/track_plot, table=trackone, trackfile=tbl/basis, multiple,
+      haxis=turn, vaxis=x, particle=1,2,3,4;
+
+PLOT, file=img/track_plot, table=trackone, trackfile=tbl/basis, multiple,
+      haxis=x, vaxis=px, particle=1,2,3,4;
+
+PLOT, file=img/track_plot, table=trackone, trackfile=tbl/basis, multiple,
+      haxis=turn, vaxis=y, particle=1,2,3,4;
+
+PLOT, file=img/track_plot, table=trackone, trackfile=tbl/basis, multiple,
+      haxis=y, vaxis=py, particle=1,2,3,4;
+
+// GAMMA ANALYSIS
 gammatr=table(summ gammatr);
 Q1=table(summ q1);
 Q2=table(summ q2);
 dq1=table(summ dq1);
 dq2=table(summ dq2);
 FILL, TABLE=tab, row=a;
-WRITE, TABLE=tab, file=gamma_analisis_out.txt;
+WRITE, TABLE=tab, file=tbl/gamma_analysis.out;
 
 
+value, Q1;
+value, Q2;
+
+value, KoeffSolSPD;
+value, KoeffSolMPD;
