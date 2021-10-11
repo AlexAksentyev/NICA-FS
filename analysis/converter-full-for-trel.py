@@ -1,7 +1,7 @@
 import re
 
 HOME = '/Users/alexaksentyev/REPOS/NICA-FS/'
-INFILE = 'madx-scripts/ST-mode/Second-ST-NICA-MAD.seq'
+INFILE = 'madx-scripts/ST-mode/NICA4SOL.seq'
 OUTFILE = 'src/setups/SECOND-ST/SEQFULL.fox'
 NUM_ACC = 1 # current array position of the element to be written
 

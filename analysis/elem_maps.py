@@ -2,7 +2,7 @@ import numpy as np
 from os import listdir
 
 HOME = '/Users/alexaksentyev/REPOS/NICA-FS/'
-DIR  = 'data/ELEMENT_MAPS/FIRST-ST/'
+DIR  = 'data/ELEMENT_MAPS/SECOND-ST/'
 VARS  = ['X','A','Y','B','T','D']
 NVARS = len(VARS)
 VIN = ['X','A','Y','B','T']
