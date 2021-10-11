@@ -12,7 +12,7 @@ PROCEDURE INJECT NUM;
 ENDPROCEDURE;
 
 PROCEDURE MAIN;
-  VARIABLE WHERE 100;
+  VARIABLE WHERE 100; VARIABLE EKIN 1;
   {LATTICE ARGUMENTS}
   VARIABLE KS 1 2; VARIABLE X 1 2;  VARIABLE XS 1 2;
   {for TREL}
@@ -31,15 +31,16 @@ PROCEDURE MAIN;
   VRF(1, 1) := 100/HNUM; {RF Voltage [kV]}
   FREQ := HNUM*REVFREQ(ACCLEN(1)); {RF Frequency}
   NTURN := 20;
+  EKIN := 130; {KINETIC ENERGY 130 MEV}
   
-  DIRSET WHERE 'data/TEST/SECOND-ST/SEQ/'&MRK(NTURN)&'-SEQ/';
+  DIRSET WHERE 'data/TEST/SECOND-ST/'&MRK(EKIN)&'/SEQ/'&MRK(NTURN)&'-SEQ/';
   GROUTF 'img/dump/TR' 1;
   
   
-  OV 5 3 0;
+  OV 3 3 0;
   { SET FOR PROTONS }
   SET_FOR_PROTONS 130 X XS;
-  NAVIGATORS 0*1e-2 0 1 KS;                               {navigator DEVIATIONS are OFF (lattice pure FS)}
+  NAVIGATORS 0 0 1 KS;                               {navigator DEVIATIONS are OFF (lattice pure FS)}
   MAPPARAMS(1) := X(1);   MAPPARAMS(2) := X(2);   {X}
   MAPPARAMS(3) := XS(1);  MAPPARAMS(4) := XS(2);  {XS}
   MAPPARAMS(5) := KS(1);  MAPPARAMS(6) := KS(2);  {KS}  

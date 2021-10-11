@@ -32,6 +32,8 @@ PROCEDURE NAVIGATORS NU NX NZ KS;
   WRITE 6 '+++++++ NAVIGATOR strength coefficients +++++++';
   WRITE 6 '        KsSPD: '&SF(KS(1), '(F15.7)');
   WRITE 6 '        KsMPD: '&SF(KS(2), '(F15.7)');
+  WRITE 6 'PHIy = ' PHIY;
+  WRITE 6 'E0' E0;
 ENDPROCEDURE;
 
 SAVE '~/REPOS/NICA-FS/bin/common/SECOND-ST/header';
