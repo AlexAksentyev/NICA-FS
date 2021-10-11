@@ -341,8 +341,8 @@ PROCEDURE LATTICE X {2 stuck} XS {2} KS {2} RFFLAG {1} ;
   DL 0.25 ; {Drift_382}
   DL 0.25 ; {Drift_383}
   QUAD 0.67 0 (-0.5166681483*(1+X2+XSQW)) ; {Quadr_384}
-  DL 1.8975 ; {Drift_385}
-  DL 1.841 ; {Drift_386}
+  DL 1.8975-.01 ; {Drift_385}                              {correction for energy 3059 MeV (3200 MeV/c)}
+  DL 1.841+.01 ; {Drift_386}                               {@AA}
   DL 1.841 ; {Drift_387}
   DL 1.841 ; {Drift_388}
   DL 1.841 ; {Drift_389}
