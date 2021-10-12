@@ -3,7 +3,13 @@ import matplotlib.pyplot as plt; plt.ion()
 from analysis import HOMEDIR, DAVEC, load_data
 
 LATTICE = 'SECOND-ST'
-ENERGY = 130
+ENERGY = '130'
+
+SEQMAP = { #indexes of cornerstone elements (in COSY indexing, SEQFULL.fox file [i.e., no RF])
+    'SPD1':21,  'ARC1s':43, 'ARC1f': 236,
+    'MDP1':257, 'MPD2':293, # straight section
+    'ARC2s':318, 'ARC2f':511, 'SPD2':530
+    }
 
 # DIR  = '../data/TEST/'+LATTICE+'/'+ENERGY+'MeV/NAVI-OFF/3D/3000000/'
 DIR  = '../data/TEST/'+LATTICE+'/'+ENERGY+'MeV/SEQ/20-SEQ/'
@@ -39,7 +45,7 @@ def plot_spin(spdat, rng=slice(0,-1,50),pid = [1,2,3], fmt='.-'):
     ax[2].set_xlabel('turn [x1000]'); ax[2].set_ylabel('S_Z')
     return fig, ax
 
-def plot_seq(dat, spdat, pid = [1,2,3], itn=(0,1)):
+def plot_seq(dat, spdat, pid = [1,2,3], itn=(0,1), show_elems=[21, 43, 236, 257, 293, 218, 530]):
     if type(itn)==int:
         ps1 = dat[dat[:,0]['iteration']<itn+1]
         sp1 = spdat[spdat[:,0]['iteration']<itn+1]
@@ -52,24 +58,30 @@ def plot_seq(dat, spdat, pid = [1,2,3], itn=(0,1)):
         sp1 = spdat[ii]
         eid_max = ps1['EID'].max()
         eid = eid_max*itn[0] + np.arange(eid_max*itrng)
-    fig, ax = plt.subplots(4,1)
+    fig, ax = plt.subplots(5,1,sharex=True)
     ax[0].plot(eid, ps1[:,pid]['X']*1000)
-    ax[0].set_xlabel('EID'); ax[0].set_ylabel('X [mm]')
+    ax[0].set_ylabel('X [mm]')
     ax[1].plot(eid, ps1[:,pid]['Y']*1000)
-    ax[1].set_xlabel('EID'); ax[1].set_ylabel('Y[mm]')
+    ax[1].set_ylabel('Y[mm]')
     ax[2].plot(eid, sp1[:,pid]['S_X'])
-    ax[2].set_xlabel('EID'); ax[2].set_ylabel('S_X')
-    ax[3].plot(eid, sp1[:,pid]['S_Y'])
-    ax[3].set_xlabel('EID'); ax[3].set_ylabel('S_Y')
-    for i in range(4):
+    ax[2].set_ylabel('S_X')
+    ax[3].plot(eid, sp1[:,pid]['S_Z'])
+    ax[3].set_ylabel('S_Z')
+    ax[4].plot(eid, sp1[:,pid]['S_Y'])
+    ax[4].set_xlabel('EID'); ax[4].set_ylabel('S_Y')
+    for i in range(5):
         ax[i].grid()
     if itn==1:
         fname = '../src/setups/'+LATTICE+'/FULL.npy'
         elnames = list(np.load(fname))
         elnames.insert(0, 'RF') # need this only if RF is inserted, which is most times but still -- not necessarily true
-        elnames.insert(0, 'INJ')
+        elnames.insert(0, 'INJ') # **
+        elnames=np.array(elnames)
+        eid = eid[:,0] if eid.ndim>1 else eid
         eid_max = eid.max()
-        plt.xticks(ticks=eid[0:eid_max:50], labels=elnames[0:eid_max:50], rotation=60)
+        show_elems=np.array(show_elems)+1 # +1 because of the added INJ **
+                            # (the added RF is taken care of due to python indexing starting at 0 while cosy's at 1)
+        plt.xticks(ticks=eid[show_elems], labels=elnames[show_elems], rotation=60)
     return fig, ax
     
 
