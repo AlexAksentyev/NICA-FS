@@ -4,6 +4,7 @@ from analysis import HOMEDIR, DAVEC, load_data
 
 LATTICE = 'SECOND-ST'
 ENERGY = '130'
+MRKR = 'SZ0-1'
 
 SEQMAP = { #indexes of cornerstone elements (in COSY indexing, SEQFULL.fox file [i.e., no RF])
     'SPD1':21,  'ARC1s':43, 'ARC1f': 236,
@@ -45,7 +46,7 @@ def plot_spin(spdat, rng=slice(0,-1,50),pid = [1,2,3], fmt='.-'):
     ax[2].set_xlabel('turn [x1000]'); ax[2].set_ylabel('S_Z')
     return fig, ax
 
-def plot_seq(dat, spdat, pid = [1,2,3], itn=(0,1), show_elems=[21, 43, 236, 257, 293, 218, 530]):
+def plot_seq(dat, spdat, pid = [1,2,3], itn=(0,1), show_elems=[21, 43, 236, 257, 293, 318, 511, 530]):
     if type(itn)==int:
         ps1 = dat[dat[:,0]['iteration']<itn+1]
         sp1 = spdat[spdat[:,0]['iteration']<itn+1]
@@ -86,10 +87,10 @@ def plot_seq(dat, spdat, pid = [1,2,3], itn=(0,1), show_elems=[21, 43, 236, 257,
     
 
 if __name__ == '__main__':
-    dat = load_data(DIR, 'TRPRAY.dat')
-    spdat = load_data(DIR, 'TRPSPI.dat')
+    dat = load_data(DIR, 'TRPRAY:{}.dat'.format(MRKR))
+    spdat = load_data(DIR, 'TRPSPI:{}.dat'.format(MRKR))
     if DIR[-4:-1]=='SEQ':
-        fig, ax = plot_seq(dat, spdat)
+        fig, ax = plot_seq(dat, spdat, itn=1)
     else:
         fig, ax = plot(dat, spdat)
         figs, axs = plot_spin(spdat)
