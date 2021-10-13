@@ -21,22 +21,24 @@ PROCEDURE MAIN;
   {LATTICE ARGUMENTS}
   VARIABLE KS 1 2; VARIABLE X  1 2; VARIABLE XS 1 2;
   VARIABLE NTURN 1; VARIABLE EKIN 1;
+  VARIABLE NAVINU 1;
   {********** CONTROLS **********}
-  NTURN := 5000;
+  NTURN := 300000;
   EKIN := 130;  {kinetic energy in MeV}
   ORDR := 3; {transfer map computation order}
-  PSI_DEG0 := 45;
+  PSI_DEG0 := 0;
+  NAVINU := 3E-2;
   {******************************}
   MRKR := 'PSI0-'&MRK(PSI_DEG0); {marker to identify data files}
   WRITE 6 '^^^^ INITIAL SPIN PSI'&SF(PSI_DEG0,'(F15.7)');
-  DIRSET WHERE 'data/TEST/SECOND-ST/'&MRK(EKIN)&'MeV/NAVI-OFF/'&MRK(ORDR)&'D/'&MRK(NTURN)&'/';
+  DIRSET WHERE 'data/TEST/SECOND-ST/'&MRK(EKIN)&'MeV/NAVI-'&MRK(NAVINU*100)&'deci/'&MRK(ORDR)&'D/'&MRK(NTURN)&'/';
   GROUTF 'img/dump/TR' 1;
   
   
   OV ORDR 3 0;
   { SET lattice parameters }
   SET_FOR_PROTONS EKIN X XS;
-  NAVIGATORS 0 0 1 KS;                   {sets navigator DEVIATIONS (if tune=0, lattice is pure FS)}
+  NAVIGATORS NAVINU 0 1 KS;                   {sets navigator DEVIATIONS (if tune=0, lattice is pure FS)}
   LATTICE X XS KS 1;
      {print transfer map}
       OPENF 636 WHERE&'TrMAP:'&MRKR 'REPLACE';

@@ -4,9 +4,10 @@ from analysis import HOMEDIR, DAVEC, load_data
 
 LATTICE = 'SECOND-ST'
 ENERGY = '130'
-MRKR = 'PSI0-45'
+MRKR = 'PSI0-0'
 SEQ = False
-NTURN = '5000'
+NTURN = '300000'
+NAVINU = '3' # times 1e-2
 
 SEQMAP = { #indexes of cornerstone elements (in COSY indexing, SEQFULL.fox file [i.e., no RF (which is at index 0 anyway)])
     'SPD1':21,  'ARC1s':43, 'ARC1f': 236,
@@ -15,7 +16,7 @@ SEQMAP = { #indexes of cornerstone elements (in COSY indexing, SEQFULL.fox file 
     }
 
 if not SEQ:
-    DIR  = '../data/TEST/'+LATTICE+'/'+ENERGY+'MeV/NAVI-OFF/3D/'+NTURN+'/'
+    DIR  = '../data/TEST/'+LATTICE+'/'+ENERGY+'MeV/NAVI-'+NAVINU+'deci/3D/'+NTURN+'/'
 else:
     DIR  = '../data/TEST/'+LATTICE+'/'+ENERGY+'MeV/SEQ/20-SEQ/'
 
