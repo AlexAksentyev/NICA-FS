@@ -1,9 +1,11 @@
 INCLUDE 'bin/setups/SECOND-ST/FULL';
 
-PROCEDURE INJECT NUM SZ; {at injection: SX = 0, SY = SQRT(1-SZ^2)}
-  VARIABLE X 100; VARIABLE I 1; VARIABLE SY 1;
-  X := LINSPACE(-5E-3, 5E-3, NUM);
-  SY := SQRT(1 - SZ*SZ);
+PROCEDURE INJECT NUM PSI_DEG; {at injection: SX = 0, SY, SZ = sin PSI, cos PSI}
+  VARIABLE X 100; VARIABLE I 1;
+  VARIABLE PSI 1; VARIABLE SY 1; VARIABLE SZ 1;
+  PSI := DEG2RAD(PSI_DEG); {PSI IN RADIANS}
+  X := LINSPACE(-3E-3, 3E-3, NUM);
+  SY := SIN(PSI); SZ := COS(PSI);
   SR 0 0 0 0 0 0 0 0 1; SSR 0 SY SZ;
   LOOP I 1 NUM;
     SR X|I 0 0 0 0 0 0 0 1; SSR 0 SY SZ;
@@ -13,44 +15,46 @@ PROCEDURE INJECT NUM SZ; {at injection: SX = 0, SY = SQRT(1-SZ^2)}
 ENDPROCEDURE;
 
 PROCEDURE MAIN;
-  VARIABLE WHERE 100; VARIABLE MRKR 100;
-  VARIABLE MAPSE 1;   VARIABLE EKIN 1;
+  VARIABLE WHERE 100;
+  VARIABLE PSI_DEG0 1; VARIABLE MRKR 100;
+  VARIABLE MAPSE 1;    VARIABLE ORDR 1;
   {LATTICE ARGUMENTS}
   VARIABLE KS 1 2; VARIABLE X  1 2; VARIABLE XS 1 2;
-  {for optimization}
-  VARIABLE X2 1; VARIABLE X3 1;
-  VARIABLE NTURN 1;
+  VARIABLE NTURN 1; VARIABLE EKIN 1;
   {********** CONTROLS **********}
-  NTURN := 3000000;
+  NTURN := 5000;
   EKIN := 130;  {kinetic energy in MeV}
+  ORDR := 3; {transfer map computation order}
+  PSI_DEG0 := 45;
   {******************************}
-  DIRSET WHERE 'data/TEST/SECOND-ST/'&MRK(EKIN)&'MeV/NAVI-OFF/3D/'&MRK(NTURN)&'/';
+  MRKR := 'PSI0-'&MRK(PSI_DEG0); {marker to identify data files}
+  WRITE 6 '^^^^ INITIAL SPIN PSI'&SF(PSI_DEG0,'(F15.7)');
+  DIRSET WHERE 'data/TEST/SECOND-ST/'&MRK(EKIN)&'MeV/NAVI-OFF/'&MRK(ORDR)&'D/'&MRK(NTURN)&'/';
   GROUTF 'img/dump/TR' 1;
   
   
-  OV 3 3 0;
+  OV ORDR 3 0;
   { SET lattice parameters }
   SET_FOR_PROTONS EKIN X XS;
   NAVIGATORS 0 0 1 KS;                   {sets navigator DEVIATIONS (if tune=0, lattice is pure FS)}
   LATTICE X XS KS 1;
      {print transfer map}
-      OPENF 636 WHERE&'TrMAP' 'REPLACE';
+      OPENF 636 WHERE&'TrMAP:'&MRKR 'REPLACE';
       PM 636; CLOSEF 636;
       {pront spin transfer map}
-      OPENF 636 WHERE&'SpTrMAP' 'REPLACE';
+      OPENF 636 WHERE&'SpTrMAP:'&MRKR 'REPLACE';
       PSM 636; CLOSEF 636;
       {print aberrations}
-      OPENF 636 WHERE&'ABERRATIONS' 'REPLACE';
+      OPENF 636 WHERE&'ABERRATIONS:'&MRKR 'REPLACE';
       PA 636; CLOSEF 636;
       {other stats about the map}
       MAPSE := SE(MAP);
-      OPENF 636 WHERE&'MAP-SYM-ERR' 'REPLACE';
+      OPENF 636 WHERE&'MAP-SYM-ERR:'&MRKR 'REPLACE';
       WRITE 636 MAPSE; CLOSEF 636;
       WRITE 6 'MAP SYMPLECTIFICATION ERROR' MAPSE;
 
 
-  INJECT 10 1;     {SZ = 1/SQRT(2) = .7071}
-  MRKR := 'SZ0-0'; {marker to identify data files}            {********** CONTROLS}
+  INJECT 10 PSI_DEG0;
   WRITE 6 '******************** STARTING TRACKING';
   OPENF 99 WHERE&'PRAY:'&MRKR&'.dat' 'REPLACE';
   PRAY 99; CLOSEF 99;

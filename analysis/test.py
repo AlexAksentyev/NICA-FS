@@ -4,16 +4,20 @@ from analysis import HOMEDIR, DAVEC, load_data
 
 LATTICE = 'SECOND-ST'
 ENERGY = '130'
-MRKR = 'SZ0-1'
+MRKR = 'PSI0-45'
+SEQ = False
+NTURN = '5000'
 
-SEQMAP = { #indexes of cornerstone elements (in COSY indexing, SEQFULL.fox file [i.e., no RF])
+SEQMAP = { #indexes of cornerstone elements (in COSY indexing, SEQFULL.fox file [i.e., no RF (which is at index 0 anyway)])
     'SPD1':21,  'ARC1s':43, 'ARC1f': 236,
     'MDP1':257, 'MPD2':293, # straight section
     'ARC2s':318, 'ARC2f':511, 'SPD2':530
     }
 
-# DIR  = '../data/TEST/'+LATTICE+'/'+ENERGY+'MeV/NAVI-OFF/3D/3000000/'
-DIR  = '../data/TEST/'+LATTICE+'/'+ENERGY+'MeV/SEQ/20-SEQ/'
+if not SEQ:
+    DIR  = '../data/TEST/'+LATTICE+'/'+ENERGY+'MeV/NAVI-OFF/3D/'+NTURN+'/'
+else:
+    DIR  = '../data/TEST/'+LATTICE+'/'+ENERGY+'MeV/SEQ/20-SEQ/'
 
 def load_tss(path=HOMEDIR+DIR+'MU.dat'):
     d_type = [('EL', int), ('PID', int)] + list(zip(['NU', 'NX','NY','NZ'], [float]*4))
@@ -44,6 +48,13 @@ def plot_spin(spdat, rng=slice(0,-1,50),pid = [1,2,3], fmt='.-'):
     ax[1].set_ylabel('S_Y')
     ax[2].plot(spdat[rng, pid]['iteration']/1000, spdat[rng,pid]['S_Z'])
     ax[2].set_xlabel('turn [x1000]'); ax[2].set_ylabel('S_Z')
+    return fig, ax
+
+def plot_spin2(spdat, rng=slice(0,-1,50),pid = [1,2,3]):
+    fig, ax = plt.subplots(2,1)
+    SX, SY, SZ = (spdat[lbl][rng,pid] for lbl in ['S_X','S_Y','S_Z'])
+    ax[0].plot(SX, SZ); ax[0].set_xlabel('S_X'); ax[0].set_ylabel('S_Z')
+    ax[1].plot(SZ, SY); ax[1].set_xlabel('S_Z'); ax[1].set_ylabel('S_Y')
     return fig, ax
 
 def plot_seq(dat, spdat, pid = [1,2,3], itn=(0,1), show_elems=[21, 43, 236, 257, 293, 318, 511, 530]):
@@ -78,6 +89,7 @@ def plot_seq(dat, spdat, pid = [1,2,3], itn=(0,1), show_elems=[21, 43, 236, 257,
         elnames.insert(0, 'RF') # need this only if RF is inserted, which is most times but still -- not necessarily true
         elnames.insert(0, 'INJ') # **
         elnames=np.array(elnames)
+        elnames = np.array([e+' ['+ str(i+1) + ']' for i,e in enumerate(elnames)]) # add the ordinal
         eid = eid[:,0] if eid.ndim>1 else eid
         eid_max = eid.max()
         show_elems=np.array(show_elems)+1 # +1 because of the added INJ **
@@ -94,3 +106,4 @@ if __name__ == '__main__':
     else:
         fig, ax = plot(dat, spdat)
         figs, axs = plot_spin(spdat)
+        figs2, axs2 = plot_spin2(spdat)
