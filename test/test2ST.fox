@@ -16,29 +16,29 @@ ENDPROCEDURE;
 
 PROCEDURE MAIN;
   VARIABLE WHERE 100;
-  VARIABLE PSI_DEG0 1; VARIABLE MRKR 100;
-  VARIABLE MAPSE 1;    VARIABLE ORDR 1;
+  VARIABLE PSI0_DEG 1; VARIABLE MRKR 100; VARIABLE PNUM 1;
+  VARIABLE MAPSE 1;
   {LATTICE ARGUMENTS}
   VARIABLE KS 1 2; VARIABLE X  1 2; VARIABLE XS 1 2;
   VARIABLE NTURN 1; VARIABLE EKIN 1;
-  VARIABLE NAVINU 1;
+  VARIABLE NAVIPSI_DEG 1;
   {********** CONTROLS **********}
-  NTURN := 300000;
+  NTURN := 3000000;
+  PNUM := 10; {number of particles in a bunch}
   EKIN := 130;  {kinetic energy in MeV}
-  ORDR := 3; {transfer map computation order}
-  PSI_DEG0 := 0;
-  NAVINU := 3E-2;
+  PSI0_DEG := 0; {angle between the spin orientation at injection and the z-axis}
+  NAVIPSI_DEG := 0; {navigator defined angle between the z and spin axes}
   {******************************}
-  MRKR := 'PSI0-'&MRK(PSI_DEG0); {marker to identify data files}
-  WRITE 6 '^^^^ INITIAL SPIN PSI'&SF(PSI_DEG0,'(F15.7)');
-  DIRSET WHERE 'data/TEST/SECOND-ST/'&MRK(EKIN)&'MeV/NAVI-'&MRK(NAVINU*100)&'deci/'&MRK(ORDR)&'D/'&MRK(NTURN)&'/';
+  MRKR := 'PSI0spin-'&MRK(PSI0_DEG); {marker to identify data files}
+  WRITE 6 '^^^^ INITIAL SPIN PSI'&SF(PSI0_DEG,'(F15.7)');
+  DIRSET WHERE 'data/SECOND-ST/'&MRK(EKIN)&'MeV/'&MRK(NTURN)&'/NAVI-ON/NAVIPSI-'&MRK(NAVIPSI_DEG)&'/';
   GROUTF 'img/dump/TR' 1;
   
   
-  OV ORDR 3 0;
+  OV 3 3 0;
   { SET lattice parameters }
   SET_FOR_PROTONS EKIN X XS;
-  NAVIGATORS NAVINU 0 1 KS;                   {sets navigator DEVIATIONS (if tune=0, lattice is pure FS)}
+  NAVIGATORS 3e-2 0 NAVIPSI_DEG KS;
   LATTICE X XS KS 1;
      {print transfer map}
       OPENF 636 WHERE&'TrMAP:'&MRKR 'REPLACE';
@@ -56,7 +56,7 @@ PROCEDURE MAIN;
       WRITE 6 'MAP SYMPLECTIFICATION ERROR' MAPSE;
 
 
-  INJECT 10 PSI_DEG0;
+  INJECT PNUM PSI0_DEG;
   WRITE 6 '******************** STARTING TRACKING';
   OPENF 99 WHERE&'PRAY:'&MRKR&'.dat' 'REPLACE';
   PRAY 99; CLOSEF 99;

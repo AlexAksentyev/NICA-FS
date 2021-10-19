@@ -3,11 +3,11 @@ import matplotlib.pyplot as plt; plt.ion()
 from analysis import HOMEDIR, DAVEC, load_data
 
 LATTICE = 'SECOND-ST'
-ENERGY = '130'
-MRKR = 'PSI0-0'
-SEQ = False
-NTURN = '300000'
-NAVINU = '3' # times 1e-2
+ENERGY = '3059'
+MRKR = 'PSI0spin-0'
+SEQ = True
+NTURN = '3000000'
+NAVIPSI = '0'
 
 SEQMAP = { #indexes of cornerstone elements (in COSY indexing, SEQFULL.fox file [i.e., no RF (which is at index 0 anyway)])
     'SPD1':21,  'ARC1s':43, 'ARC1f': 236,
@@ -16,9 +16,9 @@ SEQMAP = { #indexes of cornerstone elements (in COSY indexing, SEQFULL.fox file 
     }
 
 if not SEQ:
-    DIR  = '../data/TEST/'+LATTICE+'/'+ENERGY+'MeV/NAVI-'+NAVINU+'deci/3D/'+NTURN+'/'
+    DIR  = '../data/TEST/'+LATTICE+'/'+ENERGY+'MeV/'+NTURN+'/NAVI-ON/NAVIPSI-'+NAVIPSI+'/'
 else:
-    DIR  = '../data/TEST/'+LATTICE+'/'+ENERGY+'MeV/SEQ/20-SEQ/'
+    DIR  = '../data/TEST/'+LATTICE+'/'+ENERGY+'MeV/SEQ/1-SEQ/'
 
 def load_tss(path=HOMEDIR+DIR+'MU.dat'):
     d_type = [('EL', int), ('PID', int)] + list(zip(['NU', 'NX','NY','NZ'], [float]*4))
