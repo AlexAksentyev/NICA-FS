@@ -625,9 +625,9 @@ PROCEDURE LATTICE MAPPARAMS MAPARR SPNRARR ;
      SMAPS 303 MAPARR SPNRARR;
   UM; QUAD 0.67 0 (-0.5166681483*(1+X2+XSQW)) ; {Quadr_384}
      SMAPS 304 MAPARR SPNRARR;
-  UM; DL 1.8975 ; {Drift_385}
+  UM; DL 1.8975-.01 ; {Drift_385}                                                  {correction for energy 3059 MeV (3200 MeV/c)}
      SMAPS 305 MAPARR SPNRARR;
-  UM; DL 1.841 ; {Drift_386}
+  UM; DL 1.841+.01 ; {Drift_386}                                                                  {@AA}
      SMAPS 306 MAPARR SPNRARR;
   UM; DL 1.841 ; {Drift_387}
      SMAPS 307 MAPARR SPNRARR;
@@ -635,9 +635,9 @@ PROCEDURE LATTICE MAPPARAMS MAPARR SPNRARR ;
      SMAPS 308 MAPARR SPNRARR;
   UM; DL 1.841 ; {Drift_389}
      SMAPS 309 MAPARR SPNRARR;
-  UM; DL 1.841 ; {Drift_390}
+  UM; DL 1.841+.001 ; {Drift_390}                                             {ABERRATIONS PROBLEM CORRECTION (caused by Drift_391)}
      SMAPS 310 MAPARR SPNRARR;
-  UM; DL 1.8125 ; {Drift_391}
+  UM; DL 1.8125-.001 ; {Drift_391}                                                  {at 130 MeV energy @AA}
      SMAPS 311 MAPARR SPNRARR;
   UM; QUAD 0.69 0 (0.5185577457*(1+X2)) ; {Quadr_392}
      SMAPS 312 MAPARR SPNRARR;

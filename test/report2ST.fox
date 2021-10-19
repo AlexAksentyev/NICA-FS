@@ -1,0 +1,236 @@
+INCLUDE 'bin/setups/SECOND-ST/SEQFULL';
+
+PROCEDURE INJECT BUNCH NUM NU PSI; {inject only the x-offset particles}
+  VARIABLE X 500; VARIABLE I 1;
+  VARIABLE PSI0 1;
+  VARIABLE SY 1; VARIABLE SZ 1;
+  PSI0 := DEG2RAD(PSI); WRITE 6 'PSI0 = '&ST(PSI0);
+  SY := -SIN(PSI0)*SIG(NU); SZ := -COS(PSI0)*SIG(NU);
+  WRITE 6 'INJECTING SPIN = '&FORM(0&SY&SZ);
+  CR;
+  X := LINSPACE(-2E-3, 2E-3, NUM);
+  SR 0 0 0 0 0 0 0 0 1; SSR 0 SY SZ;
+  LOOP I 1 NUM;
+    IF BUNCH='X';
+      SR X|I 0 0 0 0 0 0 0 1; SSR 0 SY SZ;
+    ELSEIF BUNCH='Y';
+      SR 0 0 X|I 0 0 0 0 0 1; SSR 0 SY SZ;
+    ELSEIF TRUE;
+      SR 0 0 0 0 0 (X|I)/10 0 0 1; SSR 0 SY SZ;
+    ENDIF;
+  ENDLOOP;
+ENDPROCEDURE;
+
+PROCEDURE INJECT_FOR_TSS;
+  VARIABLE X 100; VARIABLE I 1; VARIABLE NUM 1;
+  NUM := 30;
+  CR;
+  X := LINSPACE(-3E-3, 3E-3, NUM);
+  SR 0 0 0 0 0 0 0 0 1; SSR 0 0 1;
+  LOOP I 1 NUM;
+    SR X|I 0 0 0 0 0 0 0 1; SSR 0 0 1;
+    SR 0 0 X|I 0 0 0 0 0 1; SSR 0 0 1;
+    SR 0 0 0 0 0 (X|I)/10 0 0 1; SSR 0 0 1;
+  ENDLOOP;
+ENDPROCEDURE;
+
+PROCEDURE SPINTUNE WHERE {to locate files} OEID NAVINU NAVIPSI_DEG {navigator parameters} NTURN BUNCH;
+  {lattice parameters}
+  VARIABLE KS 1 2; VARIABLE X  1 2; VARIABLE XS 1 2;
+  VARIABLE NSEQ 1; VARIABLE RFFLAG 1;
+  VARIABLE EKIN 1;
+  VARIABLE MAPPARAMS 1 6; {holds parameter values}
+  VARIABLE MAPARR 1000 6 547; VARIABLE SPNRARR 1000 3 3 547; {element map arrays}
+  VARIABLE SEGMARR 1000 6 LENGTH(OEID)+1;
+  VARIABLE SEGSARR 1000 3 3 LENGTH(OEID)+1;
+  {variables required by TSS, GET_TUNE_ENSEMBLE}
+  VARIABLE MU 800; VARIABLE NBAR 800 3; VARIABLE MUARR 800 4;
+  {RF parameters}
+  VARIABLE VRF 1 1 1;
+  VARIABLE FREQ 1;
+  VARIABLE HNUM 1;
+
+  VARIABLE EL 1; {index of the current starting element}
+  VARIABLE EL0 1; VARIABLE EL1 1; {select lattice segment from EL0 to EL1 for test}
+  
+  PROCEDURE PICK INDEX;
+    VARIABLE I 1; VARIABLE J 1;
+    LOOP I 1 TWOND; MSC(I) := MAPARR(I, INDEX); ENDLOOP;
+    LOOP I 1 3; LOOP J 1 3; SSCR(I,J) := SPNRARR(I,J,INDEX) + 0*DD(1);
+    ENDLOOP;ENDLOOP;
+  ENDPROCEDURE;
+  PROCEDURE MAKEMAP FROM TO START; {lattice segment FROM index TO index, beginning at START index}
+    VARIABLE J 1;
+    WRITE 6 '* '&ST(START);
+    LMAPS START MAPARR SPNRARR; {sets the MAP, SPNR transfer maps to those of the i-th element}
+    LOOP J (START+1) TO; { WRITE 6 '**       '&ST(J); }
+      PICK J; LOCSET 0 0 0 0 0 0; UPDATE 1 1;
+      ENDLOOP;
+    LOOP J FROM (START-1); { WRITE 6 '**       '&ST(J); }
+      PICK J; LOCSET 0 0 0 0 0 0; UPDATE 1 1;
+      ENDLOOP;
+  ENDPROCEDURE;
+  PROCEDURE WST ELN OU; {used in TSS DATA OUTPUT block}
+    VARIABLE I 1; VARIABLE J 1; VARIABLE STR 100;
+    LOOP J 1 NRAY ; STR := SF(ELN, '(I6)')&' '&SF(J-1,'(I6)') ;
+      LOOP I 1 4 ; STR := STR&SF((MUARR(I)|J),'(E15.7)') ; ENDLOOP ;
+      WRITE OU STR ;
+    ENDLOOP ;
+  ENDPROCEDURE; { WST }
+  PROCEDURE SEGMENT MAPARR SPNRARR OEID SEGMARR SEGSARR SEGNUM;
+    WRITE 6 '---------- SEGMENT';
+    IF (OEID|1)<0; {do NOTHING, use element-by-element tracking through MAPARR SPNRARR}
+      SEGNUM := -1;
+    ELSEIF LENGTH(OEID)=1; {Map consists of one segment -- the map -- injection point specified by OEID}
+      IF (OEID|1)=547; VELSET OEID 1 0; ENDIF;
+      WRITE 6 'MAP: '&ST(OEID|1+1)&' -- 547 --'&ST(OEID|1);
+      UM; MAKEMAP 1 547 (OEID|1+1);  {this case covers OEID|1=0 }
+          SMAPS 1 SEGMARR SEGSARR;
+          SEGNUM := 1;
+    ELSEIF LO(1); {if LENGTH(OEID)>1, injection point is SPD, and OEID specifies output points in the ORIGINAL LATTICE}
+      WRITE 6 'SEG 1: 1--'&ST(OEID|1);
+      UM; MAKEMAP 1 OEID|1 1;
+          SMAPS 1 SEGMARR SEGSARR;
+          LOOP SEGNUM 1 (LENGTH(OEID)-1);
+            WRITE 6 'SEG '&ST(SEGNUM+1)&': '&ST(OEID|SEGNUM+1)&'--'&ST(OEID|(SEGNUM+1));
+            UM; MAKEMAP (OEID|SEGNUM+1) OEID|(SEGNUM+1) (OEID|SEGNUM+1);
+                SMAPS (SEGNUM+1) SEGMARR SEGSARR;
+          ENDLOOP;
+          SEGNUM := SEGNUM + 1;
+          IF OEID|SEGNUM<472; WRITE 6 'LAST SEGMENT:'&ST(OEID|SEGNUM+1)&'--547';
+            UM; MAKEMAP (OEID|SEGNUM+1) 547 (OEID|SEGNUM+1);
+                SMAPS (SEGNUM+1) SEGMARR SEGSARR;
+                SEGNUM := SEGNUM + 1;
+          ENDIF;
+    ENDIF;
+  ENDPROCEDURE; { SEGMENT map}
+  PROCEDURE TRACK CHOICE NTURN MRK;
+    OPENF 99 WHERE&'PRAY:'&MRK&'.dat' 'REPLACE';
+    PRAY 99; CLOSEF 99;
+    OPENF 772 WHERE&'TRPRAY:'&MRK&'.dat' 'REPLACE';
+    OPENF 893 WHERE&'TRPSPI:'&MRK&'.dat' 'REPLACE';
+    IF CHOICE<0;
+      WRITE 6 '++++++++++ ELEMENT-BY-ELEMENT TRACKING';
+      TREL MAPARR SPNRARR 1 547 NTURN 772 893;
+    ELSEIF CHOICE=1;
+      WRITE 6 '++++++++++ UNSEGMENTED MAP, TR TRACKING';
+      TRPRAY 772; TRPSPI 893;
+      TR NTURN NINT(NTURN/5000) -1 -3 1.2 1.2 0 0 -12;
+    ELSEIF TRUE;
+      WRITE 6 '++++++++++ SEGMENTED MAP, TREL TRACKING';
+      TREL SEGMARR SEGSARR 1 EL NTURN 772 893;
+    ENDIF;
+    CLOSEF 772; CLOSEF 893;
+  ENDPROCEDURE; { TRACK }
+  {********** CONTROLS **********}
+  RFFLAG := 1; {insert RF if 1}
+  EKIN := 130; 
+  {******************************}
+  NSEQ := 546; {number of elements in the lattice (not counting the RF)}
+
+  OV 5 3 0;
+  
+  {setting LATTICE PARAMETERS for TSS}
+  SET_FOR_PROTONS EKIN X XS;               {beam injection at 130 MeV kinetic energy}
+  NAVIGATORS NAVINU {passed argument} 0 {NX=0} NAVIPSI_DEG {passed argument} KS {navigator strengths};
+                                                                  
+    MAPPARAMS(1) := X(1);   MAPPARAMS(2) := X(2);   {X}
+    MAPPARAMS(3) := XS(1);  MAPPARAMS(4) := XS(2);  {XS}
+    MAPPARAMS(5) := KS(1);  MAPPARAMS(6) := KS(2);  {KS} 
+    LATTICE MAPPARAMS MAPARR SPNRARR;
+    IF RFFLAG=1;
+      UM; RF VRF 0 FREQ 0 0.05;
+      INSERT 1 MAPARR SPNRARR NSEQ;
+      NSEQ := NSEQ + 1;
+    ENDIF;
+
+ {TSS DATA OUTPUT}
+  IF FALSE; 
+    EL0 := 1; EL1 := NSEQ;
+    OPENF 3618 WHERE&'MU.dat' 'REPLACE';
+    WRITE 3618 'number of rays: 92 (see INJECT_FOR_TSS source code)';
+    WRITE 3618 '# EID ray NU NX NY NZ';
+    LOOP EL EL0 EL1;
+      UM; CR;
+      MAKEMAP EL0 EL1 EL; { OPENF 935 WHERE&'MAP'&MRK(EL) 'REPLACE'; PM 935; CLOSEF 935; }
+      TSS MU NBAR 0;
+      MUARR(1) := MU; MUARR(2) := NBAR(1); MUARR(3) := NBAR(2); MUARR(4) := NBAR(3);
+      INJECT_FOR_TSS; GET_TUNE_ENSEMBLE MUARR;
+      WST EL 3618;
+    ENDLOOP;
+    CLOSEF 3618;
+    {computing the TSS DA vectors for the primary map}
+    UM; CR;
+    MAKEMAP 1 NSEQ 1;
+    TSS MU NBAR 0;
+    OPENF 3618 WHERE&'NU.da' 'REPLACE';
+      WRITE 3618 MU;
+    CLOSEF 3618;
+    LOOP EL 1 3;
+      OPENF 3618 WHERE&'NBAR'&MRK(EL)&'.da' 'REPLACE';
+        WRITE 3618 NBAR(EL);
+      CLOSEF 3618;
+    ENDLOOP;
+  ENDIF;
+
+  {computing map segments}
+  SEGMENT MAPARR SPNRARR OEID SEGMARR SEGSARR EL;
+
+  {MAIN TRACKING}
+  INJECT BUNCH 10 NAVINU NAVIPSI_DEG;
+  TRACK EL NTURN 'MAIN';
+  
+  {ONE TURN TRACKING}
+  INJECT BUNCH 10 NAVINU NAVIPSI_DEG;
+  TRACK -1 1 'ONE_TURN';
+ENDPROCEDURE; {SPINTUNE}
+
+PROCEDURE RUN;
+  VARIABLE WHERE 100; VARIABLE COMMON 100;
+  VARIABLE OEID 10; VARIABLE NTURN 1; VARIABLE BUNCH 3; VARIABLE I 1;
+  VARIABLE NAVIPSI_DEG 1; VARIABLE NAVINU 1; VARIABLE J 1; VARIABLE NANG 1;
+  FUNCTION DIRNAME NUM;
+    VARIABLE KILOS 1; VARIABLE MILS 1;
+    KILOS := NUM/1000;
+    MILS := NUM/1000000;
+    IF MILS<1;
+      DIRNAME := MRK(KILOS)&'kTURN/';
+    ELSEIF LO(1);
+      DIRNAME := MRK(MILS)&'MTURN/';
+      WRITE 6 '********** CHECK that tracking is done via TR'
+               '           (otherwise too much data possible!)';
+    ENDIF;
+  ENDFUNCTION;
+
+  DIRSET_AUTO 1;
+  OEID := 0; {output data only after these elements}
+  NTURN := 300000;
+  BUNCH := 'X'&'Y'&'D';
+  NANG := 5;      {number of navigator-set angles to check}
+  NAVINU := 3E-2; {navigator-set spin-tune to avoid instability}
+  LOOP I 1 1;
+    COMMON := 'data/REPORT/SECOND-ST-ORD5/'&DIRNAME(NTURN)&(BUNCH|I)&'-bunch/';
+    { DIRSET WHERE COMMON&'NO-NAVI/'; }
+    {   GROUTF 'img/dump/TR' 1; }
+    {   SPINTUNE PARTICLE WHERE OEID 0 0 NTURN (BUNCH|I); }
+    DIRSET WHERE COMMON&'NAVIPSI-0-/';
+      GROUTF 'img/dump/TR' 1;
+      SPINTUNE WHERE OEID NAVINU 0 NTURN (BUNCH|I);
+    DIRSET WHERE COMMON&'NAVIPSI-90+/';
+      GROUTF 'img/dump/TR' 1;
+      SPINTUNE WHERE OEID NAVINU -90 NTURN (BUNCH|I);
+    DIRSET WHERE COMMON&'NAVIPSI-0+/';
+      GROUTF 'img/dump/TR' 1;
+      SPINTUNE WHERE OEID -1*NAVINU 0 NTURN (BUNCH|I);
+    DIRSET WHERE COMMON&'NAVIPSI-90-/';
+      GROUTF 'img/dump/TR' 1;
+      SPINTUNE  WHERE OEID NAVINU 90 NTURN (BUNCH|I);
+    LOOP J 1 NANG;
+      NAVIPSI_DEG := 5 + (90-5)/(NANG-1)*(J-1);
+      DIRSET WHERE COMMON&'NAVIPSI-'&MRK(NAVIPSI_DEG)&'-/';
+        GROUTF 'img/dump/TR' 1;
+        SPINTUNE WHERE OEID NAVINU NAVIPSI_DEG NTURN (BUNCH|I);
+    ENDLOOP;
+  ENDLOOP;
+ENDPROCEDURE;
+RUN; END;
