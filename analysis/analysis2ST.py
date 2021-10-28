@@ -2,9 +2,11 @@ import numpy as np
 import matplotlib.pyplot as plt; plt.ion()
 from analysis import HOMEDIR, DAVEC, load_data, Polarization
 
+PSVARS = list(zip(['X','A','Y','B','T','D'],[float]*6))
+
 LATTICE = 'SECOND-ST'
 ENERGY = '130'
-NTURN = '3000000'
+NTURN = '300000'
 DATDIR = '../data/'+LATTICE+'/'+ENERGY+'MeV/'+NTURN
 
 SEQMAP = { #indexes of cornerstone elements (in COSY indexing, SEQFULL.fox file [i.e., no RF (which is at index 0 anyway)])
@@ -92,12 +94,26 @@ def plot_seq(dat, spdat, pid = [1,2,3], itn=(0,1), show_elems=[21, 43, 236, 257,
         plt.xticks(ticks=eid[show_elems], labels=elnames[show_elems], rotation=60)
     return fig, ax
 
+def load_nbar(folder, spin_psi):
+    nbar = {}
+    for i, lbl in [(1,'X'),(2,'Y'),(3,'Z')]:
+        nbar.update({lbl:DAVEC(folder+'NBAR({:d}):PSI0spin-{:d}'.format(i, spin_psi))})
+    return nbar
+
 def main(navi_psi, spin_psi=0):
     folder  = DATDIR+'/NAVI-ON/NAVIPSI-{:d}/'.format(navi_psi)
     print(folder)
     dat = load_data(folder, 'TRPRAY:PSI0spin-{:d}.dat'.format(spin_psi))
     spdat = load_data(folder, 'TRPSPI:PSI0spin-{:d}.dat'.format(spin_psi))
-    axis = [0, np.sin(navi_psi), np.cos(navi_psi)]
+    try:
+        spintune = DAVEC(folder+'MU:PSI0spin-{:d}'.format(spin_psi))
+        nbar = load_nbar(folder, spin_psi)
+    except:
+        print("error in trying to load spin-tune/nbar")
+    navi_psi_rad = np.deg2rad(navi_psi)
+    print(navi_psi, navi_psi_rad)
+    axis = [0, np.sin(navi_psi_rad), np.cos(navi_psi_rad)]
+    print(axis)
     P = Polarization.on_axis(spdat, axis)
     P.plot(1)
     plt.savefig(folder+'-pol.png', bbox_inches='tight', pad_inches=.1)
@@ -109,8 +125,15 @@ def main(navi_psi, spin_psi=0):
     fig2, ax2 = plot_spin(spdat)
     plt.savefig(folder+'-spin.png', bbox_inches='tight', pad_inches=.1)
     plt.close('all')
-    
+    return spintune, nbar
+
 
 if __name__ == '__main__':
-    for psi in range(0,100,10):
-        main(psi)
+    mu = {}
+    nbar = {}
+    z = np.zeros(11, dtype=PSVARS)
+    z['X'] = np.linspace(-3e-3,3e-3,11)
+    for psi in range(0,10,10):
+        mu_, nbar_ = main(psi)
+        mu.update({psi:mu_})
+        nbar.update({psi:nbar_})
