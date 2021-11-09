@@ -9,11 +9,11 @@ img/
 data/
 tmp/
 madx-scripts/*
-!madx-scripts/makefile
-!madx-scripts/support/main.madx
-!madx-scripts/**/*.madx
-!madx-scripts/**/*.seq
-!madx-scripts/**/*.py
+!madx-scripts/*.madx
+!madx-scripts/*.seq
+!madx-sctipts/*.py
+!madx-scripts/support
+!madx-scripts/ST-mode
 analysis/tbl/
 
 

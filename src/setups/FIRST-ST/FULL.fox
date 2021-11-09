@@ -1,5 +1,11 @@
-INCLUDE 'bin/common/FIRST-ST/header';
+{lattice converted from MADX sequence file: ST-moode/First-ST-NICA-MAD.seq}
+{NOTE: in the .seq file above it is said in the comments section that the number of objects is 702}
+{the actual number of objects is 542}
+{missing elements start at numbers: 42, 44, 46, 48; 65, 67, 69, 71; &c}
+{elements are CONSISTENTLY missing around the RBEND elements}
 
+
+INCLUDE 'bin/common/FIRST-ST/header';
 
 {ARGUMENTS: KsSPD XSFW XSQW X2 X3 XMQW XMFW KsMPD XMFE XMQE XSQE XSFE RFFLAG}
 
@@ -32,7 +38,10 @@ PROCEDURE LATTICE X {2 stuck} XM {4} XS {4} KS {2} RFFLAG {1} ;
   WRITE 6 'RF FREQUENCY: '&ST(FREQ/1E6)&' MHZ';
 
   UM;
-  IF RFFLAG=1; RF VRF 0 FREQ 0 0.05; WRITE 6 'INSERTING RF...'; ENDIF; {inserted by @AA}
+  IF RFFLAG=1; RF VRF 0 FREQ 0 0.05;
+    WRITE 6 'INSERTING RF...';
+    WRITE 6 'RF MAP(6):' MAP(6);
+  ENDIF; {inserted by @AA}
   {BEGIN LATTICE}
 
   DL 2.35 ; {Drift_1}

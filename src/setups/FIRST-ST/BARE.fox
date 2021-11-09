@@ -1,4 +1,4 @@
-{this is the BARE version of the NICA lattice}
+{this is the BARE version of the NICA lattice (FIRST-ST sequence)}
 {it doesn't use any of the matching quadrupole strength coefficients}
 {as a consequence, doesn't use the FS solenoids, also}
 
@@ -25,14 +25,20 @@ PROCEDURE LATTICE RFFLAG ;
   
 
   WRITE 6 '********************************************';
-  WRITE 6 '*     FS NICA FISRT-ST 30 AUG 2021 (CW)    *';
+  WRITE 6 '*  NICA FIRST-ST (BARE) 07 OCT 2021 (CW)   *';
   WRITE 6 '********************************************';
 
   WRITE 6 'REVOLUTION FREQUENCY: '&ST(REVFREQ(ACCLEN(1))/1E6)&' MHZ';
   WRITE 6 'RF FREQUENCY: '&ST(FREQ/1E6)&' MHZ';
+  WRITE 6 'KoeffSPD: '&SF(KoeffSolSPD, '(F15.7)');
+  WRITE 6 'KoeffMPD: '&SF(KoeffSolMPD, '(F15.7)');
 
   UM;
-  IF RFFLAG=1; RF VRF 0 FREQ 0 0.05; WRITE 6 'INSERTING RF...'; ENDIF; {inserted by @AA}
+  IF RFFLAG=1;
+    RF VRF 0 FREQ 0 0.05;
+    WRITE 6 'INSERTING RF...';
+    WRITE 6 'MAP(6):' MAP(6);
+  ENDIF; {inserted by @AA}
   {BEGIN LATTICE}
 
   DL 2.35 ; {Drift_1}

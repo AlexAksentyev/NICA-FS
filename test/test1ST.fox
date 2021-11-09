@@ -32,19 +32,22 @@ PROCEDURE MAIN;
   {for optimization}
   VARIABLE X2 1; VARIABLE X3 1;
   VARIABLE NTURN 1;
-  NTURN := 3000000;
-  DIRSET WHERE 'data/TEST/FIRST-ST/'&MRK(NTURN)&'/NAVI-OFF/';
+  NTURN := 300000;
+  DIRSET WHERE 'data/TEST/FIRST-ST/NAVI-OFF/'&MRK(NTURN)&'/';
   GROUTF 'img/dump/TR' 1;
   
   
   OV 3 3 0;
   { SET lattice parameters }
   SET_FOR_PROTONS 130 X XM XS;
-  NAVIGATORS 0 0 1 KS;
+  NAVIGATORS 0*5e-2 0 1 KS;                   {sets navigator DEVIATIONS (if tune=0, lattice is pure FS)}
   LATTICE X XM XS KS 1;
      {print transfer map}
       OPENF 636 WHERE&'TrMAP' 'REPLACE';
       PM 636; CLOSEF 636;
+      {pront spin transfer map}
+      OPENF 636 WHERE&'SpTrMAP' 'REPLACE';
+      PSM 636; CLOSEF 636;
       {print aberrations}
       OPENF 636 WHERE&'ABERRATIONS' 'REPLACE';
       PA 636; CLOSEF 636;
@@ -52,6 +55,7 @@ PROCEDURE MAIN;
       MAPSE := SE(MAP);
       OPENF 636 WHERE&'MAP-SYM-ERR' 'REPLACE';
       WRITE 636 MAPSE; CLOSEF 636;
+      WRITE 6 'MAP SYMPLECTIFICATION ERROR' MAPSE;
 
 
   INJECT 10;

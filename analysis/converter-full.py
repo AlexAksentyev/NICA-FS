@@ -2,7 +2,7 @@ import re
 import numpy as np
 
 HOME = '/Users/alexaksentyev/REPOS/NICA-FS/'
-INFILE = 'madx-scripts/ST-mode/Second-ST-NICA-MAD.seq'
+INFILE = 'madx-scripts/ST-mode/NICA4SOL.seq'
 OUTFILE = 'src/setups/SECOND-ST/FULL.fox'
 
 SELECT_ELEMENTS = [] # elements to be swapped for DL

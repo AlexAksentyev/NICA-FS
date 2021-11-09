@@ -1,0 +1,85 @@
+INCLUDE 'bin/setups/SECOND-ST/FULL';
+
+PROCEDURE INJECT NUM PSI_DEG; {at injection: SX = 0, SY, SZ = sin PSI, cos PSI}
+  VARIABLE X 100; VARIABLE I 1;
+  VARIABLE PSI 1; VARIABLE SY 1; VARIABLE SZ 1;
+  PSI := DEG2RAD(PSI_DEG); {PSI IN RADIANS}
+  X := LINSPACE(-3E-3, 3E-3, NUM);
+  SY := SIN(PSI); SZ := COS(PSI);
+  SR 0 0 0 0 0 0 0 0 1; SSR 0 SY SZ;
+  LOOP I 1 NUM;
+    SR X|I 0 0 0 0 0 0 0 1; SSR 0 SY SZ;
+    SR 0 0 X|I 0 0 0 0 0 1; SSR 0 SY SZ;
+    SR 0 0 0 0 0 (X|I)/10 0 0 1; SSR 0 SY SZ;
+  ENDLOOP;
+ENDPROCEDURE;
+
+PROCEDURE MAIN;
+  VARIABLE WHERE 100;
+  VARIABLE PSI0_DEG 1; VARIABLE MRKR 100; VARIABLE PNUM 1;
+  VARIABLE MAPSE 1;    VARIABLE CASE 1; VARIABLE I 1;
+  {LATTICE ARGUMENTS}
+  VARIABLE KS 1 2; VARIABLE X  1 2; VARIABLE XS 1 2;
+  VARIABLE NTURN 1; VARIABLE EKIN 1;
+  VARIABLE NAVIPSI_DEG 1;
+  {for TSS}
+  VARIABLE MU 800; VARIABLE NBAR 800 3;
+  {********** CONTROLS **********}
+  NTURN := 30000;
+  PNUM := 10; {number of particles in a bunch (overall -- three bunches)}
+  EKIN := 130;  {kinetic energy in MeV}
+  PSI0_DEG := 0; {angle between the spin orientation at injection and the z-axis}
+  NAVIPSI_DEG := 0; {navigator defined angle between the z and spin axes}
+  {******************************}
+  MRKR := 'PSI0spin-'&MRK(PSI0_DEG); {marker to identify data files}
+  WRITE 6 '^^^^ INITIAL SPIN PSI'&SF(PSI0_DEG,'(F15.7)');
+  GROUTF 'img/dump/TR' 1;
+  DIRSET_AUTO 1;
+  
+  OV 3 3 0;
+  { SET lattice parameters }
+  SET_FOR_PROTONS EKIN X XS;
+  LOOP CASE 0 4; NAVIPSI_DEG := 45 + CASE*10;
+    DIRSET WHERE 'data/SECOND-ST--/'&MRK(EKIN)&'MeV/'&MRK(NTURN)&'/NAVI-ON/NAVIPSI-'&MRK(NAVIPSI_DEG)&'/';
+    NAVIGATORS 3e-2 NAVIPSI_DEG KS;
+    LATTICE X XS KS 1;
+       {print transfer map}
+        OPENF 636 WHERE&'TrMAP:'&MRKR 'REPLACE';
+        PM 636; CLOSEF 636;
+        {pront spin transfer map}
+        OPENF 636 WHERE&'SpTrMAP:'&MRKR 'REPLACE';
+        PSM 636; CLOSEF 636;
+        {print aberrations}
+        OPENF 636 WHERE&'ABERRATIONS:'&MRKR 'REPLACE';
+        PA 636; CLOSEF 636;
+        {other stats about the map}
+        MAPSE := SE(MAP);
+        OPENF 636 WHERE&'MAP-SYM-ERR:'&MRKR 'REPLACE';
+        WRITE 636 MAPSE; CLOSEF 636;
+        WRITE 6 'MAP SYMPLECTIFICATION ERROR' MAPSE;
+        TSS MU NBAR 0;
+        OPENF 636 WHERE&'MU:'&MRKR 'REPLACE';
+        WRITE 636 MU; CLOSEF 636;
+        LOOP I 1 3;
+          OPENF 636 WHERE&'NBAR('&MRK(I)&'):'&MRKR 'REPLACE';
+          WRITE 636 NBAR(I); CLOSEF 636;
+        ENDLOOP;
+
+
+    INJECT PNUM PSI0_DEG;
+    WRITE 6 '******************** STARTING TRACKING';
+    OPENF 99 WHERE&'PRAY:'&MRKR&'.dat' 'REPLACE';
+    PRAY 99; CLOSEF 99;
+    OPENF 772 WHERE&'TRPRAY:'&MRKR&'.dat' 'REPLACE';
+    OPENF 893 WHERE&'TRPSPI:'&MRKR&'.dat' 'REPLACE';
+    TRPRAY 772; TRPSPI 893;
+    TR NTURN NINT(NTURN/5000) -1 -3 1.2 1.2 0 0 -12;
+    CLOSEF 772; CLOSEF 893;
+  ENDLOOP;
+
+ENDPROCEDURE; {MAIN}
+
+PROCEDURE RUN;
+  MAIN;
+ENDPROCEDURE;
+RUN; END;

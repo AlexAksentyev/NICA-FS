@@ -1,6 +1,8 @@
+
+{lattice converted from MADX sequence file: NICA_SOL_shifted_RBEND.seq}
+
+
 INCLUDE 'bin/common/BENDS3/header';
-
-
 
 PROCEDURE LATTICE HzSPD HzMPD dHzSPD dHzMPD QF QD RFFLAG;
   VARIABLE VRF 1 1 1;

@@ -1,4 +1,4 @@
-INCLUDE 'bin/setups/FIRST-ST/BARE';
+INCLUDE 'bin/setups/NICA/FULL';
 
 PROCEDURE INJECT NUM;
   VARIABLE X 100; VARIABLE I 1;
@@ -27,33 +27,28 @@ ENDPROCEDURE;
 PROCEDURE MAIN;
   VARIABLE WHERE 100; VARIABLE MAPSE 1;
   {LATTICE ARGUMENTS}
-  VARIABLE KS 1 2; VARIABLE X  1 2;
-  VARIABLE XS 1 4; VARIABLE XM 1 4;
-  {for optimization}
-  VARIABLE X2 1; VARIABLE X3 1;
+  VARIABLE HZ1 1; VARIABLE HZ2 1;
+  VARIABLE QF 1;  VARIABLE QD 1;
   VARIABLE NTURN 1;
-  NTURN := 300000;
-  DIRSET WHERE 'data/TEST/FIRST-ST/BARE/'&MRK(NTURN)&'/';
+  NTURN := 30000;
+  DIRSET WHERE 'data/TEST/NICA/'&MRK(NTURN)&'/';
   GROUTF 'img/dump/TR' 1;
   
   
   OV 3 3 0;
   { SET lattice parameters }
-  SET_FOR_PROTONS 130 X XM XS;           {these all}
-  NAVIGATORS 1e-2 0 1 KS;                  {will be ignored because}
-  LATTICE 1;  { X XM XS KS 1; }              {the BARE lattice doesn't requre any parameters (except RFFLAG)}
+  SET_FOR_PROTONS HZ1 HZ2 QF QD;
+  LATTICE;
      {print transfer map}
       OPENF 636 WHERE&'TrMAP' 'REPLACE';
       PM 636; CLOSEF 636;
-      {prin spin transfer map}
-      OPENF 636 WHERE&'SpTrMAP' 'REPLACE';
-      PSM 636; CLOSEF 636;
       {print aberrations}
       OPENF 636 WHERE&'ABERRATIONS' 'REPLACE';
       PA 636; CLOSEF 636;
       {other stats about the map}
       MAPSE := SE(MAP);
-      WRITE 6 'MAP SYMPLECTIFICATION ERROR: ' MAPSE;
+      OPENF 636 WHERE&'MAP-SYM-ERR' 'REPLACE';
+      WRITE 636 MAPSE; CLOSEF 636;
 
 
   INJECT 10;

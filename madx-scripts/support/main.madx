@@ -1,0 +1,21 @@
+! #################### snake solenoid parameter setting #################### 
+snake_str(G, ss): MACRO = {ss = 1/12 * PI/(1 + G)*1/.7;}; //формулa (1) в файле "Пояснения к структуре"
+
+inject_protons(gamma_): MACRO = {
+		   proton_G = 1.792847;
+		   EXEC, snake_str(proton_G, HZ1);
+		   HZ2 := HZ1;
+		   QF = -0.011;
+		   QD = -0.012;
+		   beam, PARTICLE=PROTON, GAMMA=gamma_;
+};
+
+inject_deuterons(gamma_): MACRO = {
+		     deuteron_G = -.142987;
+		     EXEC, snake_str(deuteron_G, HZ1);
+		     HZ2 := HZ1;
+		     QF = -.044;
+		     QD = -.032;
+		     beam, PARTICLE=ION, MASS=PROTON->MASS*2, GAMMA=gamma_;
+};
+! ##################################################
