@@ -23,19 +23,20 @@ PROCEDURE SET_FOR_PROTONS EKIN X XS;  {FROM 1.4.2, p. 11}
   WRITE 6 '+++++++++++++++++++++++++++++++++++';
 ENDPROCEDURE;
 
-PROCEDURE NAVIGATORS NU NX PSI_DEG KS;
+PROCEDURE NAVIGATORS NU PSI_DEG KS;
   VARIABLE GAMMA 1; VARIABLE PHIY 1;
-  VARIABLE PSI 1; VARIABLE NZ 1;
-  PSI := DEG2RAD(PSI_DEG); NZ := COS(PSI);
+  VARIABLE PSI 1; VARIABLE NZ 1; VARIABLE NY 1;
+  PSI := DEG2RAD(PSI_DEG);
+  NZ := COS(PSI); NY := SIN(PSI);
   GAMMA := CONS(1 + E0/(M0*AMUMEV));
   PHIY := GAMMA*G0*PI;
-  KS(1) := -1 + NU*(NZ - NX/TAN(PHIY)); {SPD}
-  KS(2) := +1 + NU*NX/SIN(PHIY);        {MPD}
+  KS(1) := +1 - NU*(NZ - NY/TAN(PHIY)); {SPD}
+  KS(2) := +1 - NU*NY/SIN(PHIY);        {MPD}
   WRITE 6 '+++++++ NAVIGATOR strength coefficients +++++++';
   WRITE 6 '        KsSPD: '&SF(KS(1), '(F15.7)');
   WRITE 6 '        KsMPD: '&SF(KS(2), '(F15.7)');
-  WRITE 6 'PHIy = ' PHIY;
-  WRITE 6 'E0' E0;
+  WRITE 6 'PSI = ' PSI;
+  WRITE 6 'NZ' NZ;
 ENDPROCEDURE;
 
 SAVE '~/REPOS/NICA-FS/bin/common/SECOND-ST/header';
