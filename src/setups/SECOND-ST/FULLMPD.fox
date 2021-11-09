@@ -1,0 +1,591 @@
+{lattice converted from MADX sequence file: ST-mode/NICA4SOL.seq}
+{********** INJECTION POINT MOVED from SPD to MPD **********}
+{this is the SECOND-ST mode file with an UP-TO-DATE parametrization}
+INCLUDE 'bin/common/SECOND-ST/header';
+
+
+PROCEDURE LATTICE X {2 stuck} XS {2} KS {2} RFFLAG {1} ;
+  VARIABLE VRF 1 1 1;
+  VARIABLE FREQ 1;
+  VARIABLE HNUM 1;
+  VARIABLE KoeffSolSPD 1; VARIABLE KoeffSolMPD 1;
+  VARIABLE XSFW 1;  VARIABLE XSQW 1;
+  VARIABLE XMQW 1;  VARIABLE XMFW 1;
+  VARIABLE XMFE 1;  VARIABLE XMQE 1;
+  VARIABLE XSQE 1;  VARIABLE XSFE 1;
+  VARIABLE X2 1;    VARIABLE X3 1;
+  {SETTING RF PARAMETERS}
+  HNUM := 66;
+  VRF(1, 1) := 100/HNUM; {RF Voltage [kV]}
+  FREQ := HNUM*REVFREQ(ACCLEN(1)); {RF Frequency}
+  {SETTING LATTICE PARAMETERS}
+  KoeffSolSPD := KS(1); KoeffSolMPD := KS(2);
+  X2 := X(1); X3 := X(2); 
+  XSQW := XS(1); XSFW := XS(2);
+  
+
+  WRITE 6 '********************************************';
+  WRITE 6 '*    FS NICA 4 SOL 11 OCT 2021 (CW-MPD)    *';
+  WRITE 6 '********************************************';
+
+  WRITE 6 'REVOLUTION FREQUENCY: '&ST(REVFREQ(ACCLEN(1))/1E6)&' MHZ';
+  WRITE 6 'RF FREQUENCY: '&ST(FREQ/1E6)&' MHZ';
+
+  UM;
+  IF RFFLAG=1; RF VRF 0 FREQ 0 0.05;
+    WRITE 6 'INSERTING RF...';
+    WRITE 6 'RF MAP(6):' MAP(6);
+  ENDIF; {inserted by @AA}
+  {BEGIN LATTICE}
+  {********** MPD sraight secion middle **********}
+  DL 1.3125 ; {Drift_357}
+  QUAD 0.945 0 (-0.4320256018*(1+XSFW)) ; {Quadr_358}
+  DL 0.3225 ; {Drift_359}
+  QUAD 1.415 0 (0.432038535*(1+XSFW)) ; {Quadr_360}
+  DL 0.7375 ; {Drift_361}
+  QUAD 0.68 0 (-0.4309241608*(1+XSFW)) ; {Quadr_362}
+  DL 0.25 ; {Drift_363}
+  DL 0.35 ; {Drift_364}
+  SBEND 1.38 0.041003409280000194 -pi/2 0 0 0 0 0 0 ; {SBend_365}
+  DL 2.52301 ; {Drift_366}
+  SBEND 1.38 0.041003409280000194 pi/2 0 0 0 0 0 0 ; {SBend_367}
+  DL 0.25 ; {Drift_368}
+  DL 0.334615 ; {Drift_369}
+  DL 0.1 ; {Drift_370}
+  DL 1. ; {Drift_371}
+  DL 7.4545 ; {Drift_372}
+  SOLENOID 1. 0.562435429445*KoeffSolMPD ; {Solen_373}            {1st MPD solenoid}
+  DL 2.44 ; {Drift_374}
+  DL 8.1 ; {Drift_375}
+  QUAD 0.545 0 (-0.51445610009908*(1+X2+XSQW)) ; {Quadr_376}
+  DL 0.25 ; {Drift_377}
+  DL 0.25 ; {Drift_378}
+  QUAD 0.59 0 (0.5206704002*(1+X2+XSQW)) ; {Quadr_379}
+  DL 0.415 ; {Drift_380}
+  QUAD 0.56 0 (0.5101517326*(1+X2+XSQW)) ; {Quadr_381}
+  DL 0.25 ; {Drift_382}
+  DL 0.25 ; {Drift_383}
+  QUAD 0.67 0 (-0.5166681483*(1+X2+XSQW)) ; {Quadr_384}
+  DL 1.8975-.01 ; {Drift_385}                              {correction for energy 3059 MeV (3200 MeV/c)}
+  DL 1.841+.01 ; {Drift_386}                               {@AA}
+  DL 1.841 ; {Drift_387}
+  DL 1.841 ; {Drift_388}
+  DL 1.841 ; {Drift_389}
+  DL 1.841+.001 ; {Drift_390}                                 {ABERRATIONS PROBLEM CORRECTION (caused by Drift_391)}
+  DL 1.8125-.001 ; {Drift_391}                                {at 130 MeV energy @AA}
+  QUAD 0.69 0 (0.5185577457*(1+X2)) ; {Quadr_392}
+  DL 0.25 ; {Drift_393}
+  DL 0.26787 ; {Drift_394}
+  QUAD 0.785 0 (-0.5184853392*(1+X2)) ; {Quadr_395}
+  DL 0.085 ; {Drift_396}
+  DL 0.215 ; {Drift_397}
+  RBEND 1.9395014178063565 0.0785398163399978 0 ; {RBend_399}
+  DL 0.3 ; {Drift_401}
+  RBEND 1.9395014178063565 0.0785398163399978 0 ; {RBend_403}
+  DL 0.4865 ; {Drift_405}
+  DL 0.226 ; {Drift_406}
+  QUAD 0.375 0 (0.5100182514*(1+X2)) ; {Quadr_407}
+  DL 0.20326 ; {Drift_408}
+  DL 0.266 ; {Drift_409}
+  DL 4.86224 ; {Drift_410}
+  DL 0.226 ; {Drift_411}
+  QUAD 0.47 0 (-0.5037116682*(1+X2+X3)) ; {Quadr_412}
+  DL 0.20326 ; {Drift_413}
+  DL 0.266 ; {Drift_414}
+  DL 4.82474 ; {Drift_415}
+  DL 0.226 ; {Drift_416}
+  QUAD 0.45 0 (0.5165649809*(1+X2)) ; {Quadr_417}
+  DL 0.20326 ; {Drift_418}
+  DL 0.266 ; {Drift_419}
+  DL 0.20574 ; {Drift_420}
+  RBEND 1.9395014178063565 0.0785398163399978 0 ; {RBend_422}
+  DL 0.3 ; {Drift_424}
+  RBEND 1.9395014178063565 0.0785398163399978 0 ; {RBend_426}
+  DL 0.439 ; {Drift_428}
+  DL 0.226 ; {Drift_429}
+  QUAD 0.47 0 (-0.5037116682*(1+X2+X3)) ; {Quadr_430}
+  DL 0.20326 ; {Drift_431}
+  DL 0.266 ; {Drift_432}
+  DL 0.19574 ; {Drift_433}
+  RBEND 1.9395014178063565 0.0785398163399978 0 ; {RBend_435}
+  DL 0.3 ; {Drift_437}
+  RBEND 1.9395014178063565 0.0785398163399978 0 ; {RBend_439}
+  DL 0.439 ; {Drift_441}
+  DL 0.226 ; {Drift_442}
+  QUAD 0.47 0 (0.5148373645*(1+X2)) ; {Quadr_443}
+  DL 0.20326 ; {Drift_444}
+  DL 0.266 ; {Drift_445}
+  DL 0.19574 ; {Drift_446}
+  RBEND 1.9395014178063565 0.0785398163399978 0 ; {RBend_448}
+  DL 0.3 ; {Drift_450}
+  RBEND 1.9395014178063565 0.0785398163399978 0 ; {RBend_452}
+  DL 0.439 ; {Drift_454}
+  DL 0.226 ; {Drift_455}
+  QUAD 0.47 0 (-0.5037116682*(1+X2+X3)) ; {Quadr_456}
+  DL 0.20326 ; {Drift_457}
+  DL 0.266 ; {Drift_458}
+  DL 0.19574 ; {Drift_459}
+  RBEND 1.9395014178063565 0.0785398163399978 0 ; {RBend_461}
+  DL 0.3 ; {Drift_463}
+  RBEND 1.9395014178063565 0.0785398163399978 0 ; {RBend_465}
+  DL 0.439 ; {Drift_467}
+  DL 0.226 ; {Drift_468}
+  QUAD 0.47 0 (0.5148373645*(1+X2)) ; {Quadr_469}
+  DL 0.20326 ; {Drift_470}
+  DL 0.266 ; {Drift_471}
+  DL 0.19574 ; {Drift_472}
+  RBEND 1.9395014178063565 0.0785398163399978 0 ; {RBend_474}
+  DL 0.3 ; {Drift_476}
+  RBEND 1.9395014178063565 0.0785398163399978 0 ; {RBend_478}
+  DL 0.439 ; {Drift_480}
+  DL 0.226 ; {Drift_481}
+  QUAD 0.47 0 (-0.5037116682*(1+X2+X3)) ; {Quadr_482}
+  DL 0.20326 ; {Drift_483}
+  DL 0.266 ; {Drift_484}
+  DL 0.19574 ; {Drift_485}
+  RBEND 1.9395014178063565 0.0785398163399978 0 ; {RBend_487}
+  DL 0.3 ; {Drift_489}
+  RBEND 1.9395014178063565 0.0785398163399978 0 ; {RBend_491}
+  DL 0.439 ; {Drift_493}
+  DL 0.226 ; {Drift_494}
+  QUAD 0.47 0 (0.5148373645*(1+X2)) ; {Quadr_495}
+  DL 0.20326 ; {Drift_496}
+  DL 0.266 ; {Drift_497}
+  DL 0.19574 ; {Drift_498}
+  RBEND 1.9395014178063565 0.0785398163399978 0 ; {RBend_500}
+  DL 0.3 ; {Drift_502}
+  RBEND 1.9395014178063565 0.0785398163399978 0 ; {RBend_504}
+  DL 0.439 ; {Drift_506}
+  DL 0.226 ; {Drift_507}
+  QUAD 0.47 0 (-0.5037116682*(1+X2+X3)) ; {Quadr_508}
+  DL 0.20326 ; {Drift_509}
+  DL 0.266 ; {Drift_510}
+  DL 0.19574 ; {Drift_511}
+  RBEND 1.9395014178063565 0.0785398163399978 0 ; {RBend_513}
+  DL 0.3 ; {Drift_515}
+  RBEND 1.9395014178063565 0.0785398163399978 0 ; {RBend_517}
+  DL 0.439 ; {Drift_519}
+  DL 0.226 ; {Drift_520}
+  QUAD 0.47 0 (0.5148373645*(1+X2)) ; {Quadr_521}
+  DL 0.20326 ; {Drift_522}
+  DL 0.266 ; {Drift_523}
+  DL 0.19574 ; {Drift_524}
+  RBEND 1.9395014178063565 0.0785398163399978 0 ; {RBend_526}
+  DL 0.3 ; {Drift_528}
+  RBEND 1.9395014178063565 0.0785398163399978 0 ; {RBend_530}
+  DL 0.439 ; {Drift_532}
+  DL 0.226 ; {Drift_533}
+  QUAD 0.47 0 (-0.5037116682*(1+X2+X3)) ; {Quadr_534}
+  DL 0.20326 ; {Drift_535}
+  DL 0.266 ; {Drift_536}
+  DL 0.19574 ; {Drift_537}
+  RBEND 1.9395014178063565 0.0785398163399978 0 ; {RBend_539}
+  DL 0.3 ; {Drift_541}
+  RBEND 1.9395014178063565 0.0785398163399978 0 ; {RBend_543}
+  DL 0.439 ; {Drift_545}
+  DL 0.226 ; {Drift_546}
+  QUAD 0.47 0 (0.5148373645*(1+X2)) ; {Quadr_547}
+  DL 0.20326 ; {Drift_548}
+  DL 0.266 ; {Drift_549}
+  DL 0.19574 ; {Drift_550}
+  RBEND 1.9395014178063565 0.0785398163399978 0 ; {RBend_552}
+  DL 0.3 ; {Drift_554}
+  RBEND 1.9395014178063565 0.0785398163399978 0 ; {RBend_556}
+  DL 0.439 ; {Drift_558}
+  DL 0.226 ; {Drift_559}
+  QUAD 0.47 0 (-0.5037116682*(1+X2+X3)) ; {Quadr_560}
+  DL 0.20326 ; {Drift_561}
+  DL 0.266 ; {Drift_562}
+  DL 0.19574 ; {Drift_563}
+  RBEND 1.9395014178063565 0.0785398163399978 0 ; {RBend_565}
+  DL 0.3 ; {Drift_567}
+  RBEND 1.9395014178063565 0.0785398163399978 0 ; {RBend_569}
+  DL 0.439 ; {Drift_571}
+  DL 0.226 ; {Drift_572}
+  QUAD 0.47 0 (0.5148373645*(1+X2)) ; {Quadr_573}
+  DL 0.20326 ; {Drift_574}
+  DL 0.266 ; {Drift_575}
+  DL 0.19574 ; {Drift_576}
+  RBEND 1.9395014178063565 0.0785398163399978 0 ; {RBend_578}
+  DL 0.3 ; {Drift_580}
+  RBEND 1.9395014178063565 0.0785398163399978 0 ; {RBend_582}
+  DL 0.439 ; {Drift_584}
+  DL 0.226 ; {Drift_585}
+  QUAD 0.47 0 (-0.5037116682*(1+X2+X3)) ; {Quadr_586}
+  DL 0.20326 ; {Drift_587}
+  DL 0.266 ; {Drift_588}
+  DL 0.19574 ; {Drift_589}
+  RBEND 1.9395014178063565 0.0785398163399978 0 ; {RBend_591}
+  DL 0.3 ; {Drift_593}
+  RBEND 1.9395014178063565 0.0785398163399978 0 ; {RBend_595}
+  DL 0.439 ; {Drift_597}
+  DL 0.226 ; {Drift_598}
+  QUAD 0.47 0 (0.5148373645*(1+X2)) ; {Quadr_599}
+  DL 0.20326 ; {Drift_600}
+  DL 0.266 ; {Drift_601}
+  DL 0.19574 ; {Drift_602}
+  RBEND 1.9395014178063565 0.0785398163399978 0 ; {RBend_604}
+  DL 0.3 ; {Drift_606}
+  RBEND 1.9395014178063565 0.0785398163399978 0 ; {RBend_608}
+  DL 0.439 ; {Drift_610}
+  DL 0.226 ; {Drift_611}
+  QUAD 0.47 0 (-0.5037116682*(1+X2+X3)) ; {Quadr_612}
+  DL 0.20326 ; {Drift_613}
+  DL 0.266 ; {Drift_614}
+  DL 0.19574 ; {Drift_615}
+  RBEND 1.9395014178063565 0.0785398163399978 0 ; {RBend_617}
+  DL 0.3 ; {Drift_619}
+  RBEND 1.9395014178063565 0.0785398163399978 0 ; {RBend_621}
+  DL 0.439 ; {Drift_623}
+  DL 0.226 ; {Drift_624}
+  QUAD 0.47 0 (0.5148373645*(1+X2)) ; {Quadr_625}
+  DL 0.20326 ; {Drift_626}
+  DL 0.266 ; {Drift_627}
+  DL 0.19574 ; {Drift_628}
+  RBEND 1.9395014178063565 0.0785398163399978 0 ; {RBend_630}
+  DL 0.3 ; {Drift_632}
+  RBEND 1.9395014178063565 0.0785398163399978 0 ; {RBend_634}
+  DL 0.439 ; {Drift_636}
+  DL 0.226 ; {Drift_637}
+  QUAD 0.47 0 (-0.5037116682*(1+X2+X3)) ; {Quadr_638}
+  DL 0.20326 ; {Drift_639}
+  DL 0.266 ; {Drift_640}
+  DL 0.19574 ; {Drift_641}
+  RBEND 1.9395014178063565 0.0785398163399978 0 ; {RBend_643}
+  DL 0.3 ; {Drift_645}
+  RBEND 1.9395014178063565 0.0785398163399978 0 ; {RBend_647}
+  DL 0.449 ; {Drift_649}
+  DL 0.226 ; {Drift_650}
+  QUAD 0.45 0 (0.5165649809*(1+X2)) ; {Quadr_651}
+  DL 0.20326 ; {Drift_652}
+  DL 0.266 ; {Drift_653}
+  DL 4.82474 ; {Drift_654}
+  DL 0.226 ; {Drift_655}
+  QUAD 0.47 0 (-0.5037116682*(1+X2+X3)) ; {Quadr_656}
+  DL 0.20326 ; {Drift_657}
+  DL 0.266 ; {Drift_658}
+  DL 4.86224 ; {Drift_659}
+  DL 0.226 ; {Drift_660}
+  QUAD 0.375 0 (0.5100182514*(1+X2)) ; {Quadr_661}
+  DL 0.20326 ; {Drift_662}
+  DL 0.266 ; {Drift_663}
+  DL 0.24324 ; {Drift_664}
+  RBEND 1.9395014178063565 0.0785398163399978 0 ; {RBend_666}
+  DL 0.3 ; {Drift_668}
+  RBEND 1.9395014178063565 0.0785398163399978 0 ; {RBend_670}
+  DL 0.215 ; {Drift_672}
+  DL 0.085 ; {Drift_673}
+  QUAD 0.785 0 (-0.5184853392*(1+X2)) ; {Quadr_674}
+  DL 0.26787 ; {Drift_675}
+  DL 0.25 ; {Drift_676}
+  QUAD 0.69 0 (0.5185577457*(1+X2)) ; {Quadr_677}
+  DL 12.915 ; {Drift_678}
+  QUAD 0.67 0 (-0.5166681483*(1+X2+XSQW)) ; {Quadr_679}
+  DL 0.25 ; {Drift_680}
+  DL 0.25 ; {Drift_681}
+  QUAD 0.56 0 (0.5101517326*(1+X2+XSQW)) ; {Quadr_682}
+  DL 0.415 ; {Drift_683}
+  QUAD 0.59 0 (0.5206704002*(1+X2+XSQW)) ; {Quadr_684}
+  DL 0.25 ; {Drift_685}
+  DL 0.25 ; {Drift_686}
+  QUAD 0.545 0 (-0.51445610009908*(1+X2+XSQW)) ; {Quadr_687}
+  DL 8.1 ; {Drift_688}
+  DL 2.44 ; {Drift_689}
+  SOLENOID 1. 0.562435429445*KoeffSolSPD ; {Solen_690}
+  DL 7.4545 ; {Drift_691}
+  DL 1. ; {Drift_692}
+  DL 0.1 ; {Drift_693}
+  DL 0.334615 ; {Drift_694}
+  DL 0.25 ; {Drift_695}
+  SBEND 1.38 0.041003409280000194 pi/2 0 0 0 0 0 0 ; {SBend_696}
+  DL 2.52301 ; {Drift_697}
+  SBEND 1.38 0.041003409280000194 -pi/2 0 0 0 0 0 0 ; {SBend_698}
+  DL 0.35 ; {Drift_699}
+  DL 0.25 ; {Drift_700}
+  QUAD 0.68 0 (0.4309241608*(1+XSFW)) ; {Quadr_701}
+  DL 0.7375 ; {Drift_702}
+  QUAD 1.415 0 (-0.432038535*(1+XSFW)) ; {Quadr_703}
+  DL 0.3225 ; {Drift_704}
+  QUAD 0.945 0 (0.4320256018*(1+XSFW)) ; {Quadr_705}
+  DL 5.25 ; {Drift_706}
+  {********** SPD straight section middle **********}
+  DL 2.35 ; {Drift_1}
+  DL 1. ; {Drift_2}
+  DL 1.9 ; {Drift_3}
+  QUAD 0.945 0 (-0.4320256018*(1+XSFW)) ; {Quadr_4}
+  DL 0.3225 ; {Drift_5}
+  QUAD 1.415 0 (0.432038535*(1+XSFW)) ; {Quadr_6}
+  DL 0.7375 ; {Drift_7}
+  QUAD 0.68 0 (-0.4309241608*(1+XSFW)) ; {Quadr_8}
+  DL 0.25 ; {Drift_9}
+  DL 0.35 ; {Drift_10}
+  SBEND 1.38 0.041003409280000194 -pi/2 0 0 0 0 0 0 ; {SBend_11}
+  DL 2.52301 ; {Drift_12}
+  SBEND 1.38 0.041003409280000194 pi/2 0 0 0 0 0 0 ; {SBend_13}
+  DL 0.25 ; {Drift_14}
+  DL 0.334615 ; {Drift_15}
+  DL 0.1 ; {Drift_16}
+  DL 1. ; {Drift_17}
+  DL 2.88475 ; {Drift_18}
+  DL 2.085 ; {Drift_19}
+  DL 2.48475 ; {Drift_20}
+  SOLENOID 1. 0.562435429445*KoeffSolSPD ; {Solen_21}
+  DL 2.44 ; {Drift_22}
+  DL 8.1 ; {Drift_23}
+  QUAD 0.545 0 (-0.51445610009908*(1+X2+XSQW)) ; {Quadr_24}
+  DL 0.25 ; {Drift_25}
+  DL 0.25 ; {Drift_26}
+  QUAD 0.59 0 (0.5206704002*(1+X2+XSQW)) ; {Quadr_27}
+  DL 0.415 ; {Drift_28}
+  QUAD 0.56 0 (0.5101517326*(1+X2+XSQW)) ; {Quadr_29}
+  DL 0.25 ; {Drift_30}
+  DL 0.25 ; {Drift_31}
+  QUAD 0.67 0 (-0.5166681483*(1+X2+XSQW)) ; {Quadr_32}
+  DL 4.5675 ; {Drift_33}
+  DL 1.9325 ; {Drift_34}
+  DL 1.9325 ; {Drift_35}
+  DL 4.4825 ; {Drift_36}
+  QUAD 0.69 0 (0.5185577457*(1+X2)) ; {Quadr_37}
+  DL 0.25 ; {Drift_38}
+  DL 0.26787 ; {Drift_39}
+  QUAD 0.785 0 (-0.5184853392*(1+X2)) ; {Quadr_40}
+  DL 0.085 ; {Drift_41}
+  DL 0.215 ; {Drift_42}
+  RBEND 1.9395014178063565 0.0785398163399978 0 ; {RBend_44}
+  DL 0.3 ; {Drift_46}
+  RBEND 1.9395014178063565 0.0785398163399978 0 ; {RBend_48}
+  DL 0.4865 ; {Drift_50}
+  DL 0.226 ; {Drift_51}
+  QUAD 0.375 0 (0.5100182514*(1+X2)) ; {Quadr_52}
+  DL 0.20326 ; {Drift_53}
+  DL 0.266 ; {Drift_54}
+  DL 4.86224 ; {Drift_55}
+  DL 0.226 ; {Drift_56}
+  QUAD 0.47 0 (-0.5037116682*(1+X2+X3)) ; {Quadr_57}
+  DL 0.20326 ; {Drift_58}
+  DL 0.266 ; {Drift_59}
+  DL 4.82474 ; {Drift_60}
+  DL 0.226 ; {Drift_61}
+  QUAD 0.45 0 (0.5165649809*(1+X2)) ; {Quadr_62}
+  DL 0.20326 ; {Drift_63}
+  DL 0.266 ; {Drift_64}
+  DL 0.20574 ; {Drift_65}
+  RBEND 1.9395014178063565 0.0785398163399978 0 ; {RBend_67}
+  DL 0.3 ; {Drift_69}
+  RBEND 1.9395014178063565 0.0785398163399978 0 ; {RBend_71}
+  DL 0.439 ; {Drift_73}
+  DL 0.226 ; {Drift_74}
+  QUAD 0.47 0 (-0.5037116682*(1+X2+X3)) ; {Quadr_75}
+  DL 0.20326 ; {Drift_76}
+  DL 0.266 ; {Drift_77}
+  DL 0.19574 ; {Drift_78}
+  RBEND 1.9395014178063565 0.0785398163399978 0 ; {RBend_80}
+  DL 0.3 ; {Drift_82}
+  RBEND 1.9395014178063565 0.0785398163399978 0 ; {RBend_84}
+  DL 0.439 ; {Drift_86}
+  DL 0.226 ; {Drift_87}
+  QUAD 0.47 0 (0.5148373645*(1+X2)) ; {Quadr_88}
+  DL 0.20326 ; {Drift_89}
+  DL 0.266 ; {Drift_90}
+  DL 0.19574 ; {Drift_91}
+  RBEND 1.9395014178063565 0.0785398163399978 0 ; {RBend_93}
+  DL 0.3 ; {Drift_95}
+  RBEND 1.9395014178063565 0.0785398163399978 0 ; {RBend_97}
+  DL 0.439 ; {Drift_99}
+  DL 0.226 ; {Drift_100}
+  QUAD 0.47 0 (-0.5037116682*(1+X2+X3)) ; {Quadr_101}
+  DL 0.20326 ; {Drift_102}
+  DL 0.266 ; {Drift_103}
+  DL 0.19574 ; {Drift_104}
+  RBEND 1.9395014178063565 0.0785398163399978 0 ; {RBend_106}
+  DL 0.3 ; {Drift_108}
+  RBEND 1.9395014178063565 0.0785398163399978 0 ; {RBend_110}
+  DL 0.439 ; {Drift_112}
+  DL 0.226 ; {Drift_113}
+  QUAD 0.47 0 (0.5148373645*(1+X2)) ; {Quadr_114}
+  DL 0.20326 ; {Drift_115}
+  DL 0.266 ; {Drift_116}
+  DL 0.19574 ; {Drift_117}
+  RBEND 1.9395014178063565 0.0785398163399978 0 ; {RBend_119}
+  DL 0.3 ; {Drift_121}
+  RBEND 1.9395014178063565 0.0785398163399978 0 ; {RBend_123}
+  DL 0.439 ; {Drift_125}
+  DL 0.226 ; {Drift_126}
+  QUAD 0.47 0 (-0.5037116682*(1+X2+X3)) ; {Quadr_127}
+  DL 0.20326 ; {Drift_128}
+  DL 0.266 ; {Drift_129}
+  DL 0.19574 ; {Drift_130}
+  RBEND 1.9395014178063565 0.0785398163399978 0 ; {RBend_132}
+  DL 0.3 ; {Drift_134}
+  RBEND 1.9395014178063565 0.0785398163399978 0 ; {RBend_136}
+  DL 0.439 ; {Drift_138}
+  DL 0.226 ; {Drift_139}
+  QUAD 0.47 0 (0.5148373645*(1+X2)) ; {Quadr_140}
+  DL 0.20326 ; {Drift_141}
+  DL 0.266 ; {Drift_142}
+  DL 0.19574 ; {Drift_143}
+  RBEND 1.9395014178063565 0.0785398163399978 0 ; {RBend_145}
+  DL 0.3 ; {Drift_147}
+  RBEND 1.9395014178063565 0.0785398163399978 0 ; {RBend_149}
+  DL 0.439 ; {Drift_151}
+  DL 0.226 ; {Drift_152}
+  QUAD 0.47 0 (-0.5037116682*(1+X2+X3)) ; {Quadr_153}
+  DL 0.20326 ; {Drift_154}
+  DL 0.266 ; {Drift_155}
+  DL 0.19574 ; {Drift_156}
+  RBEND 1.9395014178063565 0.0785398163399978 0 ; {RBend_158}
+  DL 0.3 ; {Drift_160}
+  RBEND 1.9395014178063565 0.0785398163399978 0 ; {RBend_162}
+  DL 0.439 ; {Drift_164}
+  DL 0.226 ; {Drift_165}
+  QUAD 0.47 0 (0.5148373645*(1+X2)) ; {Quadr_166}
+  DL 0.20326 ; {Drift_167}
+  DL 0.266 ; {Drift_168}
+  DL 0.19574 ; {Drift_169}
+  RBEND 1.9395014178063565 0.0785398163399978 0 ; {RBend_171}
+  DL 0.3 ; {Drift_173}
+  RBEND 1.9395014178063565 0.0785398163399978 0 ; {RBend_175}
+  DL 0.439 ; {Drift_177}
+  DL 0.226 ; {Drift_178}
+  QUAD 0.47 0 (-0.5037116682*(1+X2+X3)) ; {Quadr_179}
+  DL 0.20326 ; {Drift_180}
+  DL 0.266 ; {Drift_181}
+  DL 0.19574 ; {Drift_182}
+  RBEND 1.9395014178063565 0.0785398163399978 0 ; {RBend_184}
+  DL 0.3 ; {Drift_186}
+  RBEND 1.9395014178063565 0.0785398163399978 0 ; {RBend_188}
+  DL 0.439 ; {Drift_190}
+  DL 0.226 ; {Drift_191}
+  QUAD 0.47 0 (0.5148373645*(1+X2)) ; {Quadr_192}
+  DL 0.20326 ; {Drift_193}
+  DL 0.266 ; {Drift_194}
+  DL 0.19574 ; {Drift_195}
+  RBEND 1.9395014178063565 0.0785398163399978 0 ; {RBend_197}
+  DL 0.3 ; {Drift_199}
+  RBEND 1.9395014178063565 0.0785398163399978 0 ; {RBend_201}
+  DL 0.439 ; {Drift_203}
+  DL 0.226 ; {Drift_204}
+  QUAD 0.47 0 (-0.5037116682*(1+X2+X3)) ; {Quadr_205}
+  DL 0.20326 ; {Drift_206}
+  DL 0.266 ; {Drift_207}
+  DL 0.19574 ; {Drift_208}
+  RBEND 1.9395014178063565 0.0785398163399978 0 ; {RBend_210}
+  DL 0.3 ; {Drift_212}
+  RBEND 1.9395014178063565 0.0785398163399978 0 ; {RBend_214}
+  DL 0.439 ; {Drift_216}
+  DL 0.226 ; {Drift_217}
+  QUAD 0.47 0 (0.5148373645*(1+X2)) ; {Quadr_218}
+  DL 0.20326 ; {Drift_219}
+  DL 0.266 ; {Drift_220}
+  DL 0.19574 ; {Drift_221}
+  RBEND 1.9395014178063565 0.0785398163399978 0 ; {RBend_223}
+  DL 0.3 ; {Drift_225}
+  RBEND 1.9395014178063565 0.0785398163399978 0 ; {RBend_227}
+  DL 0.439 ; {Drift_229}
+  DL 0.226 ; {Drift_230}
+  QUAD 0.47 0 (-0.5037116682*(1+X2+X3)) ; {Quadr_231}
+  DL 0.20326 ; {Drift_232}
+  DL 0.266 ; {Drift_233}
+  DL 0.19574 ; {Drift_234}
+  RBEND 1.9395014178063565 0.0785398163399978 0 ; {RBend_236}
+  DL 0.3 ; {Drift_238}
+  RBEND 1.9395014178063565 0.0785398163399978 0 ; {RBend_240}
+  DL 0.439 ; {Drift_242}
+  DL 0.226 ; {Drift_243}
+  QUAD 0.47 0 (0.5148373645*(1+X2)) ; {Quadr_244}
+  DL 0.20326 ; {Drift_245}
+  DL 0.266 ; {Drift_246}
+  DL 0.19574 ; {Drift_247}
+  RBEND 1.9395014178063565 0.0785398163399978 0 ; {RBend_249}
+  DL 0.3 ; {Drift_251}
+  RBEND 1.9395014178063565 0.0785398163399978 0 ; {RBend_253}
+  DL 0.439 ; {Drift_255}
+  DL 0.226 ; {Drift_256}
+  QUAD 0.47 0 (-0.5037116682*(1+X2+X3)) ; {Quadr_257}
+  DL 0.20326 ; {Drift_258}
+  DL 0.266 ; {Drift_259}
+  DL 0.19574 ; {Drift_260}
+  RBEND 1.9395014178063565 0.0785398163399978 0 ; {RBend_262}
+  DL 0.3 ; {Drift_264}
+  RBEND 1.9395014178063565 0.0785398163399978 0 ; {RBend_266}
+  DL 0.439 ; {Drift_268}
+  DL 0.226 ; {Drift_269}
+  QUAD 0.47 0 (0.5148373645*(1+X2)) ; {Quadr_270}
+  DL 0.20326 ; {Drift_271}
+  DL 0.266 ; {Drift_272}
+  DL 0.19574 ; {Drift_273}
+  RBEND 1.9395014178063565 0.0785398163399978 0 ; {RBend_275}
+  DL 0.3 ; {Drift_277}
+  RBEND 1.9395014178063565 0.0785398163399978 0 ; {RBend_279}
+  DL 0.439 ; {Drift_281}
+  DL 0.226 ; {Drift_282}
+  QUAD 0.47 0 (-0.5037116682*(1+X2+X3)) ; {Quadr_283}
+  DL 0.20326 ; {Drift_284}
+  DL 0.266 ; {Drift_285}
+  DL 0.19574 ; {Drift_286}
+  RBEND 1.9395014178063565 0.0785398163399978 0 ; {RBend_288}
+  DL 0.3 ; {Drift_290}
+  RBEND 1.9395014178063565 0.0785398163399978 0 ; {RBend_292}
+  DL 0.449 ; {Drift_294}
+  DL 0.226 ; {Drift_295}
+  QUAD 0.45 0 (0.5165649809*(1+X2)) ; {Quadr_296}
+  DL 0.20326 ; {Drift_297}
+  DL 0.266 ; {Drift_298}
+  DL 4.82474 ; {Drift_299}
+  DL 0.226 ; {Drift_300}
+  QUAD 0.47 0 (-0.5037116682*(1+X2+X3)) ; {Quadr_301}
+  DL 0.20326 ; {Drift_302}
+  DL 0.266 ; {Drift_303}
+  DL 4.86224 ; {Drift_304}
+  DL 0.226 ; {Drift_305}
+  QUAD 0.375 0 (0.5100182514*(1+X2)) ; {Quadr_306}
+  DL 0.20326 ; {Drift_307}
+  DL 0.266 ; {Drift_308}
+  DL 0.24324 ; {Drift_309}
+  RBEND 1.9395014178063565 0.0785398163399978 0 ; {RBend_311}
+  DL 0.3 ; {Drift_313}
+  RBEND 1.9395014178063565 0.0785398163399978 0 ; {RBend_315}
+  DL 0.215 ; {Drift_317}
+  DL 0.085 ; {Drift_318}
+  QUAD 0.785 0 (-0.5184853392*(1+X2)) ; {Quadr_319}
+  DL 0.26787 ; {Drift_320}
+  DL 0.25 ; {Drift_321}
+  QUAD 0.69 0 (0.5185577457*(1+X2)) ; {Quadr_322}
+  DL 3.415 ; {Drift_323}
+  SOLENOID 6. 0. ; {Solen_324}
+  DL 3.5 ; {Drift_325}
+  QUAD 0.67 0 (-0.5166681483*(1+X2+XSQW)) ; {Quadr_326}
+  DL 0.25 ; {Drift_327}
+  DL 0.25 ; {Drift_328}
+  QUAD 0.56 0 (0.5101517326*(1+X2+XSQW)) ; {Quadr_329}
+  DL 0.415 ; {Drift_330}
+  QUAD 0.59 0 (0.5206704002*(1+X2+XSQW)) ; {Quadr_331}
+  DL 0.25 ; {Drift_332}
+  DL 0.25 ; {Drift_333}
+  QUAD 0.545 0 (-0.51445610009908*(1+X2+XSQW)) ; {Quadr_334}
+  DL 8.1 ; {Drift_335}
+  DL 2.44 ; {Drift_336}
+  SOLENOID 1. 0.562435429445*KoeffSolMPD ; {Solen_337}                     {2nd MPD solenoid}
+  DL 7.4545 ; {Drift_338}
+  DL 1. ; {Drift_339}
+  DL 0.1 ; {Drift_340}
+  DL 0.334615 ; {Drift_341}
+  DL 0.25 ; {Drift_342}
+  SBEND 1.38 0.041003409280000194 pi/2 0 0 0 0 0 0 ; {SBend_343}
+  DL 2.52301 ; {Drift_344}
+  SBEND 1.38 0.041003409280000194 -pi/2 0 0 0 0 0 0 ; {SBend_345}
+  DL 0.35 ; {Drift_346}
+  DL 0.25 ; {Drift_347}
+  QUAD 0.68 0 (0.4309241608*(1+XSFW)) ; {Quadr_348}
+  DL 0.7375 ; {Drift_349}
+  QUAD 1.415 0 (-0.432038535*(1+XSFW)) ; {Quadr_350}
+  DL 0.3225 ; {Drift_351}
+  QUAD 0.945 0 (0.4320256018*(1+XSFW)) ; {Quadr_352}
+  DL 1.3125 ; {Drift_353}
+  DL 1.3125 ; {Drift_354}
+  SOLENOID 5.25 0. ; {Solen_355}
+  DL 1.3125 ; {Drift_356}
+ENDPROCEDURE; {SECOND-ST SETUP}
+
+{number of elements (w/o RF): 546}
+SAVE 'bin/setups/SECOND-ST/FULLMPD';
