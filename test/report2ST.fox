@@ -128,7 +128,7 @@ PROCEDURE SPINTUNE WHERE {to locate files} OEID NAVINU NAVIPSI_DEG {navigator pa
   {******************************}
   NSEQ := 546; {number of elements in the lattice (not counting the RF)}
 
-  OV 5 3 0;
+  OV 3 3 0;
   
   {setting LATTICE PARAMETERS for TSS}
   SET_FOR_PROTONS EKIN X XS;               {beam injection at 130 MeV kinetic energy}
@@ -145,7 +145,7 @@ PROCEDURE SPINTUNE WHERE {to locate files} OEID NAVINU NAVIPSI_DEG {navigator pa
     ENDIF;
 
  {TSS DATA OUTPUT}
-  IF FALSE; 
+  IF TRUE; 
     EL0 := 1; EL1 := NSEQ;
     OPENF 3618 WHERE&'MU.dat' 'REPLACE';
     WRITE 3618 'number of rays: 92 (see INJECT_FOR_TSS source code)';
@@ -162,6 +162,9 @@ PROCEDURE SPINTUNE WHERE {to locate files} OEID NAVINU NAVIPSI_DEG {navigator pa
     {computing the TSS DA vectors for the primary map}
     UM; CR;
     MAKEMAP 1 NSEQ 1;
+    OPENF 737 WHERE&'MAP' 'REPLACE'; PM 737; CLOSEF 737;
+    OPENF 737 WHERE&'SMAP' 'REPLACE'; PSM 737; CLOSEF 737;
+    WRITE 6 'HERE';
     TSS MU NBAR 0;
     OPENF 3618 WHERE&'NU.da' 'REPLACE';
       WRITE 3618 MU;
@@ -203,13 +206,13 @@ PROCEDURE RUN;
   ENDFUNCTION;
 
   DIRSET_AUTO 1;
-  OEID := 0; {output data only after these elements}
-  NTURN := 300000;
+  OEID := 0&276; {output data only after these elements}
+  NTURN := 30000;
   BUNCH := 'X'&'Y'&'D';
   NANG := 5;      {number of navigator-set angles to check}
   NAVINU := 3E-2; {navigator-set spin-tune to avoid instability}
   LOOP I 1 1;
-    COMMON := 'data/REPORT/SECOND-ST-ORD5/'&DIRNAME(NTURN)&(BUNCH|I)&'-bunch/';
+    COMMON := 'data/REPORT/SECOND-ST-ORD3/'&DIRNAME(NTURN)&(BUNCH|I)&'-bunch/';
     { DIRSET WHERE COMMON&'NO-NAVI/'; }
     {   GROUTF 'img/dump/TR' 1; }
     {   SPINTUNE PARTICLE WHERE OEID 0 0 NTURN (BUNCH|I); }

@@ -23,9 +23,9 @@ def euler_angles(matrix):
     ax = np.arctan2( matrix[2,1],  matrix[2,2])
     ay = np.arctan2(-matrix[2,0],  np.sqrt(matrix[2,1]**2 + matrix[2,2]**2))
     az = np.arctan2( matrix[1,0],  matrix[0,0])
-    return ax, ay, az
+    return ax, ay, az # returns angles in radians
 
-if __name__ == '__main__':
+def main_element_by_element():
     fname = lambda nrg, num: '../data/ELEMENT_MAPS/SECOND-ST/{}MeV/ELEM_{}-SPIN'.format(nrg, num)
     nrg1 = 130;  gamma1 = 1 + nrg1/938
     nrg2 = 3059; gamma2 = 1 + nrg2/938
@@ -54,3 +54,20 @@ if __name__ == '__main__':
         ax[i].legend()
         ax[i].set_ylabel(lbl[i])
 
+def main_euler(nrg, nturn, psi_rng=None, spin_psi=0):
+    fname = lambda psi: '../data/TEST/SECOND-ST/FULLMPD/{:d}MeV/{:d}/NAVI-ON/NAVIPSI-{:d}/SpTrMAP:PSI0spin-{:d}'.format(nrg, nturn, psi, spin_psi)
+    psi_rng = range(0,90,10) if psi_rng==None else psi_rng
+    ndir = len(psi_rng)
+    euang = np.zeros(ndir, dtype=list(zip(['psi', 'X','Y','Z','N'],[float]*5)))
+    for i, psi in enumerate(psi_rng):
+        stm = load_SpTrMAP(fname(psi))
+        ang_r = euler_angles(stm)
+        pang_r = rot_angle(stm)
+        ang_d = (np.rad2deg(a) for a in ang_r)
+        pang_d = np.rad2deg(pang_r)
+        euang[i] = psi, *ang_d, pang_d # returns angles in degrees
+    return euang
+    
+if __name__ == '__main__':
+    
+    euang = main_euler(130, 3000, spin_psi=0)

@@ -1,9 +1,11 @@
 INCLUDE 'bin/setups/SECOND-ST/SEQFULL';
 
-PROCEDURE INJECT NUM SZ; {at injection: SX = 0, SY = SQRT(1-SZ^2)}
-  VARIABLE X 100; VARIABLE I 1; VARIABLE SY 1;
-  X := LINSPACE(-5E-3, 5E-3, NUM);
-  SY := SQRT(1 - SZ*SZ);
+PROCEDURE INJECT NUM PSI_DEG; {at injection: SX = 0, SY, SZ = sin PSI, cos PSI}
+  VARIABLE X 100; VARIABLE I 1;
+  VARIABLE PSI 1; VARIABLE SY 1; VARIABLE SZ 1;
+  PSI := DEG2RAD(PSI_DEG); {PSI IN RADIANS}
+  X := LINSPACE(-3E-3, 3E-3, NUM);
+  SY := SIN(PSI); SZ := COS(PSI);
   SR 0 0 0 0 0 0 0 0 1; SSR 0 SY SZ;
   LOOP I 1 NUM;
     SR X|I 0 0 0 0 0 0 0 1; SSR 0 SY SZ;
@@ -33,10 +35,10 @@ PROCEDURE MAIN;
   VRF(1, 1) := 100/HNUM; {RF Voltage [kV]}
   FREQ := HNUM*REVFREQ(ACCLEN(1)); {RF Frequency}
   {********** CONTROLS **********}
-  NTURN := 20;
-  EKIN := 3059; {KINETIC ENERGY in MEV}
+  NTURN := 5;
+  EKIN := 130; {KINETIC ENERGY in MEV}
   NAVINU := 3E-2;
-  NAVIPSI_DEG := 0; {navigator defined angle between the z and spin axes}
+  NAVIPSI_DEG := 367.56949; {navigator defined angle between the z and spin axes}
   {******************************}
   
   DIRSET WHERE 'data/TEST/SECOND-ST/'&MRK(EKIN)&'MeV/SEQ/'&MRK(NTURN)&'-SEQ/';
@@ -58,8 +60,8 @@ PROCEDURE MAIN;
     NSEQ := NSEQ + 1;
   ENDIF;
 
-  INJECT 10 1;     {SZ = 1/SQRT(2) = .7071}
-  MRKR := 'SZ0-0'; {marker to identify data files}            {********** CONTROLS}
+  INJECT 10 NAVIPSI_DEG;     {PSI at SPD}
+  MRKR := 'PSI0spin-0'; {marker to identify data files}            {********** CONTROLS}
   WRITE 6 '******************** STARTING TRACKING';
   OPENF 99 WHERE&'PRAY:'&MRKR&'.dat' 'REPLACE';
   PRAY 99; CLOSEF 99;
