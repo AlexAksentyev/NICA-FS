@@ -7,9 +7,9 @@ import matplotlib.colors as colors
 
 PSVARS = list(zip(['X','A','Y','B','T','D'],[float]*6))
 
-LATTICE = 'SECOND-ST--'
+LATTICE = 'SECOND-ST-+'
 ENERGY = '130'
-NTURN = '30000'
+NTURN = '3000000'
 DATDIR = '../data/'+LATTICE+'/'+ENERGY+'MeV/'+NTURN
 
 SEQMAP = { #indexes of cornerstone elements (in COSY indexing, SEQFULL.fox file [i.e., no RF (which is at index 0 anyway)])
@@ -106,8 +106,8 @@ def load_nbar(folder, spin_psi):
 def main(navi_psi, spin_psi=0):
     folder  = DATDIR+'/NAVI-ON/NAVIPSI-{:d}/'.format(navi_psi)
     print(folder)
-    # dat = load_data(folder, 'TRPRAY:PSI0spin-{:d}.dat'.format(spin_psi))
-    # spdat = load_data(folder, 'TRPSPI:PSI0spin-{:d}.dat'.format(spin_psi))
+    dat = load_data(folder, 'TRPRAY:PSI0spin-{:d}.dat'.format(spin_psi))
+    spdat = load_data(folder, 'TRPSPI:PSI0spin-{:d}.dat'.format(spin_psi))
     try:
         spintune = DAVEC(folder+'MU:PSI0spin-{:d}'.format(spin_psi))
         nbar = load_nbar(folder, spin_psi)
@@ -118,17 +118,17 @@ def main(navi_psi, spin_psi=0):
     print(navi_psi, navi_psi_rad)
     axis = [0, np.sin(navi_psi_rad), np.cos(navi_psi_rad)]
     print(axis)
-    # P = Polarization.on_axis(spdat, axis)
-    # P.plot(1)
-    # plt.savefig(folder+'-pol.png', bbox_inches='tight', pad_inches=.1)
-    # Px = Polarization.on_axis(spdat[1:-1:3], axis)
-    # Px.plot(1)
-    # plt.savefig(folder+'-pol-X-bunch.png', bbox_inches='tight', pad_inches=.1)
-    # fig, ax = plot(dat, spdat)
-    # plt.savefig(folder+'-plots.png', bbox_inches='tight', pad_inches=.1)
-    # fig2, ax2 = plot_spin(spdat)
-    # plt.savefig(folder+'-spin.png', bbox_inches='tight', pad_inches=.1)
-    # plt.close('all')
+    P = Polarization.on_axis(spdat, axis)
+    P.plot(1)
+    plt.savefig(folder+'-pol.png', bbox_inches='tight', pad_inches=.1)
+    Px = Polarization.on_axis(spdat[1:-1:3], axis)
+    Px.plot(1)
+    plt.savefig(folder+'-pol-X-bunch.png', bbox_inches='tight', pad_inches=.1)
+    fig, ax = plot(dat, spdat)
+    plt.savefig(folder+'-plots.png', bbox_inches='tight', pad_inches=.1)
+    fig2, ax2 = plot_spin(spdat)
+    plt.savefig(folder+'-spin.png', bbox_inches='tight', pad_inches=.1)
+    plt.close('all')
     return spintune, nbar
 
 
@@ -210,14 +210,14 @@ def polar_nbar(nbar0):
     plt.ylim([-1.1, 1.1])
     for i, psi in enumerate(psi_arr):
         colorVal = scalarMap.to_rgba(n0z[i])
-        plt.arrow(0,0,n0z[i],n0y[i], width=.005, color=colorVal, label=str(psi))
+        plt.arrow(0,0,n0z[i],n0y[i], width=.005, color=colorVal)
+        plt.text(n0z[i], n0y[i], r'$\psi={}^\circ$'.format(psi))
     plt.grid()
-    #plt.legend(title=r'$\psi_{navi}$')
 
 if __name__ == '__main__':
     mu = {}
     nbar = {}
-    psi_rng = range(0,60,10)
+    psi_rng = range(0,-90,-20)
     ndir = len(psi_rng)
     STM = np.zeros(ndir, dtype=[('psi', float),('stm', object)])
     euang = np.zeros(ndir, dtype=list(zip(['psi','X','Y','Z'],[float]*4)))

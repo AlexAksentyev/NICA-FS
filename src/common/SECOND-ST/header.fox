@@ -30,8 +30,8 @@ PROCEDURE NAVIGATORS NU PSI_DEG KS;
   NZ := COS(PSI); NY := SIN(PSI);
   GAMMA := CONS(1 + E0/(M0*AMUMEV));
   PHIY := GAMMA*G0*PI;
-  KS(1) := +1 - NU*(NZ - NY/TAN(PHIY)); {SPD}
-  KS(2) := +1 - NU*NY/SIN(PHIY);        {MPD}
+  KS(1) := -1 + NU*(NZ - NY/TAN(PHIY)); {SPD}
+  KS(2) := +1 + NU*NY/SIN(PHIY);        {MPD}
   WRITE 6 '+++++++ NAVIGATOR strength coefficients +++++++';
   WRITE 6 '        KsSPD: '&SF(KS(1), '(F15.7)');
   WRITE 6 '        KsMPD: '&SF(KS(2), '(F15.7)');

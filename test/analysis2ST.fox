@@ -25,7 +25,7 @@ PROCEDURE MAIN;
   {for TSS}
   VARIABLE MU 800; VARIABLE NBAR 800 3;
   {********** CONTROLS **********}
-  NTURN := 30000;
+  NTURN := 3000000;
   PNUM := 10; {number of particles in a bunch (overall -- three bunches)}
   EKIN := 130;  {kinetic energy in MeV}
   PSI0_DEG := 0; {angle between the spin orientation at injection and the z-axis}
@@ -39,8 +39,8 @@ PROCEDURE MAIN;
   OV 3 3 0;
   { SET lattice parameters }
   SET_FOR_PROTONS EKIN X XS;
-  LOOP CASE 0 4; NAVIPSI_DEG := 45 + CASE*10;
-    DIRSET WHERE 'data/SECOND-ST--/'&MRK(EKIN)&'MeV/'&MRK(NTURN)&'/NAVI-ON/NAVIPSI-'&MRK(NAVIPSI_DEG)&'/';
+  LOOP CASE 0 4; NAVIPSI_DEG := CASE*20;
+    DIRSET WHERE 'data/SECOND-ST-+/'&MRK(EKIN)&'MeV/'&MRK(NTURN)&'/NAVI-ON/NAVIPSI-'&MRK(NAVIPSI_DEG)&'/';
     NAVIGATORS 3e-2 NAVIPSI_DEG KS;
     LATTICE X XS KS 1;
        {print transfer map}
