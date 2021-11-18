@@ -43,16 +43,30 @@ def main_element_by_element():
         ANG2[i] = tmp2[0], tmp2[1], tmp2[2]
 
     fig, ax = plt.subplots(3,1,sharex=True)
-    lbl = ['X','Y','Z']
+    lbl = [r'$\alpha_X$',r'$\alpha_Y$',r'$\alpha_Z$']
+    ax[0].set_title('element spin-matrix euler angle')
     ax[0].plot(eid, ANG2['X'], label=nrg2)
     ax[1].plot(eid, ANG2['Y'], label=nrg2)
     ax[2].plot(eid, ANG2['Z'], label=nrg2)
     ax[0].plot(eid, ANG1['X'], label=nrg1)
     ax[1].plot(eid, ANG1['Y'], label=nrg1)
     ax[2].plot(eid, ANG1['Z'], label=nrg1)
+    ax[2].set_xlabel('element id')
     for i in range(3):
         ax[i].legend()
         ax[i].set_ylabel(lbl[i])
+    fname = '../src/setups/SECOND-ST/FULL.npy'
+    show_elems=[21, 257, 293, 530]
+    elnames = list(np.load(fname))
+    elnames.insert(0, 'RF') # need this only if RF is inserted, which is most times but still -- not necessarily true
+    elnames.insert(0, 'INJ') # **
+    elnames=np.array(elnames)
+    elnames = np.array([e+' ['+ str(i+1) + ']' for i,e in enumerate(elnames)]) # add the ordinal
+    eid = eid[:,0] if eid.ndim>1 else eid
+    eid_max = eid.max()
+    show_elems=np.array(show_elems)+1 # +1 because of the added INJ **
+                            # (the added RF is taken care of due to python indexing starting at 0 while cosy's at 1)
+    plt.xticks(ticks=eid[show_elems], labels=elnames[show_elems], rotation=60)
 
 def main_euler(nrg, nturn, psi_rng=None, spin_psi=0):
     fname = lambda psi: '../data/TEST/SECOND-ST/FULLMPD/{:d}MeV/{:d}/NAVI-ON/NAVIPSI-{:d}/SpTrMAP:PSI0spin-{:d}'.format(nrg, nturn, psi, spin_psi)
@@ -70,4 +84,4 @@ def main_euler(nrg, nturn, psi_rng=None, spin_psi=0):
     
 if __name__ == '__main__':
     
-    euang = main_euler(130, 3000, spin_psi=0)
+    main_element_by_element()
