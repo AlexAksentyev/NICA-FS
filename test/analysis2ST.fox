@@ -26,7 +26,7 @@ PROCEDURE MAIN;
   {for TSS}
   VARIABLE MU 800; VARIABLE NBAR 800 3;
   {********** CONTROLS **********}
-  NTURN := 3000000;
+  NTURN := 3000;
   PNUM := 10; {number of particles in a bunch (overall -- three bunches)}
   EKIN := 130;  {kinetic energy in MeV}
   NAVIPSI_DEG := 0; {navigator defined angle between the z and spin axes}
@@ -37,12 +37,12 @@ PROCEDURE MAIN;
   OV 3 3 0;
   { SET lattice parameters }
   SET_FOR_PROTONS EKIN X XS;
-  LOOP CASE 0 4; NAVIPSI_DEG := 100 + CASE*20;
+  LOOP CASE 0 18; NAVIPSI_DEG := CASE*20;
     PSI0_DEG := 180 - NAVIPSI_DEG;    {align inital spin with the polarization axis for 100% initial polarization}
     MRKR := 'PSI0spin=PSInavi'; {marker to identify data files}
     WRITE 6 '^^^^ INITIAL SPIN PSI'&SF(PSI0_DEG,'(F15.7)');
     DIRSET WHERE 'data/SECOND-ST/'&MRK(EKIN)&'MeV/'&MRK(NTURN)&'/NAVI-ON/NAVIPSI-'&MRK(NAVIPSI_DEG)&'/';
-    NAVIGATORS 3e-2 NAVIPSI_DEG KS;
+    NAVIGATORS 1.5e-2 NAVIPSI_DEG KS;
     LATTICE X XS KS 1;
        {print transfer map}
         OPENF 636 WHERE&'TrMAP:'&MRKR 'REPLACE';
