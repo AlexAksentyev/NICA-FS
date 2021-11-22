@@ -35,8 +35,8 @@ PROCEDURE NAVIGATORS NU PSI_DEG KS;
   WRITE 6 '+++++++ NAVIGATOR strength coefficients +++++++';
   WRITE 6 '        KsSPD: '&SF(KS(1), '(F15.7)');
   WRITE 6 '        KsMPD: '&SF(KS(2), '(F15.7)');
-  WRITE 6 'PSI = ' PSI;
-  WRITE 6 'NZ' NZ;
+  { WRITE 6 'PSI = ' PSI; }
+  { WRITE 6 'NZ' NZ; }
 ENDPROCEDURE;
 
 SAVE '~/REPOS/NICA-FS/bin/common/SECOND-ST/header';
