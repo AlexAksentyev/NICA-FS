@@ -42,16 +42,17 @@ PROCEDURE MAIN CASEPARS        LATPARS     DATDIR;
     VARIABLE FTR 1; {number of turns at a constant psi}
     VARIABLE I 1; VARIABLE SCALE 1; {scale needed to keep data below a certain size}
     VARIABLE NUCORR 1; {corrected navi-nu accounting for the second-order effect (see eq (2.2.1) in report)}
-    FTR := 10000;
-    SCALE := INT(NSWITCH*FTR/5000);
+    FTR := 300;
+    SCALE := INT(NSWITCH*FTR/5000); IF SCALE=0; SCALE:=1; ENDIF;
     NUCORR := NAVINU - 4E-4*(ABS(COS(DEG2RAD(NAVIPSI_DEG))) - 1);   {remove the 2nd order effect; see eq (2.2.1) in report}
     NAVIGATORS NUCORR NAVIPSI_DEG KS; {recompute solenoid strengths}
     LATTICE X XS KS 1;                {recompute lattice}
     LRAY RAYH; LSPI SPIH;             {loads RAY, SPI data after clearing}
     GET_TUNE_ENSEMBLE MUARR;          {compute nu, nbar for the current turn}
 
-    LOOP I 1 (FTR/SCALE);
+    LOOP I 0 (FTR/SCALE);
       TR FTR -SCALE -1 -3 1.1 1.1 0 0 -12;
+      WRITE 6 1+FTR*CASE+I*SCALE;
       WRITETBL SOU SPI   3 SF(1+FTR*CASE+I*SCALE, '(I15)');
       WRITETBL ROU RAY   6 SF(1+FTR*CASE+I*SCALE, '(I15)');
       WRITETBL TOU MUARR 4 SF(1+FTR*CASE+I*SCALE, '(I15)');

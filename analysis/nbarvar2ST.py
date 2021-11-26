@@ -23,8 +23,8 @@ def load(case, spin_psi='=PSInavi'):
     dat = load_data(folder, 'TRPRAY:PSI0spin{}.dat'.format(spin_psi))
     spdat = load_data(folder, 'TRPSPI:PSI0spin{}.dat'.format(spin_psi))
     muarr = load_data(folder, 'TRMUARR:PSI0spin{}.dat'.format(spin_psi))
-    rate = np.diff(np.rad2deg(np.arcsin(muarr['NY'][:,0])))
-    print('psi <rate-of-change> = ', rate.mean(), '[deg/turn]')
+    # rate = np.diff(np.rad2deg(np.arcsin(muarr['NY'][:,0])))
+    # print('psi <rate-of-change> = ', rate.mean(), '[deg/turn]')
     return dat, spdat, muarr
 
 def process(case_name):
@@ -34,7 +34,7 @@ def process(case_name):
     step = int(dat[1,0]['TURN'])
     if True:                                                               # nbar plot
         fig1, ax1 = plt.subplots(4,1,sharex=True)
-        ax1[0].set_title(r'$\dot \psi = $ {} [deg/{}-turn]'.format(case_name,step))
+        ax1[0].set_title(r'$\dot \psi = $ {} [deg/{}-switch]'.format(case_name,step))
         ax1[3].set_xlabel('TURN #')
         for i, var in enumerate(['U', 'X', 'Y', 'Z']):
             ax1[i].plot(muarr['TURN'], muarr['N'+var], '-')
@@ -45,7 +45,7 @@ def process(case_name):
                 ax1[i].set_ylabel(r'$\nu$')
     if True:                                                        # spin-vector plot
         fig3, ax3 = plt.subplots(3,1,sharex=True)
-        ax3[0].set_title(r'$\dot \psi = $ {} [deg/{}-turn]'.format(case_name,step))
+        ax3[0].set_title(r'$\dot \psi = $ {} [deg/{}-switch]'.format(case_name,step))
         ax3[2].set_xlabel('TURN #')
         for i, var in enumerate(['X', 'Y', 'Z']):
             ax3[i].plot(spdat[:,1:]['TURN'], spdat[:,1:]['S_'+var], '--')
@@ -99,7 +99,7 @@ def main(case_names):
         ax.plot(nturn, disp, label=case)
         # P = pol_ana(case)
         # P.plot(1)
-    ax.legend(title=r'$\dot\psi_{navi}$ [deg/turn]')
+    ax.legend(title=r'$\dot\psi_{navi}$ [deg/switch]')
     ax.ticklabel_format(style='sci',scilimits=(0,0),useMathText=True, axis='y')
     return disp_dict
 
@@ -107,5 +107,5 @@ if __name__ == '__main__':
     vals = ['5']
     pows = ['0', '0 (nu not controlled)']
     # case_names = np.array([[x+'e'+y for x in vals] for y in pows]).flatten()
-    case_names = ['45']
+    case_names = ['45', '90']
     disp_dict = main(case_names)
