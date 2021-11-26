@@ -18,17 +18,17 @@ def spin_disp(spdat):
     disp = cos_phi.std(axis=1)
     return disp
 
-def load(case, spin_psi='=PSInavi'):
+def load(case, mrkr='PSI0spin=PSInavi'):
     folder = '../data/'+LATTICE+'/'+ENERGY+'MeV/'+DATDIR+'/RATE_'+case+'/'
-    dat = load_data(folder, 'TRPRAY:PSI0spin{}.dat'.format(spin_psi))
-    spdat = load_data(folder, 'TRPSPI:PSI0spin{}.dat'.format(spin_psi))
-    muarr = load_data(folder, 'TRMUARR:PSI0spin{}.dat'.format(spin_psi))
+    dat = load_data(folder, 'TRPRAY:{}.dat'.format(mrkr))
+    spdat = load_data(folder, 'TRPSPI:{}.dat'.format(mrkr))
+    muarr = load_data(folder, 'TRMUARR:{}.dat'.format(mrkr))
     # rate = np.diff(np.rad2deg(np.arcsin(muarr['NY'][:,0])))
     # print('psi <rate-of-change> = ', rate.mean(), '[deg/turn]')
     return dat, spdat, muarr
 
-def process(case_name):
-    dat, spdat, muarr = load(case_name)
+def process(case_name, mrkr='PSI0spin=PSInavi'):
+    dat, spdat, muarr = load(case_name, mrkr)
     disp = spin_disp(spdat)
     s0 = spdat[:,0] # reference spin vector
     step = int(dat[1,0]['TURN'])
@@ -53,7 +53,7 @@ def process(case_name):
             ax3[i].set_ylabel(r'$\vec s_{}$'.format(var))
     if False:                                                        # phase space plot
         fig2, ax2 = plt.subplots(3,1)
-        ax2[0].set_title(r'$\dot \psi = $ {} [deg/{:d}-turn]'.format(case_name,step))
+        ax2[0].set_title(r'$\dot \psi = $ {} [deg/{}-switch]'.format(case_name,step))
         ax2[0].plot(dat[:,:3]['X']*1e3, dat[:,:3]['A']*1e3)
         ax2[0].set_xlabel('X [mm]'); ax2[0].set_ylabel('A [mrad]')
         ax2[1].plot(dat[:,:3]['Y']*1e3, dat[:,:3]['B']*1e3)
@@ -64,10 +64,10 @@ def process(case_name):
             ax2[i].ticklabel_format(style='sci',scilimits=(0,0),useMathText=True)
     return disp, dat[:,0]['TURN']
 
-def pol_ana(case_name, spin_psi='=PSInavi'):
+def pol_ana(case_name, mrkr='PSI0spin=PSInavi'):
     folder = '../data/'+LATTICE+'/'+ENERGY+'MeV/NAVI-VARI/RATE_'+case_name+'/'
-    spdat = load_data(folder, 'TRPSPI:PSI0spin{}.dat'.format(spin_psi))
-    muarr = load_data(folder, 'TRMUARR:PSI0spin{}.dat'.format(spin_psi))
+    spdat = load_data(folder, 'TRPSPI:{}.dat'.format(mrkr))
+    muarr = load_data(folder, 'TRMUARR:{}.dat'.format(mrkr))
     # modify data for Polarization()
     spdat.dtype.names = 'iteration', *spdat.dtype.names[1:]
     muarr.dtype.names = 'iteration', *muarr.dtype.names[1:]
@@ -88,13 +88,13 @@ def pol_ana(case_name, spin_psi='=PSInavi'):
     P = Polarization.on_nbar(spdat, muarr)
     return P
 
-def main(case_names):
+def main(case_names, mrkr='PSI0spin=PSInavi'):
     disp_dict = {}
     fig, ax = plt.subplots(1,1)
     ax.set_xlabel('TURN #')
     ax.set_ylabel(r'$\sigma[\cos(\vec s, \vec s_0)]$')
     for i, case in enumerate(case_names):
-        disp, nturn = process(case)
+        disp, nturn = process(case, mrkr)
         disp_dict.update({case:disp})
         ax.plot(nturn, disp, label=case)
         # P = pol_ana(case)
@@ -104,8 +104,8 @@ def main(case_names):
     return disp_dict
 
 if __name__ == '__main__':
-    vals = ['5']
-    pows = ['0', '0 (nu not controlled)']
-    # case_names = np.array([[x+'e'+y for x in vals] for y in pows]).flatten()
+    vals = ['1']
+    pows = ['0', '1']
+    case_names = np.array([[x+'e'+y for x in vals] for y in pows]).flatten()
     case_names = ['45', '90']
     disp_dict = main(case_names)
