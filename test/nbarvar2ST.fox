@@ -24,9 +24,8 @@ PROCEDURE MAIN CASEPARS        LATPARS     DATDIR;
   VARIABLE WHERE 100; VARIABLE MRKR 100;
   {tracking}
   VARIABLE NAVIPSI_DI 1; VARIABLE NAVIPSI_DF 1; {navi-psi change range}
-  VARIABLE TURNperDEG 1; {number of turns per constant psi}
-  VARIABLE NSTEP 1; {number of navigator-psi change steps}
-  VARIABLE STEP 1; {current step} VARIABLE PCT 1; {tracking percent}
+  VARIABLE NSWITCH 1; {number of navigator-psi switchings}
+  VARIABLE CASE 1; {current switch case} VARIABLE PCT 1; {tracking percent}
   {lattice}
   VARIABLE X  1 2; VARIABLE XS 1 2;
   {navigators}
@@ -42,18 +41,20 @@ PROCEDURE MAIN CASEPARS        LATPARS     DATDIR;
     VARIABLE MUARR 100 4; {holds NU, NX, NY, NZ of the ray ensemble}
     VARIABLE FTR 1; {number of turns at a constant psi}
     VARIABLE I 1; VARIABLE SCALE 1; {scale needed to keep data below a certain size}
-    FTR := 1000;
-    SCALE := INT(NSTEP*FTR/5000);
-    NAVIGATORS NAVINU NAVIPSI_DEG KS; {recompute solenoid strengths}
+    VARIABLE NUCORR 1; {corrected navi-nu accounting for the second-order effect (see eq (2.2.1) in report)}
+    FTR := 10000;
+    SCALE := INT(NSWITCH*FTR/5000);
+    NUCORR := NAVINU - 4E-4*(ABS(COS(DEG2RAD(NAVIPSI_DEG))) - 1);   {remove the 2nd order effect; see eq (2.2.1) in report}
+    NAVIGATORS NUCORR NAVIPSI_DEG KS; {recompute solenoid strengths}
     LATTICE X XS KS 1;                {recompute lattice}
     LRAY RAYH; LSPI SPIH;             {loads RAY, SPI data after clearing}
     GET_TUNE_ENSEMBLE MUARR;          {compute nu, nbar for the current turn}
 
     LOOP I 1 (FTR/SCALE);
       TR FTR -SCALE -1 -3 1.1 1.1 0 0 -12;
-      WRITETBL SOU SPI   3 SF(1+FTR*STEP+I*SCALE, '(I15)');
-      WRITETBL ROU RAY   6 SF(1+FTR*STEP+I*SCALE, '(I15)');
-      WRITETBL TOU MUARR 4 SF(1+FTR*STEP+I*SCALE, '(I15)');
+      WRITETBL SOU SPI   3 SF(1+FTR*CASE+I*SCALE, '(I15)');
+      WRITETBL ROU RAY   6 SF(1+FTR*CASE+I*SCALE, '(I15)');
+      WRITETBL TOU MUARR 4 SF(1+FTR*CASE+I*SCALE, '(I15)');
     ENDLOOP;
   ENDPROCEDURE; {PUSH}
   {^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^}
@@ -61,10 +62,9 @@ PROCEDURE MAIN CASEPARS        LATPARS     DATDIR;
   NAVINU := 1.5E-2; {minimum (and maximum) stable spin tune for PROTONS}
   NAVIPSI_DI := CASEPARS(1);
   NAVIPSI_DF := CASEPARS(2);
-  TURNperDEG := 1/CASEPARS(3);
   X(1)  := LATPARS(1); X(2)  := LATPARS(2);
   XS(1) := LATPARS(3); XS(2) := LATPARS(4);
-  NSTEP := 100;
+  NSWITCH := 1;
   DIRSET WHERE DATDIR;
   
   {inject particles}
@@ -88,18 +88,18 @@ PROCEDURE MAIN CASEPARS        LATPARS     DATDIR;
   {+++++++++++++++++++++++++++++++++++++++++++++++++++++}
 
   {tracking}
-  LOOP STEP 0 NSTEP; NAVIPSI_DEG := NAVIPSI_DI + STEP*CASEPARS(3); {CASEPARS(3) (NAVIPSI in RUN) = [deg/turn]}
+  LOOP CASE 0 NSWITCH; NAVIPSI_DEG := NAVIPSI_DI + CASE*CASEPARS(3); {CASEPARS(3) (NAVIPSI in RUN) = [deg/turn]}
     PUSH NAVIPSI_DEG 100501 100502 100503;  {push through one turn}
       SRAY RAYH; SSPI SPIH; {saves RAY, SPI against CR}
-    PCT := 100*STEP/NSTEP;
+    PCT := 100*CASE/NSWITCH;
       IF MOD(PCT, 10)=0; WRITE 6 '                                                      '&SI(PCT)&' %'; ENDIF;
   ENDLOOP;
 ENDPROCEDURE; {MAIN}
 
 PROCEDURE RUN;
   VARIABLE DATDIR 100; {where to output data files}
-  VARIABLE CASEV 1; VARIABLE CASEP 1; {iterator* over DEGperTURN}
-  VARIABLE NAVIPSI 1 3; {iteration range* & iterated navi psi rate-of-change* [deg/step]}
+  VARIABLE TRIALV 1; VARIABLE TRIALP 1; {iterator* over DEGperSWITCH}
+  VARIABLE NAVIPSI 1 3; {iteration range* & iterated navi psi rate-of-change* [deg/switch]}
   {LATTICE ARGUMENTS}
   VARIABLE EKIN 1;
   VARIABLE X  1 2; VARIABLE XS 1 2;
@@ -107,8 +107,9 @@ PROCEDURE RUN;
   {********** CONTROLS **********}
   EKIN := 130; {injection kinetic energy in MeV}
   NAVIPSI(1) := 100; {initial ...}
-  NAVIPSI(2) := 180; {... final psi}
+  NAVIPSI(2) := 180; {... final psi [deg]}
   {NAVIPSI(3)    set     below                       ($$)}
+  {*** NOTE ***: I control NAVINU in MAIN:PUSH (above) --------------------------  at the moment}
   {******************************}
   GROUTF 'img/dump/TR' 1;
   DIRSET_AUTO 1;
@@ -120,13 +121,13 @@ PROCEDURE RUN;
   LATPARS(1) := X(1);  LATPARS(2) := X(2);
   LATPARS(3) := XS(1); LATPARS(4) := XS(2);
   
-  LOOP CASEP -1 0;
-    LOOP CASEV 2 2; IF CASEV=2; CASEV:=5; ENDIF;
-      NAVIPSI(3) := CASEV * 10^(CASEP);  {[deg/step] rate-of-change*}      {($$)}
-      DATDIR := 'data/SECOND-ST/'&MRK(EKIN)&'MeV/NAVI-VARI/RATE_'&MRK(CASEV)&'E'&MRK(CASEP)&'/';
+  LOOP TRIALP 0 0;
+    LOOP TRIALV 1 2; IF TRIALV=1; TRIALV:=45; ELSEIF TRIALV=2; TRIALV:=90; ENDIF;
+      NAVIPSI(3) := TRIALV * 10^(TRIALP);  {[deg/switch] rate-of-change*}      {($$)}
+      DATDIR := 'data/SECOND-ST/'&MRK(EKIN)&'MeV/NAVI-VARI-1switch/RATE_'&MRK(TRIALV)&'/';{E'&MRK(TRIALP)&'/';}
       MAIN NAVIPSI LATPARS DATDIR;
-    ENDLOOP; {CASEV}
-  ENDLOOP; {CASEP}
+    ENDLOOP; {TRIALV}
+  ENDLOOP; {TRIALP}
 
 ENDPROCEDURE; {RUN}
 RUN; END;
