@@ -1,4 +1,4 @@
-INCLUDE 'bin/setups/SECOND-ST/FULL';
+INCLUDE 'bin/setups/SECOND-ST/FULLMPD';
 
 PROCEDURE INJECT NUM PSI_DEG; {at injection: SX = 0, SY, SZ = sin PSI, cos PSI}
   VARIABLE X 100; VARIABLE I 1;
@@ -37,12 +37,12 @@ PROCEDURE MAIN;
   OV 3 3 0;
   { SET lattice parameters }
   SET_FOR_PROTONS EKIN X XS;
-  LOOP CASE 0 18; NAVIPSI_DEG := CASE*20;
-    PSI0_DEG := 180 - NAVIPSI_DEG;    {align inital spin with the polarization axis for 100% initial polarization}
+  LOOP CASE 0 9; NAVIPSI_DEG := CASE*20;
+    PSI0_DEG := 180*0 - NAVIPSI_DEG;    {align inital spin with the polarization axis for 100% initial polarization}
     MRKR := 'PSI0spin=PSInavi'; {marker to identify data files}
     WRITE 6 '^^^^ INITIAL SPIN PSI'&SF(PSI0_DEG,'(F15.7)');
-    DIRSET WHERE 'data/SECOND-ST/'&MRK(EKIN)&'MeV/'&MRK(NTURN)&'/NAVI-ON/NAVIPSI-'&MRK(NAVIPSI_DEG)&'/';
-    NAVIGATORS 1.5e-2 NAVIPSI_DEG KS;
+    DIRSET WHERE 'data/SECOND-ST/FULLMPD/'&MRK(EKIN)&'MeV/'&MRK(NTURN)&'/NAVI-ON/NAVIPSI-'&MRK(NAVIPSI_DEG)&'/';
+    NAVIGATORS 3e-2 NAVIPSI_DEG KS;
     LATTICE X XS KS 1;
        {print transfer map}
         OPENF 636 WHERE&'TrMAP:'&MRKR 'REPLACE';
