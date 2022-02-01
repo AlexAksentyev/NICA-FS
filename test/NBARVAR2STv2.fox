@@ -28,6 +28,7 @@ PROCEDURE MAIN CASEPARS        LATPARS     DATDIR;
   VARIABLE FTR 1; {number of turns at a constant psi}
   VARIABLE SCALE 1; {scale needed to keep data below a certain size}
   VARIABLE CASE 1; {current switch case} VARIABLE PCT 1; {tracking percent}
+  VARIABLE I 1; {data output counter}
   {lattice}
   VARIABLE X  1 2; VARIABLE XS 1 2;
   {navigators}
@@ -38,10 +39,10 @@ PROCEDURE MAIN CASEPARS        LATPARS     DATDIR;
   VARIABLE PNUM 1; {number of particles per bunch}
   VARIABLE PSI0_DEG 1; {initial SPIN tilt angle}
   VARIABLE RAYH 1000 8; VARIABLE SPIH 1000 3; {keeps RAY, SPI data after each turn}
+  VARIABLE MUARR 100 4; {holds NU, NX, NY, NZ of the ray ensemble}
   {^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^}
-  PROCEDURE PUSH NAVIPSI_DEG SOU ROU TOU;
+  PROCEDURE PUSH NAVIPSI_DEG;
     VARIABLE KS 1 2; {navigator solenoid strengths}
-    VARIABLE MUARR 100 4; {holds NU, NX, NY, NZ of the ray ensemble}
     VARIABLE NUCORR 1; {corrected navi-nu accounting for the second-order effect (see eq (2.2.1) in report)}
     IF NUFLAG='free';
       NUCORR := NAVINU;
@@ -50,12 +51,12 @@ PROCEDURE MAIN CASEPARS        LATPARS     DATDIR;
     ELSEIF TRUE;
       WRITE 6 '!!! NUFLAG ERROR (check MAIN:PUSH)!!!'; QUIT 1;
     ENDIF;
-    NAVIGATORS NUCORR NAVIPSI_DEG KS; {recompute solenoid strengths}
-    LATTICE X XS KS 1;                {recompute lattice}
-    LRAY RAYH; LSPI SPIH;             {loads RAY, SPI data after clearing}
-    GET_TUNE_ENSEMBLE MUARR;          {compute nu, nbar for the current turn}
-
-    TR FTR -FTR -1 -3 1.1 1.1 0 0 -12;
+    NAVIGATORS NUCORR NAVIPSI_DEG KS;  {recompute solenoid strengths}
+    LATTICE X XS KS 1;                 {recompute lattice}
+    
+    LRAY RAYH; LSPI SPIH;              {loads RAY, SPI data after clearing}
+    TR FTR -FTR -1 -3 1.1 1.1 0 0 -12; {push}
+    SRAY RAYH; SSPI SPIH;              {saves RAY, SPI against CR}
   ENDPROCEDURE; {PUSH}
   {^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^}
   PNUM := 10; {x 3 bunches + 1 (reference ray)}
@@ -67,7 +68,7 @@ PROCEDURE MAIN CASEPARS        LATPARS     DATDIR;
   {********** CONTROLS **********}
   NSWITCH := 600000;
   FTR := 1; {number of turns at a CONSTANT psi SETTING}
-  SCALE := INT(NSWITCH*FTR/5000); IF SCALE=0; SCALE:=1; ENDIF; {output data every SCALE}
+  SCALE := INT(NSWITCH/5000); IF SCALE=0; SCALE:=1; ENDIF; {output data every SCALE}
   NUFLAG := 'free';  {determines whether NAVINU is to be controlled of free in PUSH}
   {***********************************}
   DIRSET WHERE DATDIR;
@@ -93,17 +94,14 @@ PROCEDURE MAIN CASEPARS        LATPARS     DATDIR;
   {+++++++++++++++++++++++++++++++++++++++++++++++++++++}
   
   {tracking}
-  LOOP CASE 0 NSWITCH; NAVIPSI_DEG := NAVIPSI_DI + CASE*CASEPARS(3); {CASEPARS(3) (NAVIPSI in RUN) = [deg/turn]}
-    PUSH NAVIPSI_DEG 100501 100502 100503;  {push through FTR turns}
+  LOOP CASE 1 NSWITCH; NAVIPSI_DEG := NAVIPSI_DI + (CASE-1)*CASEPARS(3); {CASEPARS(3) (NAVIPSI in RUN) = [deg/turn]}
+    PUSH NAVIPSI_DEG;  {push through FTR turns}
       IF MOD(CASE, SCALE)=0;
-        WRITE 6 FTR*CASE+I*SCALE;
-        WRITETBL SOU SPI   3 SF(FTR*CASE+I*SCALE, '(I15)');
-        WRITETBL ROU RAY   6 SF(FTR*CASE+I*SCALE, '(I15)');
-        WRITETBL TOU MUARR 4 SF(FTR*CASE+I*SCALE, '(I15)');
+        GET_TUNE_ENSEMBLE MUARR;          {compute nu, nbar for the current turn}
+        WRITETBL 100501 SPI   3 SF(CASE*FTR, '(I15)');
+        WRITETBL 100502 RAY   6 SF(CASE*FTR, '(I15)');
+        WRITETBL 100503 MUARR 4 SF(CASE*FTR, '(I15)');
       ENDIF;
-      SRAY RAYH; SSPI SPIH; {saves RAY, SPI against CR}
-    PCT := 100*CASE/NSWITCH;
-      IF MOD(PCT, 10)=0; WRITE 6 '                                                      '&SI(PCT)&' %'; ENDIF;
   ENDLOOP;
 ENDPROCEDURE; {MAIN}
 

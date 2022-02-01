@@ -164,9 +164,9 @@ def main(case_names, mrkr='PSI0spin=PSInavi'):
 
 if __name__ == '__main__':
     vals = ['1']
-    pows = ['1/LONG']
+    pows = ['-1','0','1']
     case_names = np.array([[x+'E'+y for x in vals] for y in pows]).flatten()
     # case_names = ['30', '60', '90']
-    proj_dict, W_dict = main(case_names, 'nu-free')
-    rates = [deg_per_sec(float(e)) for e in case_names]
-    adiabaticity = st_dps/rates
+    proj_dict, W_dict = main(case_names, 'nu-controlled')
+    #rates = [deg_per_sec(float(e)) for e in case_names]
+    #adiabaticity = st_dps/rates
