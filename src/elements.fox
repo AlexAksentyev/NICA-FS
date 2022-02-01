@@ -181,7 +181,8 @@ PROCEDURE SOL L {m} KS {m^-2}; {TO BE FINISHED !!!!!!!!!!!!!!!!!!!!!}
   LOCSET 0 0 0 0 0 0 ; UPDATE 1 1;
 ENDPROCEDURE;
 
-PROCEDURE SOLENOID L {m} KS {rad/m};
+PROCEDURE SOLENOID_0 L {m} KS {rad/m}; {this is the ORIGINAL IMPLEMENTATION used in test2ST (contract 100-3596)}
+                                         {which doesn't account for the saturation in the solenoid magnets}
   VARIABLE B0 1; VARIABLE A 1;
   VARIABLE MU 1 ; {MAGNETIC PERMEABILITY}
   VARIABLE N 1; {NUMBER OF SOLENOID TURNS}
@@ -191,6 +192,20 @@ PROCEDURE SOLENOID L {m} KS {rad/m};
   B0 := KS * CONS(CHIM);
   I  := 2*B0/MU/N;
   IF (B0 = 0); DL L; WRITE 6 'SOLENOID IS OFF';
+  ELSEIF TRUE;
+    CMS B0 A L;
+  ENDIF;
+ENDPROCEDURE; {SOLENOID_0}
+
+PROCEDURE SOLENOID L {m} KS {rad/m}; {this solenoid implementation accounts for the saturation effect (top B-field)}
+  VARIABLE B0 1; VARIABLE A 1;
+  VARIABLE BTOP 1; {maximum magnetic field in solenoid; cannot go any further}
+  BTOP := 6; {the 2ST scheme requires 4 6-T solenoids, so I assume 6T is reacheable}
+  A  := .05;
+  B0 := KS * CONS(CHIM); WRITE 6 'SOLENOID MAGNETIC FIELD COMPUTED:'&SF(B0, '(F15.7)')&' Tl';
+  IF (B0>BTOP); B0 := BTOP; WRITE 6 'SOLENOID REACHED SATURATION; SETTING Btop FIELD (6T)!'; ENDIF;
+  IF (B0 = 0);
+    DL L; WRITE 6 'SOLENOID IS OFF';
   ELSEIF TRUE;
     CMS B0 A L;
   ENDIF;
