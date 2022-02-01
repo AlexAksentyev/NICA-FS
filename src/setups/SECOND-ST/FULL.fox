@@ -341,13 +341,13 @@ PROCEDURE LATTICE X {2 stuck} XS {2} KS {2} RFFLAG {1} ;
   DL 0.25 ; {Drift_382}
   DL 0.25 ; {Drift_383}
   QUAD 0.67 0 (-0.5166681483*(1+X2+XSQW)) ; {Quadr_384}
-  DL 1.8975-.01 ; {Drift_385}                              {correction for energy 3059 MeV (3200 MeV/c)}
-  DL 1.841+.01 ; {Drift_386}                               {@AA}
+  DL 1.8975 ; {Drift_385}                              
+  DL 1.841 ; {Drift_386}                               
   DL 1.841 ; {Drift_387}
   DL 1.841 ; {Drift_388}
   DL 1.841 ; {Drift_389}
-  DL 1.841+.001 ; {Drift_390}                                 {ABERRATIONS PROBLEM CORRECTION (caused by Drift_391)}
-  DL 1.8125-.001 ; {Drift_391}                                {at 130 MeV energy @AA}
+  DL 1.841 ; {Drift_390}                                 
+  DL 1.8125 ; {Drift_391}                                
   QUAD 0.69 0 (0.5185577457*(1+X2)) ; {Quadr_392}
   DL 0.25 ; {Drift_393}
   DL 0.26787 ; {Drift_394}
