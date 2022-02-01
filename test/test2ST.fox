@@ -25,9 +25,9 @@ PROCEDURE MAIN;
   {********** CONTROLS **********}
   NTURN := 3000000;
   PNUM := 10; {number of particles in a bunch}
-  EKIN := 130;  {kinetic energy in MeV}
-  PSI0_DEG := 0; {angle between the spin orientation at injection and the z-axis}
-  NAVIPSI_DEG := 0; {navigator defined angle between the z and spin axes}
+  EKIN := 3059;  {kinetic energy in MeV}
+  PSI0_DEG := 135; {angle between the spin orientation at injection and the z-axis}
+  NAVIPSI_DEG := 135; {navigator defined angle between the z and spin axes}
   {******************************}
   MRKR := 'PSI0spin-'&MRK(PSI0_DEG); {marker to identify data files}
   WRITE 6 '^^^^ INITIAL SPIN PSI'&SF(PSI0_DEG,'(F15.7)');
@@ -38,7 +38,7 @@ PROCEDURE MAIN;
   OV 3 3 0;
   { SET lattice parameters }
   SET_FOR_PROTONS EKIN X XS;
-  NAVIGATORS 3e-2 0 NAVIPSI_DEG KS;
+  NAVIGATORS 3e-2 NAVIPSI_DEG KS;
   LATTICE X XS KS 1;
      {print transfer map}
       OPENF 636 WHERE&'TrMAP:'&MRKR 'REPLACE';
