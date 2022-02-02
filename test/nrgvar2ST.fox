@@ -10,7 +10,7 @@ PROCEDURE INJECT NUM PSI_DEG; {at injection: SX = 0, SY, SZ = sin PSI, cos PSI}
   LOOP I 1 NUM;
     SR X|I 0 0 0 0 0 0 0 1; SSR 0 SY SZ;
     SR 0 0 X|I 0 0 0 0 0 1; SSR 0 SY SZ;
-    SR 0 0 0 0 0 (X|I)/10 0 0 1; SSR 0 SY SZ;
+    SR 0 0 0 0 0 (X|I)/30 0 0 1; SSR 0 SY SZ;
   ENDLOOP;
 ENDPROCEDURE;
 
@@ -24,10 +24,10 @@ PROCEDURE MAIN yG {the resonance integer};
   VARIABLE NTURN 1;
   VARIABLE NAVIPSI_DEG 1; VARIABLE FREEZE 1;
   {********** CONTROLS **********}
-  NTURN := 30000;
+  NTURN := 300000;
   PNUM := 10; {number of particles in a bunch}
   NAVIPSI_DEG := 0; {navigator defined angle between the z and spin axes}
-  PSI0_DEG := 45; {angle between the spin orientation at injection and the z-axis}
+  PSI0_DEG := 3; {angle between the spin orientation at injection and the z-axis}
   {******************************}
   MRKR := 'PSI0spin-'&MRK(PSI0_DEG); {marker to identify data files}
   WRITE 6 '^^^^ INITIAL SPIN PSI'&SF(PSI0_DEG,'(F15.7)');
@@ -81,10 +81,10 @@ PROCEDURE RUN;
   VARIABLE yG 1 6; {integer} VARIABLE CASE 1;
   yG(1) := 0;  {siberian snakes navigating AND spin freezing}
   yG(2) := 2; 
-  yG(3) := 3; 
-  yG(4) := 4; 
-  yG(5) := 5;
-  yG(6) := 6;
+  yG(3) := 6; 
+  yG(4) := 7; 
+  yG(5) := 10;
+  yG(6) := 12;
   LOOP CASE 1 6;
     MAIN yG(CASE);
   ENDLOOP;

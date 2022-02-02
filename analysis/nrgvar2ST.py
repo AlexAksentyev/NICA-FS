@@ -28,7 +28,7 @@ def main(varyvar, spin_psi=0):
     spdat = load_data(folder, 'TRPSPI:PSI0spin-{:d}.dat'.format(spin_psi))
     P = Polarization.on_axis(spdat, axis)
     ## computations
-    vvl = str(varyvar) # "varyvar label"
+    vvl = str(varyvar) + '__' + str(spin_psi) # "varyvar label"
     P.plot(1)
     plt.savefig(folder+vvl+'-pol.png', bbox_inches='tight', pad_inches=.1)
     Px = Polarization.on_axis(spdat[1:-1:3], axis)
@@ -73,4 +73,4 @@ if __name__ == '__main__':
     caserng = [int(x) for x in caserng]; caserng.sort()
     P = {}
     for casevar in caserng:
-        P.update({casevar: main(casevar, 45)})
+        P.update({casevar: main(casevar, 3)})

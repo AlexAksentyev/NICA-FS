@@ -86,7 +86,7 @@ PROCEDURE NAVIGATORS FREEZE NU PSI_DEG KS; {the FREEZE flag determines whether t
   PSI := DEG2RAD(PSI_DEG);
   NZ := COS(PSI); NY := SIN(PSI); WRITE 6 'NZ, NY ='&ST(NZ)&'   '&ST(NY);
   GAMMA := CONS(1 + E0/(M0*AMUMEV));
-  PHIY := GAMMA*G0*PI; WRITE 6 'PHIY, TAN(PHIY) = '&ST(PHIY)&'   '&ST(TAN(PHIY));
+  PHIY := GAMMA*G0*PI; WRITE 6 'PHIY, TAN(PHIY) = '&ST(PHIY/PI)&'*PI   '&ST(TAN(PHIY));
   WRITE 6 '@@@@ siberian snakes freeze:' FREEZE; WRITE 6 'BASE ='&ST(BASE);
   IF FREEZE; BASE := 1; ENDIF; { if FREEZE is FALSE, BASE == 0 }
   KS(1) := -1*BASE + 2*NU*(NZ - NY/TAN(PHIY)); {SPD}
