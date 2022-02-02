@@ -14,7 +14,7 @@ PROCEDURE INJECT NUM PSI_DEG; {at injection: SX = 0, SY, SZ = sin PSI, cos PSI}
   ENDLOOP;
 ENDPROCEDURE;
 
-PROCEDURE MAIN MOM {MeV/c};
+PROCEDURE MAIN yG {the resonance integer};
   VARIABLE WHERE 100;
   VARIABLE PSI0_DEG 1; VARIABLE MRKR 100; VARIABLE PNUM 1;
   VARIABLE MAPSE 1;
@@ -22,16 +22,19 @@ PROCEDURE MAIN MOM {MeV/c};
   {LATTICE ARGUMENTS}
   VARIABLE KS 1 2; VARIABLE X  1 2; VARIABLE XS 1 2;
   VARIABLE NTURN 1;
-  VARIABLE NAVIPSI_DEG 1;
+  VARIABLE NAVIPSI_DEG 1; VARIABLE FREEZE 1;
   {********** CONTROLS **********}
   NTURN := 30000;
   PNUM := 10; {number of particles in a bunch}
   NAVIPSI_DEG := 0; {navigator defined angle between the z and spin axes}
-  PSI0_DEG := NAVIPSI_DEG; {angle between the spin orientation at injection and the z-axis}
+  PSI0_DEG := 45; {angle between the spin orientation at injection and the z-axis}
   {******************************}
   MRKR := 'PSI0spin-'&MRK(PSI0_DEG); {marker to identify data files}
   WRITE 6 '^^^^ INITIAL SPIN PSI'&SF(PSI0_DEG,'(F15.7)');
-  DIRSET WHERE 'data/SECOND-ST/MOMVARY/'&MRK(MOM)&'MeV:c/'&MRK(NTURN)&'/NAVIPSI-'&MRK(NAVIPSI_DEG)&'/';
+  IF yG=0; FREEZE := LO(1); {turn on the spin-freezing snake solenoid capability}
+  ELSEIF yG>0; FREEZE := LO(0); {turn off the spin-freezing, use snakes as pure navigator solenoids}
+  ENDIF;
+  DIRSET WHERE 'data/SECOND-ST/yGVARY/'&MRK(yG)&'/'&MRK(NTURN)&'/NAVIPSI-'&MRK(NAVIPSI_DEG)&'/';
   GROUTF 'img/dump/TR' 1;
   
   
@@ -39,8 +42,8 @@ PROCEDURE MAIN MOM {MeV/c};
   DAEPS 1E-12; {this sets DA garbage collection tolerance so that the TRANSFER MAP doesn't get the 1e-15 ABERRATION coefficient}
   DIRSET_AUTO 1;
   { SET lattice parameters }
-  SET_FOR_PROTONS MOM X XS;
-  NAVIGATORS 3e-2 NAVIPSI_DEG KS;
+  SET_FOR_PROTONS yG X XS;
+  NAVIGATORS FREEZE 3e-2 NAVIPSI_DEG KS;
   LATTICE X XS KS 1;
      {print transfer map}
       OPENF 636 WHERE&'TrMAP:'&MRKR 'REPLACE';
@@ -75,15 +78,15 @@ PROCEDURE MAIN MOM {MeV/c};
 ENDPROCEDURE; {MAIN}
 
 PROCEDURE RUN;
-  VARIABLE MOM 1 6; {MeV/c} VARIABLE CASE 1;
-  MOM(1) := 511; {the proton EDM experiment momentum (EKIN=130 MeV)}
-  MOM(2) := 800; {filler value}
-  MOM(3) := 1.6*1000; {1ST and 2ST modes maximum momenta...}
-  MOM(4) := 3.2*1000; {... in MeV/c respectively}
-  MOM(5) := 4800;
-  MOM(6) := 6400;
+  VARIABLE yG 1 6; {integer} VARIABLE CASE 1;
+  yG(1) := 0;  {siberian snakes navigating AND spin freezing}
+  yG(2) := 2; 
+  yG(3) := 3; 
+  yG(4) := 4; 
+  yG(5) := 5;
+  yG(6) := 6;
   LOOP CASE 1 6;
-    MAIN MOM(CASE);
+    MAIN yG(CASE);
   ENDLOOP;
 ENDPROCEDURE;
 RUN; END;
