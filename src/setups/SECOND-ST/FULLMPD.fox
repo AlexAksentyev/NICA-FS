@@ -17,7 +17,7 @@ PROCEDURE LATTICE X {2 stuck} XS {2} KS {2} RFFLAG {1} ;
   {SETTING RF PARAMETERS}
   HNUM := 66;
   VRF(1, 1) := 100/HNUM; {RF Voltage [kV]}
-  FREQ := HNUM*REVFREQ(ACCLEN(1)); {RF Frequency}
+  FREQ := HNUM*REVFREQ(fACCLEN(1)); {RF Frequency}
   {SETTING LATTICE PARAMETERS}
   KoeffSolSPD := KS(1); KoeffSolMPD := KS(2);
   X2 := X(1); X3 := X(2); 
@@ -28,7 +28,7 @@ PROCEDURE LATTICE X {2 stuck} XS {2} KS {2} RFFLAG {1} ;
   WRITE 6 '*    FS NICA 4 SOL 11 OCT 2021 (CW-MPD)    *';
   WRITE 6 '********************************************';
 
-  WRITE 6 'REVOLUTION FREQUENCY: '&ST(REVFREQ(ACCLEN(1))/1E6)&' MHZ';
+  WRITE 6 'REVOLUTION FREQUENCY: '&ST(REVFREQ(fACCLEN(1))/1E6)&' MHZ';
   WRITE 6 'RF FREQUENCY: '&ST(FREQ/1E6)&' MHZ';
 
   UM;

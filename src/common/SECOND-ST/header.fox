@@ -1,11 +1,35 @@
 INCLUDE 'bin/elements';
 
-FUNCTION ACCLEN DUMMY;
-  ACCLEN := 503;
-ENDFUNCTION;
+FUNCTION fACCLEN DUMMY; fACCLEN := 503; ENDFUNCTION;
 
-PROCEDURE SET_FOR_PROTONS EKIN X XS;  {FROM 1.4.2, p. 11}
-                      {max EKIN 3.2 [GeV] (taken from p. 3)}
+FUNCTION fEKIN MOM {MeV/c} RESTMASS {MeV}; fEKIN := SQRT(SQR(MOM) + SQR(RESTMASS)) - RESTMASS; ENDFUNCTION; {kinetic energy from momentum}
+FUNCTION fMOM EKIN {MeV} RESTMASS {MeV};   fMOM := SQRT(SQR(EKIN)+2*EKIN*RESTMASS); ENDFUNCTION; {momentum from kinetic energy}
+
+{new procedure with MOMENTUM as input}
+PROCEDURE SET_FOR_PROTONS MOM X XS;  {FROM 1.4.2, p. 11}
+                      {max MOM 3.2 [GeV/c] (taken from p. 3)}
+  VARIABLE RESTMASSAMU 1; VARIABLE RESTMASSMEV 1;
+  VARIABLE EKIN 1; VARIABLE GAMMA 1; VARIABLE BETA 1;
+  RESTMASSAMU := 1.00728; RESTMASSMEV := RESTMASSAMU*AMUMEV;
+  EKIN := fEKIN(MOM, RESTMASSMEV);
+  GAMMA := 1 + EKIN/RESTMASSMEV;
+  BETA := SQRT(GAMMA*GAMMA - 1)/GAMMA;
+  RP EKIN RESTMASSAMU 1;
+  RPS 1 1.792847;
+  {X2}           {X3}
+  X(1) := .0035; X(2) := .00275;
+  {XSQW}         {XSFW}
+  XS(1) := .009; XS(2) := .018;
+
+  WRITE 6 '++++++++++ SETTING UP FOR PROTONS:';
+  WRITE 6 'EKIN [MeV]          GAMMA          BETA';
+  WRITE 6 SF(EKIN, '(F15.7)')&SF(GAMMA, '(F15.7)')&SF(BETA, '(F15.7)');
+  WRITE 6 '+++++++++++++++++++++++++++++++++++';
+ENDPROCEDURE;
+
+{original procedure uses EKIN as input}
+PROCEDURE SET_FOR_PROTONS0 EKIN X XS;  {FROM 1.4.2, p. 11}
+                      {max EKIN corresponds to 3.2 [GeV/c] (taken from p. 3)}
   VARIABLE RESTMASSAMU 1; VARIABLE GAMMA 1; VARIABLE BETA 1;
   RESTMASSAMU := 1.00728; 
   GAMMA := 1 + EKIN/(RESTMASSAMU*AMUMEV);

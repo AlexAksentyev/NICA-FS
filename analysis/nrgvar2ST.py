@@ -8,17 +8,17 @@ PSVARS = list(zip(['X','A','Y','B','T','D'],[float]*6))
 
 LATTICE = 'SECOND-ST'
 NTURN = '30000'
-ROOT = '../data/'+LATTICE+'/NRGVARY/'
-datadir = lambda energy: ROOT+str(energy)+'MeV/'+NTURN
+ROOT = '../data/'+LATTICE+'/MOMVARY/'
+datadir = lambda momentum: ROOT+str(momentum)+'MeV:c/'+NTURN
 
 def load_tss(folder):
     mu = DAVEC(folder+'MU:PSI0spin-0')
     nbar = load_nbar(folder, '-0')
     return mu, nbar
 
-def main(energy):
-    dir_ = datadir(energy)
-    folder  = dir_+'/NAVI-ON/NAVIPSI-0/'
+def main(momentum):
+    dir_ = datadir(momentum)
+    folder  = dir_+'/NAVIPSI-0/'
     print(folder)
     navi_psi_rad = np.deg2rad(180-0) # 180 b/c the navigators set psi in the SPD as 180 - psi
     axis = [0, np.sin(navi_psi_rad), np.cos(navi_psi_rad)]
@@ -28,22 +28,22 @@ def main(energy):
     spdat = load_data(folder, 'TRPSPI:PSI0spin-0.dat')
     P = Polarization.on_axis(spdat, axis)
     ## computations
-    nrg = str(energy)
+    mom = str(momentum)
     P.plot(1)
-    plt.savefig(folder+nrg+'-pol.png', bbox_inches='tight', pad_inches=.1)
+    plt.savefig(folder+mom+'-pol.png', bbox_inches='tight', pad_inches=.1)
     Px = Polarization.on_axis(spdat[1:-1:3], axis)
     Px.plot(1)
-    plt.savefig(folder+nrg+'-pol-X-bunch.png', bbox_inches='tight', pad_inches=.1)
+    plt.savefig(folder+mom+'-pol-X-bunch.png', bbox_inches='tight', pad_inches=.1)
     fig, ax = plot(dat, spdat)
-    plt.savefig(folder+nrg+'-plots.png', bbox_inches='tight', pad_inches=.1)
+    plt.savefig(folder+mom+'-plots.png', bbox_inches='tight', pad_inches=.1)
     fig2, ax2 = plot_spin(spdat)
-    plt.savefig(folder+nrg+'-spin.png', bbox_inches='tight', pad_inches=.1)
+    plt.savefig(folder+mom+'-spin.png', bbox_inches='tight', pad_inches=.1)
     plt.close('all')
     return P
 
-def spin_dyn(energy):
-    dir_ = datadir(energy)
-    folder  = dir_+'/NAVI-ON/NAVIPSI-0/'
+def spin_dyn(momentum):
+    dir_ = datadir(momentum)
+    folder  = dir_+'/NAVIPSI-0/'
     spdat = load_data(folder, 'TRPSPI:PSI0spin-0.dat')
     # s0 = np.zeros(spdat.shape[0], dtype=list(zip(['X','Y','Z'],[float]*3)))
     # for lbl in ['X','Y','Z']:
@@ -54,18 +54,18 @@ def _spana(P,pid1=11,pid2=14):
     fig, ax = plt.subplots(3,3,sharey='row',sharex='col')
     for i, lbl in enumerate(['X','Y','Z']):
         ax[i,0].set_ylabel('S_'+lbl)
-        for j, nrg in enumerate([130,3335, 6468]):
-            ax[i,j].plot(P[nrg][:,pid1]['S_'+lbl],  label=str(pid1+1))
-            ax[i,j].plot(P[nrg][:,pid2]['S_'+lbl], label=str(pid2+1))
-            ax[i,j].plot(P[nrg][:,0]['S_'+lbl],  label='ref')
-            ax[0,j].set_title(nrg)
+        for j, mom in enumerate([511,800, 3200]):
+            ax[i,j].plot(P[mom][:,pid1]['S_'+lbl],  label=str(pid1+1))
+            ax[i,j].plot(P[mom][:,pid2]['S_'+lbl], label=str(pid2+1))
+            ax[i,j].plot(P[mom][:,0]['S_'+lbl],  label='ref')
+            ax[0,j].set_title(str(mom)+' MeV/c')
         ax[i,0].legend()
     return fig, ax
 
 
 if __name__ == '__main__':
-    nrg_rng = os.listdir(ROOT); nrg_rng.remove('.DS_Store')
-    nrg_rng = [int(x[:-3]) for x in nrg_rng]; nrg_rng.sort()
+    caserng = os.listdir(ROOT); caserng.remove('.DS_Store')
+    caserng = [int(x[:-5]) for x in caserng]; caserng.sort()
     P = {}
-    for energy in nrg_rng:
-        P.update({energy: spin_dyn(energy)})
+    for mom in caserng:
+        P.update({mom: spin_dyn(mom)})

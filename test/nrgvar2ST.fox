@@ -14,7 +14,7 @@ PROCEDURE INJECT NUM PSI_DEG; {at injection: SX = 0, SY, SZ = sin PSI, cos PSI}
   ENDLOOP;
 ENDPROCEDURE;
 
-PROCEDURE MAIN EKIN {MeV};
+PROCEDURE MAIN MOM {MeV/c};
   VARIABLE WHERE 100;
   VARIABLE PSI0_DEG 1; VARIABLE MRKR 100; VARIABLE PNUM 1;
   VARIABLE MAPSE 1;
@@ -31,7 +31,7 @@ PROCEDURE MAIN EKIN {MeV};
   {******************************}
   MRKR := 'PSI0spin-'&MRK(PSI0_DEG); {marker to identify data files}
   WRITE 6 '^^^^ INITIAL SPIN PSI'&SF(PSI0_DEG,'(F15.7)');
-  DIRSET WHERE 'data/SECOND-ST/NRGVARY/'&MRK(EKIN)&'MeV/'&MRK(NTURN)&'/NAVI-ON/NAVIPSI-'&MRK(NAVIPSI_DEG)&'/';
+  DIRSET WHERE 'data/SECOND-ST/MOMVARY/'&MRK(MOM)&'MeV:c/'&MRK(NTURN)&'/NAVIPSI-'&MRK(NAVIPSI_DEG)&'/';
   GROUTF 'img/dump/TR' 1;
   
   
@@ -39,7 +39,7 @@ PROCEDURE MAIN EKIN {MeV};
   DAEPS 1E-12; {this sets DA garbage collection tolerance so that the TRANSFER MAP doesn't get the 1e-15 ABERRATION coefficient}
   DIRSET_AUTO 1;
   { SET lattice parameters }
-  SET_FOR_PROTONS EKIN X XS;
+  SET_FOR_PROTONS MOM X XS;
   NAVIGATORS 3e-2 NAVIPSI_DEG KS;
   LATTICE X XS KS 1;
      {print transfer map}
@@ -74,22 +74,16 @@ PROCEDURE MAIN EKIN {MeV};
 
 ENDPROCEDURE; {MAIN}
 
-FUNCTION MOM2NRG P {MeV/c};
-  VARIABLE Mp 1; {proton rest mass}
-  Mp := 938; {MeV}
-  MOM2NRG := NINT(SQRT(SQR(P) + SQR(Mp))); {Ekin = SQRT(Pc^2 + Mp^2)}
-ENDFUNCTION;
-
 PROCEDURE RUN;
-  VARIABLE NRG 1 6; {MeV} VARIABLE CASE 1;
-  NRG(1) := 130; {the proton EDM experiment energy}
-  NRG(2) := MOM2NRG(800); {filler value}
-  NRG(3) := MOM2NRG(1.6*1000); {1ST and 2ST modes maximum momenta...}
-  NRG(4) := MOM2NRG(3.2*1000); {... in MeV/c respectively}
-  NRG(5) := MOM2NRG(4800);
-  NRG(6) := MOM2NRG(6400);
+  VARIABLE MOM 1 6; {MeV/c} VARIABLE CASE 1;
+  MOM(1) := 511; {the proton EDM experiment momentum (EKIN=130 MeV)}
+  MOM(2) := 800; {filler value}
+  MOM(3) := 1.6*1000; {1ST and 2ST modes maximum momenta...}
+  MOM(4) := 3.2*1000; {... in MeV/c respectively}
+  MOM(5) := 4800;
+  MOM(6) := 6400;
   LOOP CASE 1 6;
-    MAIN NRG(CASE);
+    MAIN MOM(CASE);
   ENDLOOP;
 ENDPROCEDURE;
 RUN; END;
