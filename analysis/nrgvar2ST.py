@@ -54,7 +54,7 @@ def _spana(P,pid1=11,pid2=14):
     fig, ax = plt.subplots(3,3,sharey='row',sharex='col')
     for i, lbl in enumerate(['X','Y','Z']):
         ax[i,0].set_ylabel('S_'+lbl)
-        for j, mom in enumerate([511,800, 3200]):
+        for j, mom in enumerate([511,3200, 4800]):
             ax[i,j].plot(P[mom][:,pid1]['S_'+lbl],  label=str(pid1+1))
             ax[i,j].plot(P[mom][:,pid2]['S_'+lbl], label=str(pid2+1))
             ax[i,j].plot(P[mom][:,0]['S_'+lbl],  label='ref')
@@ -64,8 +64,13 @@ def _spana(P,pid1=11,pid2=14):
 
 
 if __name__ == '__main__':
-    caserng = os.listdir(ROOT); caserng.remove('.DS_Store')
+    caserng = os.listdir(ROOT);
+    try:
+        caserng.remove('.DS_Store');
+        caserng.remove('img');
+    except:
+        pass
     caserng = [int(x[:-5]) for x in caserng]; caserng.sort()
     P = {}
     for mom in caserng:
-        P.update({mom: spin_dyn(mom)})
+        P.update({mom: main(mom)})
