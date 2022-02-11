@@ -1,0 +1,94 @@
+INCLUDE 'bin/elements';
+
+FUNCTION fACCLEN DUMMY; fACCLEN := 503; ENDFUNCTION;
+
+FUNCTION fEKIN MOM {MeV/c} RESTMASS {MeV}; fEKIN := SQRT(SQR(MOM) + SQR(RESTMASS)) - RESTMASS; ENDFUNCTION; {kinetic energy from momentum}
+FUNCTION fMOM EKIN {MeV} RESTMASS {MeV};   fMOM := SQRT(SQR(EKIN)+2*EKIN*RESTMASS); ENDFUNCTION; {momentum from kinetic energy}
+
+{injection energy is determined by the gamma*G input}
+PROCEDURE SET_FOR_PROTONS yG X XS;
+  VARIABLE RESTMASSAMU 1; VARIABLE RESTMASSMEV 1;
+  VARIABLE EKIN 1; VARIABLE GAMMA 1; VARIABLE BETA 1;
+  VARIABLE Gprot 1; {proton magnetic anomaly G}
+  RESTMASSAMU := 1.00728; RESTMASSMEV := RESTMASSAMU*AMUMEV;
+  Gprot := 1.792847;
+  IF yG=0; {if yG is zero use the DEFAULT ENERGY value (the siberian SNAKES should be turned ON)}
+    GAMMA := 1.139; { EKIN=130.382 MeV }
+  ELSEIF yG>1;
+    GAMMA := yG/Gprot; {compute the beam reference Gamma corresponding to the input gamma*G}
+  ELSEIF TRUE; {if yG = 1: this is a PROHIBITED value for the proton, since yG/G = y = 0.56<1, which cannot be}
+    WRITE 6 '!!!!!!! PROHIBITED Y VALUE = '&SF(yG/Gprot, '(F15.7)');
+    QUIT 15;
+  ENDIF;
+  BETA := SQRT(GAMMA*GAMMA - 1)/GAMMA;
+  EKIN := (GAMMA-1)*RESTMASSMEV;
+  RP EKIN RESTMASSAMU 1;
+  RPS 1 Gprot;
+  {X2}           {X3}
+  X(1) := .0035; X(2) := .00275;
+  {XSQW}         {XSFW}
+  XS(1) := .009; XS(2) := .018;
+
+  WRITE 6 '++++++++++ SETTING UP FOR PROTONS:';
+  WRITE 6 'EKIN [MeV]          GAMMA          BETA';
+  WRITE 6 SF(EKIN, '(F15.7)')&SF(GAMMA, '(F15.7)')&SF(BETA, '(F15.7)');
+  WRITE 6 '+++++++++++++++++++++++++++++++++++';
+ENDPROCEDURE;
+
+{procedure with MOMENTUM as input}
+PROCEDURE SET_FOR_PROTONS1 MOM X XS;  {FROM 1.4.2, p. 11}
+                      {max MOM 3.2 [GeV/c] (taken from p. 3)}
+  VARIABLE RESTMASSAMU 1; VARIABLE RESTMASSMEV 1;
+  VARIABLE EKIN 1; VARIABLE GAMMA 1; VARIABLE BETA 1;
+  RESTMASSAMU := 1.00728; RESTMASSMEV := RESTMASSAMU*AMUMEV;
+  EKIN := fEKIN(MOM, RESTMASSMEV);
+  GAMMA := 1 + EKIN/RESTMASSMEV;
+  BETA := SQRT(GAMMA*GAMMA - 1)/GAMMA;
+  RP EKIN RESTMASSAMU 1;
+  RPS 1 1.792847;
+  {X2}           {X3}
+  X(1) := .0035; X(2) := .00275;
+  {XSQW}         {XSFW}
+  XS(1) := .009; XS(2) := .018;
+
+  WRITE 6 '++++++++++ SETTING UP FOR PROTONS:';
+  WRITE 6 'EKIN [MeV]          GAMMA          BETA';
+  WRITE 6 SF(EKIN, '(F15.7)')&SF(GAMMA, '(F15.7)')&SF(BETA, '(F15.7)');
+  WRITE 6 '+++++++++++++++++++++++++++++++++++';
+ENDPROCEDURE;
+
+{original procedure uses EKIN as input}
+PROCEDURE SET_FOR_PROTONS0 EKIN X XS;  {FROM 1.4.2, p. 11}
+                      {max EKIN corresponds to 3.2 [GeV/c] (taken from p. 3)}
+  VARIABLE RESTMASSAMU 1; VARIABLE GAMMA 1; VARIABLE BETA 1;
+  RESTMASSAMU := 1.00728; 
+  GAMMA := 1 + EKIN/(RESTMASSAMU*AMUMEV);
+  BETA := SQRT(GAMMA*GAMMA - 1)/GAMMA;
+  RP EKIN RESTMASSAMU 1;
+  RPS 1 1.792847;
+  {X2}           {X3}
+  X(1) := .0035; X(2) := .00275;
+  {XSQW}         {XSFW}
+  XS(1) := .009; XS(2) := .018;
+
+  WRITE 6 '++++++++++ SETTING UP FOR PROTONS:';
+  WRITE 6 'EKIN [MeV]          GAMMA          BETA';
+  WRITE 6 SF(EKIN, '(F15.7)')&SF(GAMMA, '(F15.7)')&SF(BETA, '(F15.7)');
+  WRITE 6 '+++++++++++++++++++++++++++++++++++';
+ENDPROCEDURE;
+
+PROCEDURE NAVIGATORS NU PSI_DEG KS;
+  VARIABLE GAMMA 1; VARIABLE PHIY 1;
+  VARIABLE PSI 1; VARIABLE NZ 1; VARIABLE NX 1;
+  PSI := DEG2RAD(PSI_DEG);
+  NZ := COS(PSI); NX := SIN(PSI); WRITE 6 'NZ, NX ='&ST(NZ)&'   '&ST(NX);
+  GAMMA := CONS(1 + E0/(M0*AMUMEV));
+  PHIY := GAMMA*G0*PI/4; WRITE 6 'PHIY, TAN(PHIY) = '&ST(PHIY/PI)&'*PI   '&ST(TAN(PHIY)); {placed solenoid after first 10 RBENDs}
+  KS(1) := 2*2*NU*(NZ - NX/TAN(PHIY)); {solen1}   {2* in front b/c i removed 2 solenoids out of 4, the other 2 must pick up, therefore}
+  KS(2) := 2*2*NU*NX/SIN(PHIY);        {solen2}   {same here}
+  WRITE 6 '+++++++ NAVIGATOR strength coefficients +++++++';
+  WRITE 6 '        Ks1: '&SF(KS(1), '(F15.7)');
+  WRITE 6 '        Ks2: '&SF(KS(2), '(F15.7)');
+ENDPROCEDURE;
+
+SAVE '~/REPOS/NICA-FS/bin/common/2ST+/header';

@@ -6,7 +6,7 @@ from analysis2ST import plot, plot_spin, load_nbar
 
 PSVARS = list(zip(['X','A','Y','B','T','D'],[float]*6))
 
-LATTICE = 'SECOND-ST'
+LATTICE = '2ST+'
 NTURN = '30000'
 ROOT = '../data/'+LATTICE+'/yGVARY/'
 datadir = lambda momentum: ROOT+str(momentum)+'/'+NTURN
@@ -32,8 +32,11 @@ def main(varyvar, spin_psi=0):
     P.plot(1)
     plt.savefig(folder+vvl+'-pol.png', bbox_inches='tight', pad_inches=.1)
     Px = Polarization.on_axis(spdat[1:-1:3], axis)
+    Pd = Polarization.on_axis(spdat[3:-1:3], axis)
     Px.plot(1)
     plt.savefig(folder+vvl+'-pol-X-bunch.png', bbox_inches='tight', pad_inches=.1)
+    Pd.plot(1)
+    plt.savefig(folder+vvl+'-pol-D-bunch.png', bbox_inches='tight', pad_inches=.1)
     fig, ax = plot(dat, spdat)
     plt.savefig(folder+vvl+'-plots.png', bbox_inches='tight', pad_inches=.1)
     fig2, ax2 = plot_spin(spdat)
@@ -71,6 +74,11 @@ if __name__ == '__main__':
     except:
         pass
     caserng = [int(x) for x in caserng]; caserng.sort()
+    caserng=[2]
     P = {}
     for casevar in caserng:
-        P.update({casevar: main(casevar, 3)})
+        try:
+            P.update({casevar: main(casevar, 3)})
+        except:
+            pass
+                
