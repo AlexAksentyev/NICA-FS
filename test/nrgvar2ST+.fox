@@ -1,16 +1,16 @@
 INCLUDE 'bin/setups/2ST+/FULL';
 
-PROCEDURE INJECT NUM PSI_DEG; {at injection: SX = 0, SY, SZ = sin PSI, cos PSI}
+PROCEDURE INJECT NUM PSI_DEG; {at injection: SY = 0,; SX, SZ = sin PSI, cos PSI}
   VARIABLE X 100; VARIABLE I 1;
-  VARIABLE PSI 1; VARIABLE SY 1; VARIABLE SZ 1;
+  VARIABLE PSI 1; VARIABLE SX 1; VARIABLE SZ 1;
   PSI := DEG2RAD(PSI_DEG); {PSI IN RADIANS}
   X := LINSPACE(-3E-3, 3E-3, NUM);
-  SY := SIN(PSI); SZ := COS(PSI);
-  SR 0 0 0 0 0 0 0 0 1; SSR 0 SY SZ;
+  SX := SIN(PSI); SZ := COS(PSI);
+  SR 0 0 0 0 0 0 0 0 1; SSR SX 0 SZ;
   LOOP I 1 NUM;
-    SR X|I 0 0 0 0 0 0 0 1; SSR 0 SY SZ;
-    SR 0 0 X|I 0 0 0 0 0 1; SSR 0 SY SZ;
-    SR 0 0 0 0 0 (X|I)/30 0 0 1; SSR 0 SY SZ;
+    SR X|I 0 0 0 0 0 0 0 1; SSR SX 0 SZ;
+    SR 0 0 X|I 0 0 0 0 0 1; SSR SX 0 SZ;
+    SR 0 0 0 0 0 (X|I)/30 0 0 1; SSR SX 0 SZ;
   ENDLOOP;
 ENDPROCEDURE;
 
@@ -26,8 +26,8 @@ PROCEDURE MAIN yG {the resonance integer};
   {********** CONTROLS **********}
   NTURN := 30000;
   PNUM := 10; {number of particles in a bunch}
-  NAVIPSI_DEG := 0; {navigator defined angle between the z and spin axes}
-  PSI0_DEG := 3; {angle between the spin orientation at injection and the z-axis}
+  NAVIPSI_DEG := 30; {navigator defined angle between the z and spin axes}
+  PSI0_DEG := NAVIPSI_DEG + 10; {angle between the spin orientation at injection and the z-axis}
   {******************************}
   MRKR := 'PSI0spin-'&MRK(PSI0_DEG); {marker to identify data files}
   WRITE 6 '^^^^ INITIAL SPIN PSI'&SF(PSI0_DEG,'(F15.7)');
@@ -79,13 +79,13 @@ ENDPROCEDURE; {MAIN}
 
 PROCEDURE RUN;
   VARIABLE yG 1 6; {integer} VARIABLE CASE 1;
-  yG(1) := 0;  {siberian snakes navigating AND spin freezing}
+  yG(1) := 0;  {WONT WORK!!!}
   yG(2) := 2; {adapted ONLY for THIS CASE yet}
   yG(3) := 6; 
   yG(4) := 7; 
   yG(5) := 10;
   yG(6) := 12;
-  LOOP CASE 2 2;
+  LOOP CASE 2 3;
     MAIN yG(CASE);
   ENDLOOP;
 ENDPROCEDURE;

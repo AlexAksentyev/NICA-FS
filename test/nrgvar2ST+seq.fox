@@ -1,0 +1,92 @@
+INCLUDE 'bin/setups/2ST+/SEQFULL';
+
+PROCEDURE INJECT NUM PSI_DEG; {at injection: SX = 0, SY, SZ = sin PSI, cos PSI}
+  VARIABLE X 100; VARIABLE I 1;
+  VARIABLE PSI 1; VARIABLE SX 1; VARIABLE SZ 1;
+  PSI := DEG2RAD(PSI_DEG); {PSI IN RADIANS}
+  X := LINSPACE(-3E-3, 3E-3, NUM);
+  SX := SIN(PSI); SZ := COS(PSI);
+  SR 0 0 0 0 0 0 0 0 1; SSR SX 0 SZ;
+  LOOP I 1 NUM;
+    SR X|I 0 0 0 0 0 0 0 1; SSR SX 0 SZ;
+    SR 0 0 X|I 0 0 0 0 0 1; SSR SX 0 SZ;
+    SR 0 0 0 0 0 (X|I)/10 0 0 1; SSR SX 0 SZ;
+  ENDLOOP;
+ENDPROCEDURE;
+
+PROCEDURE MAIN yG {the resonance integer};
+  VARIABLE WHERE 100; VARIABLE MRKR 100; VARIABLE PSI0_DEG 1;
+  VARIABLE PNUM 1;
+  {LATTICE ARGUMENTS}
+  VARIABLE KS 1 2; VARIABLE X 1 2;  VARIABLE XS 1 2;
+  VARIABLE NAVIPSI_DEG 1; 
+  {for TREL}
+  VARIABLE MAPPARAMS 1 6; {HOLDS THE ABOVE VALUES}
+  VARIABLE MAPARR 1000 6 545; VARIABLE SPNRARR 1000 3 3 545;
+  VARIABLE VRF 1 1 1;
+  VARIABLE FREQ 1;
+  VARIABLE HNUM 1;
+  VARIABLE RFFLAG 1;
+  VARIABLE NSEQ 1; {number of elements in lattice}
+  VARIABLE NTURN 1; {number of turns in the accelerator}
+
+  RFFLAG := 1;
+  NSEQ := 544;
+  HNUM := 66;
+  VRF(1, 1) := 100/HNUM; {RF Voltage [kV]}
+  FREQ := HNUM*REVFREQ(fACCLEN(1)); {RF Frequency}
+  {********** CONTROLS **********}
+  NTURN := 50; {number of turns to track}
+  PNUM := 10; {number of particles in a bunch}
+  NAVIPSI_DEG := 30; {navigator set angle between the z and spin axes}
+  PSI0_DEG := NAVIPSI_DEG + 10; {angle between the spin orientation at injection and the z-axis}
+  {******************************}
+  MRKR := 'PSI0spin-'&MRK(PSI0_DEG); {marker to identify data files}
+  WRITE 6 '^^^^ INITIAL SPIN PSI'&SF(PSI0_DEG,'(F15.7)');
+  DIRSET WHERE 'data/2ST+/yGVARY/'&MRK(yG)&'/SEQ/'&MRK(NTURN)&'/NAVIPSI-'&MRK(NAVIPSI_DEG)&'/';
+  GROUTF 'img/dump/TR' 1;
+  
+  
+  OV 3 3 0;
+  DAEPS 1E-12; DIRSET_AUTO 1;
+  { SET lattice parameters }
+  SET_FOR_PROTONS yG X XS;
+  NAVIGATORS 3e-2 NAVIPSI_DEG KS;
+  MAPPARAMS(1) := X(1);   MAPPARAMS(2) := X(2);   {X}
+  MAPPARAMS(3) := XS(1);  MAPPARAMS(4) := XS(2);  {XS}
+  MAPPARAMS(5) := KS(1);  MAPPARAMS(6) := KS(2);  {KS}  
+  
+  LATTICE MAPPARAMS MAPARR SPNRARR;
+  IF RFFLAG=1;
+    UM; RF VRF 0 FREQ 0 0.05;
+    INSERT 1 MAPARR SPNRARR NSEQ;
+    NSEQ := NSEQ + 1;
+  ENDIF;
+
+  INJECT PNUM PSI0_DEG;     {PSI at SPD}
+  WRITE 6 '******************** STARTING TRACKING';
+  OPENF 99 WHERE&'PRAY:'&MRKR&'.dat' 'REPLACE';
+  PRAY 99; CLOSEF 99;
+  OPENF 772 WHERE&'TRPRAY:'&MRKR&'.dat' 'REPLACE';
+  OPENF 893 WHERE&'TRPSPI:'&MRKR&'.dat' 'REPLACE';
+  TRPRAY 772; TRPSPI 893;
+  TREL MAPARR SPNRARR 1 NSEQ NTURN 772 893;
+  CLOSEF 772; CLOSEF 893;
+
+ENDPROCEDURE; {MAIN}
+
+
+
+PROCEDURE RUN;
+  VARIABLE yG 1 6; {integer} VARIABLE CASE 1;
+    yG(1) := 0; {WONT WORK!!!}
+    yG(2) := 2; {adapted ONLY for THIS CASE yet}
+    yG(3) := 6; 
+    yG(4) := 7; 
+    yG(5) := 10;
+    yG(6) := 12;
+    LOOP CASE 2 2;
+      MAIN yG(CASE);
+    ENDLOOP;
+ENDPROCEDURE;
+RUN; END;

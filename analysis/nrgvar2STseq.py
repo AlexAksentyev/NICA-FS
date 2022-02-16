@@ -13,54 +13,56 @@ SEQMAP = { #indexes of cornerstone elements (in COSY indexing, SEQFULL.fox file 
     'ARC2s':318, 'ARC2f':511, 'SPD2':530
     }
 
-LATTICE = 'SECOND-ST'
-NTURN = '150'
-ROOT = '../data/'+LATTICE+'/MOMVARY/'
-datadir = lambda momentum: ROOT+str(momentum)+'MeV:c/SEQ/'+NTURN
+LATTICE = '2ST+'
+navipsi = 30
+NTURN = '50'
+ROOT = '../data/'+LATTICE+'/yGVARY/'
+datadir = lambda momentum: ROOT+str(momentum)+'/SEQ/'+NTURN
 
-def angles(s):
-    sx,sy,sz = [s['S_'+lbl] for lbl in ('X','Y','Z')]
-    dtheta_z = np.arccos(sx[1:]*sx[:-1] + sy[1:]*sy[:-1])
 
-def main(momentum):
-    dir_ = datadir(momentum)
-    folder  = dir_+'/NAVIPSI-0/'
+def main(varyvar, spin_psi=0):
+    dir_ = datadir(varyvar)
+    folder  = dir_+'/NAVIPSI-{:d}/'.format(navipsi)
     print(folder)
-    navi_psi_rad = np.deg2rad(180-0) # 180 b/c the navigators set psi in the SPD as 180 - psi
-    axis = [0, np.sin(navi_psi_rad), np.cos(navi_psi_rad)]
+    navi_psi_rad = np.deg2rad(180-navipsi) # 180 b/c the navigators set psi in the SPD as 180 - psi
+    axis = [np.sin(navi_psi_rad), 0, np.cos(navi_psi_rad)]
     print(axis)
     ## data loading
-    dat = load_data(folder, 'TRPRAY:PSI0spin-0.dat')
-    spdat = load_data(folder, 'TRPSPI:PSI0spin-0.dat')
+    dat = load_data(folder, 'TRPRAY:PSI0spin-{:d}.dat'.format(spin_psi))
+    spdat = load_data(folder, 'TRPSPI:PSI0spin-{:d}.dat'.format(spin_psi))
     P = Polarization.on_axis(spdat, axis)
     ## computations
-    mom = str(momentum)
+    vvl = str(varyvar) + '__' + str(spin_psi) # "varyvar label"
     P.plot(1)
-    plt.savefig(folder+mom+'-pol.png', bbox_inches='tight', pad_inches=.1)
-    fig, ax = plot_seq(dat, spdat,itn=(100,150))
-    plt.savefig(folder+mom+'-plots.png', bbox_inches='tight', pad_inches=.1)
+    plt.savefig(folder+vvl+'-pol.png', bbox_inches='tight', pad_inches=.1)
+    fig, ax = plot_seq(dat, spdat,itn=(0,1))
+    plt.savefig(folder+vvl+'-plots-1turn.png', bbox_inches='tight', pad_inches=.1)
+    fig, ax = plot_seq(dat, spdat,itn=(0,50))
+    plt.savefig(folder+vvl+'-plots.png', bbox_inches='tight', pad_inches=.1)
     plt.close('all')
-    return P
+    return P, dat, spdat
 
-def spin_dyn(momentum):
-    dir_ = datadir(momentum)
-    folder  = dir_+'/NAVIPSI-0/'
-    spdat = load_data(folder, 'TRPSPI:PSI0spin-0.dat')
-    # s0 = np.zeros(spdat.shape[0], dtype=list(zip(['X','Y','Z'],[float]*3)))
-    # for lbl in ['X','Y','Z']:
-    #     s0[lbl] = spdat[:,1]['S_'+lbl]
-    return spdat
-
-def _spana(P,pid1=11,pid2=14):
-    fig, ax = plt.subplots(3,3,sharey='row',sharex='col')
-    for i, lbl in enumerate(['X','Y','Z']):
-        ax[i,0].set_ylabel('S_'+lbl)
-        for j, mom in enumerate([511,3200, 4800]):
-            ax[i,j].plot(P[mom][:,pid1]['S_'+lbl],  label=str(pid1+1))
-            ax[i,j].plot(P[mom][:,pid2]['S_'+lbl], label=str(pid2+1))
-            ax[i,j].plot(P[mom][:,0]['S_'+lbl],  label='ref')
-            ax[0,j].set_title(str(mom)+' MeV/c')
-        ax[i,0].legend()
+def spin_plot_circ(spdat, itn=(0,1), pid=[1,2,3]):
+    if type(itn)==int:
+        sp1 = spdat[spdat[:,0]['iteration']<itn+1]
+        eid = sp1['EID'][:, pid] if itn<2 else np.arange(sp1['EID'].max()*itn+1)
+    else:
+        itrow = spdat[:,0]['iteration']
+        ii = np.logical_and(itrow>itn[0], itrow<itn[1]+1)
+        itrng = itn[1]-itn[0]
+        sp1 = spdat[ii]
+        eid_max = sp1['EID'].max()
+        eid = eid_max*itn[0] + np.arange(eid_max*itrng)
+    s0 = sp1[0,0]
+    fig, ax = plt.subplots(2,1,sharex=True)
+    ax[0].plot(sp1[:,pid]['S_Z'], sp1[:,pid]['S_X'],'.')
+    ax[0].set_ylabel('X')
+    ax[0].plot([0, s0['S_Z']],[0, s0['S_X']], '->r', markevery=[1])
+    ax[1].plot(sp1[:,pid]['S_Z'], sp1[:,pid]['S_Y'],'.')
+    ax[1].set_xlabel('Z'); ax[1].set_ylabel('Y')
+    ax[1].plot([0, s0['S_Z']],[0, s0['S_Y']], '->r', markevery=[1])
+    for i in range(2):
+        ax[i].grid()
     return fig, ax
 
 
@@ -71,7 +73,7 @@ if __name__ == '__main__':
         caserng.remove('img');
     except:
         pass
-    caserng = [int(x[:-5]) for x in caserng]; caserng.sort()
+    caserng = [int(x) for x in caserng]; caserng.sort()
     P = {}
-    for mom in caserng:
-        P.update({mom: main(mom)})
+    for casevar in caserng:
+        P.update({casevar: main(casevar, 33)})
