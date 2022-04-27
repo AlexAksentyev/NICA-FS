@@ -74,7 +74,7 @@ PROCEDURE MAIN CASEPARS        LATPARS     DATDIR;
   DIRSET WHERE DATDIR;
   
   {inject particles}
-  PSI0_DEG := 180 - NAVIPSI_DI;    {align inital spin with the polarization axis for 100% initial polarization}
+  PSI0_DEG := 90 - NAVIPSI_DI;    {align inital spin with the polarization axis for 100% initial polarization}
   INJECT PNUM PSI0_DEG; SRAY RAYH; SSPI SPIH; {saves RAY, SPI against CR}
   MRKR := 'nu-'&NUFLAG;
   WRITE 6 '^^^^ INITIAL SPIN PSI'&SF(PSI0_DEG,'(F15.7)');
