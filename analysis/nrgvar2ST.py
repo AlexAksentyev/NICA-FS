@@ -8,9 +8,9 @@ PSVARS = list(zip(['X','A','Y','B','T','D'],[float]*6))
 
 LATTICE = '2ST+'
 navipsi = 30
-NTURN = '30000'
+NTURN = '30000000'
 ROOT = '../data/'+LATTICE+'/yGVARY/'
-datadir = lambda momentum: ROOT+str(momentum)+'/'+NTURN
+datadir = lambda varyvar: ROOT+str(varyvar)+'/'+NTURN
 
 navi_psi_rad = np.deg2rad(navipsi)
 POLAXIS = [np.sin(navi_psi_rad), 0, np.cos(navi_psi_rad)]
@@ -32,10 +32,13 @@ def main(varyvar, spin_psi=0):
     vvl = str(varyvar) + '__' + str(spin_psi) # "varyvar label"
     P.plot(1)
     plt.savefig(folder+vvl+'-pol.png', bbox_inches='tight', pad_inches=.1)
-    Px = Polarization.on_axis(spdat[1:-1:3], POLAXIS)
-    Pd = Polarization.on_axis(spdat[3:-1:3], POLAXIS)
+    Px = Polarization.on_axis(spdat[:,1:-1:3], POLAXIS)
+    Py = Polarization.on_axis(spdat[:,2:-1:3], POLAXIS)
+    Pd = Polarization.on_axis(spdat[:,3:-1:3], POLAXIS)
     Px.plot(1)
     plt.savefig(folder+vvl+'-pol-X-bunch.png', bbox_inches='tight', pad_inches=.1)
+    Py.plot(1)
+    plt.savefig(folder+vvl+'-pol-Y-bunch.png', bbox_inches='tight', pad_inches=.1)
     Pd.plot(1)
     plt.savefig(folder+vvl+'-pol-D-bunch.png', bbox_inches='tight', pad_inches=.1)
     fig, ax = plot(dat, spdat)
@@ -74,7 +77,7 @@ if __name__ == '__main__':
     except:
         pass
     caserng = [int(x) for x in caserng]; caserng.sort()
-    caserng=[2]
+    caserng=[]
     P = {}
     for casevar in caserng:
         try:
