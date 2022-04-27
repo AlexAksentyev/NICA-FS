@@ -129,10 +129,27 @@ def pol_on_nbar(spdat, muarr): # compute beam polarization as spin-projection on
     proj['TIME'] = proj['TURN']/Wcyc # Wcyc -- the cyclotron frequency -- a constant defined above
     return proj
 
+def pol_on_z(spdat):
+    def shape_up(elem):
+        res = np.repeat(elem, nray)
+        res.shape = (-1, nray)
+        return res
+    nturn, nray = spdat.shape
+    s = {lbl:spdat['S_'+lbl] for lbl in ('X','Y','Z')}
+    ez = np.zeros(spdat.shape, dtype=list(zip(['X','Y','Z'],[float]*3)))
+    ez['Z'] = np.ones(spdat.shape)
+    proj = np.zeros(nturn, dtype = [('TURN',int)]+list(zip(['X','Y','Z','TOT', 'TIME'], [float]*5)))
+    for var in ['X','Y','Z']:
+        proj[var] = np.sum(s[var]*ez[var], axis=1)/nray
+    proj['TOT'] = proj['X']+proj['Y']+proj['Z']
+    proj['TURN'] = spdat['TURN'][:,0]
+    proj['TIME'] = proj['TURN']/Wcyc # Wcyc -- the cyclotron frequency -- a constant defined above
+    return proj
+
 def process(case_name, mrkr='PSI0spin=PSInavi'):
     dat, spdat, muarr = load(case_name, mrkr)
     step = int(dat[1,0]['TURN'])
-    if True:      # svec + nbar plot
+    if False:      # svec + nbar plot
         fig1, ax1, fig2, ax2  = plot_spin_nbar(spdat, muarr)
         ax1[0].set_title(r'$\dot \psi = $ {} [deg/{}-switch]'.format(case_name,step))
         fig1.savefig('../img/'+case_name+'-SVEC+NBAR-plot.png', dpi=450, bbox_inches='tight', pad_inches=.1)
@@ -142,7 +159,7 @@ def process(case_name, mrkr='PSI0spin=PSInavi'):
         fig3, ax3 = plot_phase(dat)
         ax3[0].set_title(r'$\dot \psi = $ {} [deg/{}-switch]'.format(case_name,step))
         fig3.savefig('../img/'+case_name+'-PHASESPACE-plot.png', dpi=450, bbox_inches='tight', pad_inches=.1)
-    if True:     # polarization plot
+    if False:     # polarization on nbar plot
         P = pol_on_nbar(spdat, muarr)
         fig4, ax4 = plt.subplots(1,1)
         ax4.plot(P['TIME'], P['TOT']); ax4.grid()
@@ -150,6 +167,14 @@ def process(case_name, mrkr='PSI0spin=PSInavi'):
         ax4.set_xlabel('time [sec]'); ax4.set_ylabel(r'$\sum\vec s\cdot \bar n^{CO}$')
         ax4.ticklabel_format(style='sci',scilimits=(0,0),useMathText=True)
         fig4.savefig('../img/'+case_name+'-POLARIZATION-plot.png', dpi=450, bbox_inches='tight', pad_inches=.1)
+    if True:      # polarization on ez plot
+        P = pol_on_z(spdat)
+        fig4, ax5 = plt.subplots(1,1)
+        ax5.plot(P['TIME'], P['TOT']); ax5.grid()
+        ax5.set_title(r'$\dot \psi = $ {} [deg/{}-switch]'.format(case_name,step))
+        ax5.set_xlabel('time [sec]'); ax5.set_ylabel(r'$\sum\vec s\cdot \bar n^{CO}$')
+        ax5.ticklabel_format(style='sci',scilimits=(0,0),useMathText=True)
+        fig4.savefig('../img/'+case_name+'-POLARIZATION_z-plot.png', dpi=450, bbox_inches='tight', pad_inches=.1)
     return P
 
 def main(case_names, mrkr='PSI0spin=PSInavi'):
