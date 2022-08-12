@@ -24,7 +24,7 @@ PROCEDURE MAIN yG {the resonance integer};
   VARIABLE NTURN 1;
   VARIABLE NAVIPSI_DEG 1; VARIABLE FREEZE 1;
   {********** CONTROLS **********}
-  NTURN := 30000000;
+  NTURN := 30000;
   PNUM := 10; {number of particles in a bunch}
   NAVIPSI_DEG := 30; {navigator defined angle between the z and spin axes}
   PSI0_DEG := NAVIPSI_DEG + 10; {angle between the spin orientation at injection and the z-axis}

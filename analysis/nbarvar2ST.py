@@ -1,8 +1,11 @@
 import numpy as np
+import matplotlib as mpl
 import matplotlib.pyplot as plt; plt.ion()
 from analysis import load_data, Polarization, guess_freq, guess_phase
 import numpy.lib.recfunctions as rfn
 from scipy.optimize import curve_fit
+
+mpl.rcParams['font.size']=14
 
 LATTICE = 'SECOND-ST'
 ENERGY = '130' # MeV
@@ -80,7 +83,7 @@ def plot_spin_nbar(spdat, muarr):
         ax1[i].plot(muarr0['TURN']/Wcyc, muarr0['N'+var], '--r', label=r'$\bar n^{CO}$')
         # metadata
         ax1[i].set_ylabel(r'$\vec s_{}$'.format(var))
-        ax1[i].ticklabel_format(style='sci',scilimits=(0,0),useMathText=True)
+        ax1[i].ticklabel_format(style='sci',axis='x', scilimits=(0,0),useMathText=True)
         ax1[i].legend()
     fig2, ax2 = plt.subplots(1,1)
     ax2.plot(spdat['S_Z'], spdat['S_Y'], '-k')
@@ -149,7 +152,7 @@ def pol_on_z(spdat):
 def process(case_name, mrkr='PSI0spin=PSInavi'):
     dat, spdat, muarr = load(case_name, mrkr)
     step = int(dat[1,0]['TURN'])
-    if False:      # svec + nbar plot
+    if True:      # svec + nbar plot
         fig1, ax1, fig2, ax2  = plot_spin_nbar(spdat, muarr)
         ax1[0].set_title(r'$\dot \psi = $ {} [deg/{}-switch]'.format(case_name,step))
         fig1.savefig('../img/'+case_name+'-SVEC+NBAR-plot.png', dpi=450, bbox_inches='tight', pad_inches=.1)
@@ -159,7 +162,7 @@ def process(case_name, mrkr='PSI0spin=PSInavi'):
         fig3, ax3 = plot_phase(dat)
         ax3[0].set_title(r'$\dot \psi = $ {} [deg/{}-switch]'.format(case_name,step))
         fig3.savefig('../img/'+case_name+'-PHASESPACE-plot.png', dpi=450, bbox_inches='tight', pad_inches=.1)
-    if False:     # polarization on nbar plot
+    if True:     # polarization on nbar plot
         P = pol_on_nbar(spdat, muarr)
         fig4, ax4 = plt.subplots(1,1)
         ax4.plot(P['TIME'], P['TOT']); ax4.grid()
@@ -167,7 +170,7 @@ def process(case_name, mrkr='PSI0spin=PSInavi'):
         ax4.set_xlabel('time [sec]'); ax4.set_ylabel(r'$\sum\vec s\cdot \bar n^{CO}$')
         ax4.ticklabel_format(style='sci',scilimits=(0,0),useMathText=True)
         fig4.savefig('../img/'+case_name+'-POLARIZATION-plot.png', dpi=450, bbox_inches='tight', pad_inches=.1)
-    if True:      # polarization on ez plot
+    if False:      # polarization on ez plot
         P = pol_on_z(spdat)
         fig4, ax5 = plt.subplots(1,1)
         ax5.plot(P['TIME'], P['TOT']); ax5.grid()
@@ -186,6 +189,50 @@ def main(case_names, mrkr='PSI0spin=PSInavi'):
         proj_dict.update({case:proj})
         W_dict.update({case:omega})
     return proj_dict, W_dict
+
+def fig_four(spdat, muarr):
+    P = pol_on_nbar(spdat, muarr)
+    muarr0 = muarr[:,0] # muarr on the closed orbit
+    fig, ax = plt.subplots(2,1, sharex=True)
+    ax[1].set_xlabel('time [sec]')
+    # svec
+    ax[0].plot(spdat['TURN']/Wcyc, spdat['S_Z'], '-k')
+    # nbar (on the CO)
+    ax[0].plot(muarr0['TURN']/Wcyc, muarr0['NZ'], '--r', label=r'$\bar n^{CO}$')
+    # metadata
+    ax[0].set_ylabel(r'$\vec s_z$')
+    ax[0].ticklabel_format(style='sci',axis='x', scilimits=(0,0),useMathText=True)
+    ax[0].legend()
+    ax[1].plot(P['TIME'], P['TOT']); ax[1].grid()
+    ax[1].set_ylabel(r'$\sum\vec s\cdot \bar n^{CO}$')
+    ax[1].set_yticks([-.5,0,.5,1])
+    ax[1].ticklabel_format(style='sci', axis='x', scilimits=(0,0),useMathText=True)
+    fig.savefig('../img/WEPOPT006_f2.png', dpi=450, bbox_inches='tight', pad_inches=.1)
+    return fig, ax
+
+def fig_five(spdat1, spdat10, muarr1, muarr10):
+    P = pol_on_nbar(spdat10, muarr10)
+    muarr1 = muarr1[:,0] 
+    muarr10 = muarr10[:,0]
+    fig, ax = plt.subplots(3,1, sharex=True)
+    ax[2].set_xlabel('time [sec]')
+    ax[0].plot(spdat1['TURN']/Wcyc, spdat1['S_Z'], '-k')
+    ax[0].plot(muarr1['TURN']/Wcyc, muarr1['NZ'], '--r', label=r'$\bar n^{CO}$')
+    ax[0].set_ylabel(r'$\vec s_z$')
+    ax[0].ticklabel_format(style='sci',axis='x', scilimits=(0,0),useMathText=True)
+    ax[0].legend()
+    ax[1].plot(spdat10['TURN']/Wcyc, spdat10['S_Z'], '-k')
+    ax[1].plot(muarr10['TURN']/Wcyc, muarr10['NZ'], '--r', label=r'$\bar n^{CO}$')
+    ax[1].set_ylabel(r'$\vec s_z$')
+    ax[1].ticklabel_format(style='sci',axis='x', scilimits=(0,0),useMathText=True)
+    #ax[1].legend()
+    ax[2].plot(P['TIME'], P['TOT']); ax[2].grid()
+    #ax[2].set_yticks([.925,.95,.975,1])
+    ax[2].set_yticks([.93,.95,1])
+    ax[2].set_ylabel(r'$\sum\vec s\cdot \bar n^{CO}$')
+    ax[2].ticklabel_format(style='sci', scilimits=(0,0),useMathText=True)
+    fig.savefig('../img/WEPOPT006_f3.png', dpi=450, bbox_inches='tight', pad_inches=.1)
+    return fig, ax
 
 if __name__ == '__main__':
     vals = ['1']
