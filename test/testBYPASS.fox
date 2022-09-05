@@ -23,7 +23,7 @@ PROCEDURE MAIN;
   VARIABLE PSI0_DEG 1;
   VARIABLE NTURN 1;
 
-  MRKR := '';
+  MRKR := 'FULL';
   DIRSET WHERE 'data/BYPASS/';
   GROUTF 'img/dump/TR' 1;
   GAMMA := 1.14;

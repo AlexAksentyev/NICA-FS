@@ -3,8 +3,8 @@ import matplotlib.pyplot as plt; plt.ion()
 from analysis import HOMEDIR, DAVEC, load_data
 
 LATTICE = 'BYPASS'
-MRKR = ''
-SEQ = False
+MRKR = 'SEQ'
+SEQ = True
 
 SEQMAP = { #indexes of cornerstone elements (in COSY indexing, SEQFULL.fox file [i.e., no RF (which is at index 0 anyway)])
     'SPD1':21,  'ARC1s':43, 'ARC1f': 236,
@@ -99,7 +99,7 @@ def plot_seq(dat, spdat, pid = [1,2,3], itn=(0,1), show_elems=[21, 43, 236, 257,
 if __name__ == '__main__':
     dat = load_data(DIR, 'TRPRAY:{}.dat'.format(MRKR))
     spdat = load_data(DIR, 'TRPSPI:{}.dat'.format(MRKR))
-    if DIR[-4:-1]=='SEQ':
+    if SEQ:
         fig, ax = plot_seq(dat, spdat, itn=1)
     else:
         fig, ax = plot(dat, spdat)

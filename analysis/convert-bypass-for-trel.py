@@ -2,7 +2,7 @@ import re
 
 HOME = '/Users/alexaksentyev/REPOS/NICA-FS/'
 INFILE = 'madx-scripts/BYPASS/bypass.seq'
-OUTFILE = 'src/setups/BYPASS/SEQFULL.fox'
+OUTFILE = 'src/setups/BYPASS/SEQFULL-test.fox'
 NUM_ACC = 1 # current array position of the element to be written
 
 SELECT_ELEMENTS = []  # elements to be swapped for DL
@@ -118,7 +118,7 @@ def write_dict(line):
     elem = identify_mult(lbl, elem)
     elem = parse_element(elem)
     out_string = swap_for_DL(elem) if elem[0] in SELECT_ELEMENTS else form_string(elem)
-    out_string += ' {' + lbl + '}\n' # adding comment to procedure string
+    out_string += ' {' + lbl + '}'#\n' # adding comment to procedure string   <-----
     lbl_dict.update({lbl : out_string}) # filling the label dictionary
     
 
@@ -130,7 +130,7 @@ def write_file(line, fout):
     for idx, element in enumerate(seq):            
         out_line = 'UM; '
         out_line += lbl_dict[element]
-        out_line += '\t SMAPS {} MAPARR SPNRARR;\n'.format(NUM_ACC + idx)
+        out_line += ' SMAPS {} MAPARR SPNRARR;\n'.format(NUM_ACC + idx)  #   <------ no \t
         fout.write(out_line)
     NUM_ACC += idx + 1
 

@@ -3,7 +3,7 @@ import numpy as np
 
 HOME = '/Users/alexaksentyev/REPOS/NICA-FS/'
 INFILE = 'madx-scripts/BYPASS/bypass.seq'
-OUTFILE = 'src/setups/BYPASS/FULL.fox'
+OUTFILE = 'src/setups/BYPASS/FULL-test.fox'
 
 SELECT_ELEMENTS = [] # elements to be swapped for DL
 
