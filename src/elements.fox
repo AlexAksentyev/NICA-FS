@@ -72,7 +72,7 @@ PROCEDURE QUAD L {m} TILT {rad} K1 {m^-2} ;
   VARIABLE TILT0 1;
   TILT0 := RAD2DEG(TILT);
   A:=.05;
-  Bpt := K1*CONS(CHIM)*A; {in Tesla}
+  Bpt := K1*CONS(CHIM)*A; {in Tesla}WRITE 6 'LENGTH'&SF(L, '(E15.7)');
   { WRITE 6 'K1[m^-2]        B[Tl]          G[kG/cm]       ' }
   {          SF(CONS(K1), '(E15.7)')&SF(CONS(Bpt), '(E15.7)')&SF(CONS(Bpt)/A/10,'(E15.7)'); }
   IF Bpt=0; DL L;
@@ -86,7 +86,8 @@ ENDPROCEDURE; {QUAD}
 PROCEDURE SEXT L {m} TILT {rad} KNL {unit};
   VARIABLE Bpt 1; VARIABLE TILT0 1;
   VARIABLE L0 1;
-  Bpt := BMULT(KNL, L);
+  Bpt := 0;{*BMULT(KNL, L);}
+  WRITE 6 'Bpt = '&SF(Bpt, '(E15.7)');
   TILT0 := RAD2DEG(TILT);
   IF Bpt=0; DL L;
   ELSEIF TRUE;
@@ -98,7 +99,8 @@ ENDPROCEDURE; {SEXT}
 
 PROCEDURE OCT L {m} TILT {rad} KNL {unit};
   VARIABLE Bpt 1; VARIABLE TILT0 1;
-  Bpt := BMULT(KNL, L);
+  Bpt := 0;{*BMULT(KNL, L);}
+  WRITE 6 'Bpt = '&SF(Bpt, '(E15.7)');
   IF Bpt=0; DL L;
   ELSEIF TRUE;
     ROTATE TILT0;
@@ -111,14 +113,14 @@ PROCEDURE MULT TILT {rad} KNL {unit} N;
   VARIABLE Bpt 1 N; VARIABLE I 1;
   VARIABLE L0 1; VARIABLE FLAG 1; {used to check magnetic field components against 0}
   VARIABLE TILT0 1;
-  L0 := .1;
+  L0 := 0;
   TILT0 := RAD2DEG(TILT);
-  IF N=2;
-    QUAD L0 TILT (KNL(2)/L0); WRITE 6 'QUAD';
-  ELSEIF N=3;
-    SEXT L0 TILT (KNL(3)/L0); WRITE 6 'SEXT';
-  ELSEIF N=4;
-    OCT L0 TILT (KNL(4)/L0); WRITE 6 'OCT';
+  IF N=2; WRITE 6 'QUAD';
+    {QUAD L0 TILT KNL(2);} DL 0;
+  ELSEIF N=3; WRITE 6 'SEXT';
+    {SEXT L0 TILT KNL(3);} DL 0;
+  ELSEIF N=4; WRITE 6 'OCT';
+    {OCT  L0 TILT KNL(4); } DL 0;
   ELSEIF TRUE;
     WRITE 6 '*** UNDEFINED ELEMENT ERROR ***';
   ENDIF;
@@ -227,7 +229,6 @@ PROCEDURE KICK L {m} KX {unit} KY {unit};
   ENDIF;
 ENDPROCEDURE;
 
-{I PUT THIS ELEMENT HERE TO CHECK AGAINST THE BNL LATTICE}
 PROCEDURE WIEN L2 B1 B2 TILT; {homogenous WF; closed orbit preserved}
 {parasitic (tilt) fields are implemented via a spin kick like Eremey thesis section 6.5.3}
   VARIABLE R1 1;
@@ -242,8 +243,9 @@ PROCEDURE WIEN L2 B1 B2 TILT; {homogenous WF; closed orbit preserved}
   B3:=ABS(B2)*1e5;   {in V/m}
   R2:=CONS(CHIM)/B0;
   R1:=CONS(CHIE)/B3;
+  WRITE 6 'RE = '&SF(R1, '(E15.7)')&' RB ='&SF(R2, '(E15.7)');
   TILT0 := TILT;
-  WF R1 R2 L1 0.05;
+  WF R1 R1 L1 0.05;             {I use equal radii (R1 R1) for no bend effect in the Wien-filter}
   IF TILT0#0;
     BX := B0*TAN(TILT0);
     EY := CONS(CHIE)/CONS(CHIM)*BX;
