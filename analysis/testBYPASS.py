@@ -6,12 +6,6 @@ LATTICE = 'BYPASS'
 MRKR = 'SEQ'
 SEQ = True
 
-SEQMAP = { #indexes of cornerstone elements (in COSY indexing, SEQFULL.fox file [i.e., no RF (which is at index 0 anyway)])
-    'SPD1':21,  'ARC1s':43, 'ARC1f': 236,
-    'MDP1':257, 'MPD2':293, # straight section
-    'ARC2s':318, 'ARC2f':511, 'SPD2':530
-    }
-
 if not SEQ:
     DIR  = '../data/BYPASS/'
 else:
@@ -92,7 +86,7 @@ def plot_seq(dat, spdat, pid = [1,2,3], itn=(0,1), show_elems=[21, 43, 236, 257,
         eid_max = eid.max()
         show_elems=np.array(show_elems)+1 # +1 because of the added INJ **
                             # (the added RF is taken care of due to python indexing starting at 0 while cosy's at 1)
-        plt.xticks(ticks=eid[show_elems], labels=elnames[show_elems], rotation=60)
+        #plt.xticks(ticks=eid[show_elems], labels=elnames[show_elems], rotation=60)
     return fig, ax
     
 
@@ -100,7 +94,7 @@ if __name__ == '__main__':
     dat = load_data(DIR, 'TRPRAY:{}.dat'.format(MRKR))
     spdat = load_data(DIR, 'TRPSPI:{}.dat'.format(MRKR))
     if SEQ:
-        fig, ax = plot_seq(dat, spdat, itn=1)
+        fig, ax = plot_seq(dat, spdat, itn=1, show_elems=[9, 15])
     else:
         fig, ax = plot(dat, spdat)
         figs, axs = plot_spin(spdat)

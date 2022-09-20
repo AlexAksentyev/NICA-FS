@@ -163,9 +163,10 @@ with open(HOME+OUTFILE,'r+') as fout:
     write_header(fout)
     fout.write(content)
 
+print('length')
 ## computing the lattice length
 for i, one in enumerate(length_arr):
-    length_arr[i] = eval(one, {'LSPD':.7, 'LMPD':5})
+    length_arr[i] = eval(one, {'MB2LMARR':.1, 'MCQ0MARR':.1, 'MCS0MARR':.1, 'MCS1MARR':.1, 'MCS2MARR':.1, 'MCO0MARR':.1,'MCO3MARR':.1})
 length_arr = np.array(length_arr)
 print('lattice length: ', length_arr.sum())
     
