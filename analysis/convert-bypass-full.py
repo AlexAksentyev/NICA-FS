@@ -6,6 +6,8 @@ INFILE = 'madx-scripts/BYPASS/bypass.seq'
 OUTFILE = 'src/setups/BYPASS/FULL-test.fox'
 
 SELECT_ELEMENTS = [] # elements to be swapped for DL
+NULL_ELEMENTS= []#['HD', 'HQ', 'HQFF', 'KHV',
+                  #  'MCQ0', 'MCS0', 'MCS1', 'MCS2', 'MCO0', 'MCO3', 'MB2L']
 
 
 el_dict = {
@@ -132,6 +134,8 @@ def write_file(line, fout):
     seq = seq.split(',')
     np.save(HOME+OUTFILE[:-4], seq)
     for element in seq:
+        if (element in NULL_ELEMENTS):
+            continue
         out_line = lbl_dict[element]
         fout.write(out_line)
     
@@ -148,7 +152,7 @@ with open(HOME+INFILE, 'r') as fin:
             print('++', cnt)
             print(line)
             pass
-        elif cnt>54: #
+        elif cnt>53: #
             print('##',cnt)
             print(line)
             if (line[0]!='\n' and line[0]!='/'):

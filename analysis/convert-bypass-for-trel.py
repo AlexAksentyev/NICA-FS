@@ -6,6 +6,8 @@ OUTFILE = 'src/setups/BYPASS/SEQFULL-test.fox'
 NUM_ACC = 1 # current array position of the element to be written
 
 SELECT_ELEMENTS = []  # elements to be swapped for DL
+NULL_ELEMENTS= []#['HD', 'HQ', 'HQFF', 'KHV',
+                  #  'MCQ0', 'MCS0', 'MCS1', 'MCS2', 'MCO0', 'MCO3', 'MB2L']
 
 el_dict = {
     'MONITOR': ('DL', 1),
@@ -127,7 +129,12 @@ def write_file(line, fout):
     seq = "".join(line.split())[:-1] # remove trailing comma
     seq = seq.strip(');')
     seq = seq.split(',')
-    for idx, element in enumerate(seq):            
+    print('seq', seq)
+    for idx, element in enumerate(seq):
+        print('idx, element', idx, element)
+        if (element in NULL_ELEMENTS):
+            NUM_ACC -= 1
+            continue
         out_line = 'UM; '
         out_line += lbl_dict[element]
         out_line += ' SMAPS {} MAPARR SPNRARR;\n'.format(NUM_ACC + idx)  #   <------ no \t
@@ -146,7 +153,7 @@ with open(HOME+INFILE, 'r') as fin:
             print('++', cnt)
             print(line)
             pass
-        elif cnt>54: #
+        elif cnt>53: #
             print('##',cnt)
             print(line)
             if (line[0]!='\n' and line[0]!='/'):
