@@ -229,7 +229,7 @@ PROCEDURE KICK L {m} KX {unit} KY {unit};
   ENDIF;
 ENDPROCEDURE;
 
-PROCEDURE WIEN L2 B1 B2 TILT; {homogenous WF; closed orbit preserved}
+PROCEDURE WIEN L2 {m} B1 {kGs} B2 {kV/cm} TILT {rad}; {homogenous WF; closed orbit preserved}
 {parasitic (tilt) fields are implemented via a spin kick like Eremey thesis section 6.5.3}
   VARIABLE R1 1;
   VARIABLE R2 1;
@@ -238,7 +238,7 @@ PROCEDURE WIEN L2 B1 B2 TILT; {homogenous WF; closed orbit preserved}
   VARIABLE TILT0 1; VARIABLE TOF 1;
   VARIABLE BX 1; VARIABLE EY 1;
   VARIABLE BETA 1; VARIABLE DWMDM 1; 
-  L1:=L2/100; {in meters}
+  L1:=L2; {in meters}
   B0:=ABS(B1)/10; {in Tesla}
   B3:=ABS(B2)*1e5;   {in V/m}
   R2:=CONS(CHIM)/B0;
