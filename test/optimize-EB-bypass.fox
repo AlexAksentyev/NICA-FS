@@ -31,7 +31,7 @@ PROCEDURE OPTIMIZE EBE BBE;
     OBJ := SQRT(SQR(SXX-1) + SQR(SXZ));
     WRITE 6 'EBE, BBE = '&ST(EB1)&', '&ST(EB2);
     WRITE 6 'OBJ ='&ST(OBJ);
-  ENDFIT 1E-9 1000 1 OBJ;
+  ENDFIT 1E-12 1000 1 OBJ;
 
   EBE := EB1; BBE := EB2;
 ENDPROCEDURE; {OPTIMIZE}
@@ -57,7 +57,7 @@ PROCEDURE MAIN;
   PNUM := 10;
   
   
-  OV 1 3 0;
+  OV 3 3 0;
   DAEPS 1E-12; {this sets DA garbage collection tolerance so that the TRANSFER MAP doesn't get the 1e-15 ABERRATION coefficient}
   { SET lattice parameters }
   SET_FOR_DEUTERONS GAMMA;

@@ -23,20 +23,20 @@ PROCEDURE MAIN;
   VARIABLE PSI0_DEG 1;
   VARIABLE NTURN 1;
 
-  MRKR := 'FULL';
+  MRKR := 'FULL-1D';
   DIRSET WHERE 'data/BYPASS/';
   GROUTF 'img/dump/TR' 1;
   GAMMA := 1.129;
-  NTURN := 30000;
+  NTURN := 3000000;
   PSI0_DEG := 0;
   PNUM := 10;
   
   
-  OV 3 3 0;
-  DAEPS 1E-10; {this sets DA garbage collection tolerance so that the TRANSFER MAP doesn't get the 1e-15 ABERRATION coefficient}
+  OV 1 3 0;
+  DAEPS 1E-12; {this sets DA garbage collection tolerance so that the TRANSFER MAP doesn't get the 1e-15 ABERRATION coefficient}
   { SET lattice parameters }
   SET_FOR_DEUTERONS GAMMA;
-  LATTICE 1;
+  LATTICE 101.8726388306976 0.7909823739837908 1;
      {print transfer map}
       OPENF 636 WHERE&'TrMAP:'&MRKR 'REPLACE';
       PM 636; CLOSEF 636;

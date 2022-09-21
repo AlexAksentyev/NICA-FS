@@ -6,11 +6,11 @@ PROCEDURE LATTICE EBE {kV/cm} BBE {kGs} RFFLAG {1} ;
   VARIABLE VRF 1 1 1;
   VARIABLE FREQ 1;
   VARIABLE HNUM 1;
-  
-  {VARIABLE EBE 1; VARIABLE BBE 1;}
+
   {WIEN-filter optimal parameters found by optimize-EB-bypass}
-  {EBE := 101.8781250681079;}
-  {BBE := 0.7912071795685093;}
+  { VARIABLE EBE 1; VARIABLE BBE 1; }
+  { EBE := 101.8726388306976; }
+  { BBE := 0.7909823739837908; }
               
   {SETTING RF PARAMETERS}
   HNUM := 66;

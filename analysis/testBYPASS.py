@@ -3,7 +3,7 @@ import matplotlib.pyplot as plt; plt.ion()
 from analysis import HOMEDIR, DAVEC, load_data
 
 LATTICE = 'BYPASS'
-MRKR = 'FULL'
+MRKR = 'FULL-1D'
 SEQ = False
 
 def load_trMap(fname):

@@ -45,9 +45,9 @@ PROCEDURE RUN;
   GROUTF 'img/dump/TR' 1;
   
   OV 3 3 0;
-  DAEPS 1E-10; {this sets DA garbage collection tolerance so}
+  DAEPS 1E-12; {this sets DA garbage collection tolerance so}
                {that the TRANSFER MAP doesn't get the 1e-15 ABERRATION coefficient}
-  SET_FOR_DEUTERONS 1.14;
+  SET_FOR_DEUTERONS 1.129;
 
   LATTICE MAPPARAMS MAPARR SPNRARR;
 
