@@ -72,7 +72,7 @@ PROCEDURE QUAD L {m} TILT {rad} K1 {m^-2} ;
   VARIABLE TILT0 1;
   TILT0 := RAD2DEG(TILT);
   A:=.05;
-  Bpt := K1*CONS(CHIM)*A; {in Tesla}WRITE 6 'LENGTH'&SF(L, '(E15.7)');
+  Bpt := K1*CONS(CHIM)*A; {in Tesla}
   { WRITE 6 'K1[m^-2]        B[Tl]          G[kG/cm]       ' }
   {          SF(CONS(K1), '(E15.7)')&SF(CONS(Bpt), '(E15.7)')&SF(CONS(Bpt)/A/10,'(E15.7)'); }
   IF Bpt=0; DL L;
@@ -243,9 +243,9 @@ PROCEDURE WIEN L2 {m} B1 {kGs} B2 {kV/cm} TILT {rad}; {homogenous WF; closed orb
   B3:=ABS(B2)*1e5;   {in V/m}
   R2:=CONS(CHIM)/B0;
   R1:=CONS(CHIE)/B3;
-  WRITE 6 'RE = '&SF(R1, '(E15.7)')&' RB ='&SF(R2, '(E15.7)');
+  { WRITE 6 'RE = '&SF(R1, '(E15.7)')&' RB ='&SF(R2, '(E15.7)'); }
   TILT0 := TILT;
-  WF R1 R1 L1 0.05;             {I use equal radii (R1 R1) for no bend effect in the Wien-filter}
+  WF R1 R2 L1 0.05;             {use equal radii (R1 R1) for no bend effect in the Wien-filter}
   IF TILT0#0;
     BX := B0*TAN(TILT0);
     EY := CONS(CHIE)/CONS(CHIM)*BX;
