@@ -1,4 +1,4 @@
-INCLUDE 'bin/setups/BYPASS/FULL';
+INCLUDE 'bin/setups/BYPASS/FULL_clean';
 
 PROCEDURE INJECT NUM PSI_DEG; {at injection: SX = 0, SY, SZ = sin PSI, cos PSI}
   VARIABLE X 100; VARIABLE I 1;
@@ -26,13 +26,14 @@ PROCEDURE MAIN;
   MRKR := 'FULL';
   DIRSET WHERE 'data/BYPASS/';
   GROUTF 'img/dump/TR' 1;
-  GAMMA := 1.14;
+  GAMMA := 1.129;
   NTURN := 30000;
   PSI0_DEG := 0;
   PNUM := 10;
   
   
   OV 3 3 0;
+  DAEPS 1E-10; {this sets DA garbage collection tolerance so that the TRANSFER MAP doesn't get the 1e-15 ABERRATION coefficient}
   { SET lattice parameters }
   SET_FOR_DEUTERONS GAMMA;
   LATTICE 1;
@@ -50,6 +51,7 @@ PROCEDURE MAIN;
       OPENF 636 WHERE&'MAP-SYM-ERR:'&MRKR 'REPLACE';
       WRITE 636 MAPSE; CLOSEF 636;
       WRITE 6 'MAP SYMPLECTIFICATION ERROR' MAPSE;
+      WRITE 6 'LATTICE LENGTH' SPOS;
 
 
   INJECT PNUM PSI0_DEG;

@@ -1,4 +1,4 @@
-INCLUDE 'bin/setups/BYPASS/SEQFULL';
+INCLUDE 'bin/setups/BYPASS/SEQFULL_clean';
 
 
 PROCEDURE BETAFUNC;
@@ -11,7 +11,7 @@ PROCEDURE BETAFUNC;
   {lattice parameters}
   VARIABLE KS 1 2; VARIABLE X 1 2;  VARIABLE XS 1 2;
   VARIABLE MAPPARAMS 1 6; {HOLDS THE ABOVE VALUES}
-  VARIABLE MAPARR 1000 6 1281; VARIABLE SPNRARR 1000 3 3 1281; {element map arrays}
+  VARIABLE MAPARR 1000 6 587{1281}; VARIABLE SPNRARR 1000 3 3 587{1281}; {element map arrays}
   {variables required by GT}
   VARIABLE F 100 6; VARIABLE A 100 2; VARIABLE B 100 2;
   VARIABLE G 100 2; VARIABLE R 100 2; VARIABLE MU 100 2; 
@@ -41,13 +41,15 @@ PROCEDURE BETAFUNC;
   {********** CONTROLS **********}
   GAMMA := 1.14; {beam injection energy}
   RFFLAG := 1; {insert RF at the beginning of lattice}
-  NSEQ := 1280; {number of elements in sequence PRIOR to the inserion}
+  NSEQ := 586{1280}; {number of elements in sequence PRIOR to the inserion}
   {******************************}
 
   DIRSET WHERE 'data/BETA-FUNCTION/BYPASS/SEQFULL/';
   GROUTF 'img/dump/TR' 1;
 
   OV 3 2 0; SET_FOR_DEUTERONS GAMMA;
+  DAEPS 1E-10; {this sets DA garbage collection tolerance so that}
+               {the TRANSFER MAP doesn't get the 1e-15 ABERRATION coefficient}
 
 
   LATTICE MAPPARAMS MAPARR SPNRARR; {computes element matrices}

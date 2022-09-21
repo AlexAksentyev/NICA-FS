@@ -3,8 +3,19 @@ import matplotlib.pyplot as plt; plt.ion()
 from analysis import HOMEDIR, DAVEC, load_data
 
 LATTICE = 'BYPASS'
-MRKR = 'SEQ'
-SEQ = True
+MRKR = 'FULL'
+SEQ = False
+
+def load_trMap(fname):
+    VARS  = ['X','A','Y','B','T','D']
+    NVARS = len(VARS)
+    VIN = ['X','A','Y','B','T']
+    DTYPE = [('dummy', object)] + list(zip(VIN, [float]*5)) + [('EXP', int)]
+    tmp = np.genfromtxt(fname, skip_footer = 1,
+                        #dtype=DTYPE,
+                        delimiter=(1, 14, 14, 14, 14, 14, 7),
+                        usecols = range(1,NVARS))
+    return tmp
 
 if not SEQ:
     DIR  = '../data/BYPASS/'
