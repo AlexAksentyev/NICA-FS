@@ -10,12 +10,12 @@ PSVARS = list(zip(['X','A','Y','B','T','D'],[float]*6))
 
 LATTICE = 'SECOND-ST'
 LLENGTH = 503 # meters
-ENERGY = '130'
+ENERGY = '3059'
 GAMMA = 1 + float(ENERGY)/938 # injecting PROTONS with rest mass 938 MeV
 BETA = np.sqrt(1 - 1/GAMMA**2)
 v = CLIGHT*BETA
 TAU = LLENGTH/v # reference particle's time-of-flight
-NTURN = '3000'
+NTURN = '3000000'
 DATDIR = '../data/'+LATTICE+'/'+ENERGY+'MeV/'+NTURN
 
 SEQMAP = { #indexes of cornerstone elements (in COSY indexing, SEQFULL.fox file [i.e., no RF (which is at index 0 anyway)])
@@ -112,8 +112,8 @@ def load_nbar(folder, spin_psi):
 def main(navi_psi, spin_psi='-0'):
     folder  = DATDIR+'/NAVI-ON/NAVIPSI-{}/'.format(navi_psi)
     print(folder)
-    # dat = load_data(folder, 'TRPRAY:PSI0spin{}.dat'.format(spin_psi))
-    # spdat = load_data(folder, 'TRPSPI:PSI0spin{}.dat'.format(spin_psi))
+    dat = load_data(folder, 'TRPRAY:PSI0spin{}.dat'.format(spin_psi))
+    spdat = load_data(folder, 'TRPSPI:PSI0spin{}.dat'.format(spin_psi))
     try:
         spintune = DAVEC(folder+'MU:PSI0spin{}'.format(spin_psi))
         nbar = load_nbar(folder, spin_psi)
@@ -124,17 +124,17 @@ def main(navi_psi, spin_psi='-0'):
     print(navi_psi, navi_psi_rad)
     axis = [0, np.sin(navi_psi_rad), np.cos(navi_psi_rad)]
     print(axis)
-    # P = Polarization.on_axis(spdat, axis)
-    # P.plot(1)
-    # plt.savefig(folder+spin_psi+'-pol.png', bbox_inches='tight', pad_inches=.1)
-    # Px = Polarization.on_axis(spdat[1:-1:3], axis)
-    # Px.plot(1)
-    # plt.savefig(folder+spin_psi+'-pol-X-bunch.png', bbox_inches='tight', pad_inches=.1)
-    # fig, ax = plot(dat, spdat)
-    # plt.savefig(folder+spin_psi+'-plots.png', bbox_inches='tight', pad_inches=.1)
-    # fig2, ax2 = plot_spin(spdat)
-    # plt.savefig(folder+spin_psi+'-spin.png', bbox_inches='tight', pad_inches=.1)
-    # plt.close('all')
+    P = Polarization.on_axis(spdat, axis)
+    P.plot(1)
+    plt.savefig(folder+spin_psi+'-pol.png', bbox_inches='tight', pad_inches=.1)
+    Px = Polarization.on_axis(spdat[1:-1:3], axis)
+    Px.plot(1)
+    plt.savefig(folder+spin_psi+'-pol-X-bunch.png', bbox_inches='tight', pad_inches=.1)
+    fig, ax = plot(dat, spdat)
+    plt.savefig(folder+spin_psi+'-plots.png', bbox_inches='tight', pad_inches=.1)
+    fig2, ax2 = plot_spin(spdat)
+    plt.savefig(folder+spin_psi+'-spin.png', bbox_inches='tight', pad_inches=.1)
+    plt.close('all')
     return spintune, nbar
 
 def polarization_analysis(navi_psi, spin_psi='-0'):
@@ -236,9 +236,9 @@ def tss_analysis_nbar(nbar):
     ax[2,2].legend(title=r'$\psi_{navi}$', bbox_to_anchor=(1,2))
     return fig, ax
         
-def spin_matrix_analysis(navi_psi):
+def spin_matrix_analysis(navi_psi, spin_psi='-0'):
     folder  = DATDIR+'/NAVI-ON/NAVIPSI-{:d}/'.format(navi_psi)
-    stm = load_SpTrMAP(folder+'SpTrMAP:PSI0spin=PSInavi')
+    stm = load_SpTrMAP(folder+'SpTrMAP:PSI0spin'+spin_psi)
     angles = euler_angles(stm)
     return stm, angles
 
@@ -261,16 +261,16 @@ def polar_nbar(nbar0):
 if __name__ == '__main__':
     mu = {}
     nbar = {}
-    psi_rng = range(0,380,20)
+    psi_rng = [180, 135, 90]#range(0,380,20)
     ndir = len(psi_rng)
     STM = np.zeros(ndir, dtype=[('psi', float),('stm', object)])
     euang = np.zeros(ndir, dtype=list(zip(['psi','X','Y','Z'],[float]*4)))
     nbar0 = np.zeros(ndir, dtype=list(zip(['psi', 'X','Y','Z'], [float]*4)))
     for i, psi in enumerate(psi_rng):
-        mu_, nbar_ = main(psi,'=PSInavi')
+        mu_, nbar_ = main(psi,'-'+str(psi))
         mu.update({psi:mu_})
         nbar.update({psi:nbar_})
-        stm, ang = spin_matrix_analysis(psi)
+        stm, ang = spin_matrix_analysis(psi,'-'+str(psi))
         STM[i] = psi, stm
         euang[i] = psi, *ang
         try:

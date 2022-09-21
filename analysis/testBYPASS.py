@@ -3,22 +3,24 @@ import matplotlib.pyplot as plt; plt.ion()
 from analysis import HOMEDIR, DAVEC, load_data
 
 LATTICE = 'BYPASS'
-ENERGY = '130'
-MRKR = 'PSI0spin-0'
+MRKR = 'FULL'
 SEQ = False
-NTURN = '30000'
-NAVIPSI = '70'
 
-SEQMAP = { #indexes of cornerstone elements (in COSY indexing, SEQFULL.fox file [i.e., no RF (which is at index 0 anyway)])
-    'SPD1':21,  'ARC1s':43, 'ARC1f': 236,
-    'MDP1':257, 'MPD2':293, # straight section
-    'ARC2s':318, 'ARC2f':511, 'SPD2':530
-    }
+def load_trMap(fname):
+    VARS  = ['X','A','Y','B','T','D']
+    NVARS = len(VARS)
+    VIN = ['X','A','Y','B','T']
+    DTYPE = [('dummy', object)] + list(zip(VIN, [float]*5)) + [('EXP', int)]
+    tmp = np.genfromtxt(fname, skip_footer = 1,
+                        #dtype=DTYPE,
+                        delimiter=(1, 14, 14, 14, 14, 14, 7),
+                        usecols = range(1,NVARS))
+    return tmp
 
 if not SEQ:
-    DIR  = '../data/TEST/'+LATTICE+'/'+ENERGY+'MeV/'+NTURN+'/NAVI-ON/NAVIPSI-'+NAVIPSI+'/'
+    DIR  = '../data/BYPASS/'
 else:
-    DIR  = '../data/TEST/'+LATTICE+'/'+ENERGY+'MeV/SEQ/5-SEQ/'
+    DIR  = '../data/BYPASS/'
 
 def load_tss(path=HOMEDIR+DIR+'MU.dat'):
     d_type = [('EL', int), ('PID', int)] + list(zip(['NU', 'NX','NY','NZ'], [float]*4))
@@ -95,15 +97,15 @@ def plot_seq(dat, spdat, pid = [1,2,3], itn=(0,1), show_elems=[21, 43, 236, 257,
         eid_max = eid.max()
         show_elems=np.array(show_elems)+1 # +1 because of the added INJ **
                             # (the added RF is taken care of due to python indexing starting at 0 while cosy's at 1)
-        plt.xticks(ticks=eid[show_elems], labels=elnames[show_elems], rotation=60)
+        #plt.xticks(ticks=eid[show_elems], labels=elnames[show_elems], rotation=60)
     return fig, ax
     
 
 if __name__ == '__main__':
     dat = load_data(DIR, 'TRPRAY:{}.dat'.format(MRKR))
     spdat = load_data(DIR, 'TRPSPI:{}.dat'.format(MRKR))
-    if DIR[-4:-1]=='SEQ':
-        fig, ax = plot_seq(dat, spdat, itn=1)
+    if SEQ:
+        fig, ax = plot_seq(dat, spdat, itn=1, show_elems=[9, 15])
     else:
         fig, ax = plot(dat, spdat)
         figs, axs = plot_spin(spdat)

@@ -10,7 +10,7 @@ def prep_elnames(lattice, rf=True):
     elnames = np.array([e+' ['+ str(i+1) + ']' for i,e in enumerate(elnames)]) # add the ordinal
     return elnames
     
-LATTICE = 'SECOND-ST'
+LATTICE = 'BYPASS'
 DATADIR = 'data/BETA-FUNCTION/'+LATTICE+'/SEQFULL/'
 ELNAMES = prep_elnames(LATTICE)
 TICK_STP = 20

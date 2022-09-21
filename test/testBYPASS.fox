@@ -1,10 +1,10 @@
-INCLUDE 'bin/setups/SECOND-ST/FULL';
+INCLUDE 'bin/setups/BYPASS/FULL_clean';
 
 PROCEDURE INJECT NUM PSI_DEG; {at injection: SX = 0, SY, SZ = sin PSI, cos PSI}
   VARIABLE X 100; VARIABLE I 1;
   VARIABLE PSI 1; VARIABLE SY 1; VARIABLE SZ 1;
   PSI := DEG2RAD(PSI_DEG); {PSI IN RADIANS}
-  X := LINSPACE(-3E-3, 3E-3, NUM);
+  X := LINSPACE(-1E-3, 1E-3, NUM);
   SY := SIN(PSI); SZ := COS(PSI);
   SR 0 0 0 0 0 0 0 0 1; SSR 0 SY SZ;
   LOOP I 1 NUM;
@@ -15,31 +15,28 @@ PROCEDURE INJECT NUM PSI_DEG; {at injection: SX = 0, SY, SZ = sin PSI, cos PSI}
 ENDPROCEDURE;
 
 PROCEDURE MAIN;
-  VARIABLE WHERE 100;
-  VARIABLE PSI0_DEG 1; VARIABLE MRKR 100; VARIABLE PNUM 1;
+  VARIABLE WHERE 100; VARIABLE MRKR 10;
+  VARIABLE GAMMA 1;
   VARIABLE MAPSE 1;
-  {LATTICE ARGUMENTS}
-  VARIABLE KS 1 2; VARIABLE X  1 2; VARIABLE XS 1 2;
-  VARIABLE NTURN 1; VARIABLE EKIN 1;
-  VARIABLE NAVIPSI_DEG 1;
-  {********** CONTROLS **********}
-  NTURN := 3000000;
-  PNUM := 10; {number of particles in a bunch}
-  EKIN := 3059;  {kinetic energy in MeV}
-  PSI0_DEG := 135; {angle between the spin orientation at injection and the z-axis}
-  NAVIPSI_DEG := 135; {navigator defined angle between the z and spin axes}
-  {******************************}
-  MRKR := 'PSI0spin-'&MRK(PSI0_DEG); {marker to identify data files}
-  WRITE 6 '^^^^ INITIAL SPIN PSI'&SF(PSI0_DEG,'(F15.7)');
-  DIRSET WHERE 'data/SECOND-ST/'&MRK(EKIN)&'MeV/'&MRK(NTURN)&'/NAVI-ON/NAVIPSI-'&MRK(NAVIPSI_DEG)&'/';
+
+  VARIABLE PNUM 1;
+  VARIABLE PSI0_DEG 1;
+  VARIABLE NTURN 1;
+
+  MRKR := 'FULL';
+  DIRSET WHERE 'data/BYPASS/';
   GROUTF 'img/dump/TR' 1;
+  GAMMA := 1.129;
+  NTURN := 30000;
+  PSI0_DEG := 0;
+  PNUM := 10;
   
   
   OV 3 3 0;
+  DAEPS 1E-10; {this sets DA garbage collection tolerance so that the TRANSFER MAP doesn't get the 1e-15 ABERRATION coefficient}
   { SET lattice parameters }
-  SET_FOR_PROTONS EKIN X XS;
-  NAVIGATORS 3e-2 NAVIPSI_DEG KS;
-  LATTICE X XS KS 1;
+  SET_FOR_DEUTERONS GAMMA;
+  LATTICE 1;
      {print transfer map}
       OPENF 636 WHERE&'TrMAP:'&MRKR 'REPLACE';
       PM 636; CLOSEF 636;
@@ -54,6 +51,7 @@ PROCEDURE MAIN;
       OPENF 636 WHERE&'MAP-SYM-ERR:'&MRKR 'REPLACE';
       WRITE 636 MAPSE; CLOSEF 636;
       WRITE 6 'MAP SYMPLECTIFICATION ERROR' MAPSE;
+      WRITE 6 'LATTICE LENGTH' SPOS;
 
 
   INJECT PNUM PSI0_DEG;

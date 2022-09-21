@@ -1,3 +1,4 @@
+
 INCLUDE 'bin/elements';
 
 FUNCTION fACCLEN DUMMY; fACCLEN := 503; ENDFUNCTION;
@@ -35,5 +36,4 @@ PROCEDURE SET_FOR_DEUTERONS y;
   WRITE 6 '+++++++++++++++++++++++++++++++++++';
 ENDPROCEDURE;
 
-
-SAVE '~/REPOS/NICA-FS/bin/common/NICA/header';
+SAVE '~/REPOS/NICA-FS/bin/common/BYPASS/header';

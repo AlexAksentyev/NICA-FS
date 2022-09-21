@@ -1,13 +1,14 @@
-{lattice converted from MADX sequence file: ST-mode/NICA4SOL.seq}
-{this is the SECOND-ST mode file with an UP-TO-DATE parametrization}
-INCLUDE 'bin/common/SECOND-ST/header';
+{this is the modified-for-yG=2 (and over) SECOND-ST lattice}
+{the second spin-navigating solenoid is moved from the straight section into an arc}
+{cf the respective doc: *** Realization aspects of spin-transparent mode on COSY *** }
+INCLUDE 'bin/common/2ST+/header';
 
 
 PROCEDURE LATTICE X {2 stuck} XS {2} KS {2} RFFLAG {1} ;
   VARIABLE VRF 1 1 1;
   VARIABLE FREQ 1;
   VARIABLE HNUM 1;
-  VARIABLE KoeffSolSPD 1; VARIABLE KoeffSolMPD 1;
+  VARIABLE KoeffSol1 1; VARIABLE KoeffSol2 1;
   VARIABLE XSFW 1;  VARIABLE XSQW 1;
   VARIABLE XMQW 1;  VARIABLE XMFW 1;
   VARIABLE XMFE 1;  VARIABLE XMQE 1;
@@ -18,13 +19,13 @@ PROCEDURE LATTICE X {2 stuck} XS {2} KS {2} RFFLAG {1} ;
   VRF(1, 1) := 100/HNUM; {RF Voltage [kV]}
   FREQ := HNUM*REVFREQ(fACCLEN(1)); {RF Frequency}
   {SETTING LATTICE PARAMETERS}
-  KoeffSolSPD := KS(1); KoeffSolMPD := KS(2);
+  KoeffSol1 := KS(1); KoeffSol2 := KS(2);
   X2 := X(1); X3 := X(2); 
   XSQW := XS(1); XSFW := XS(2);
   
 
   WRITE 6 '********************************************';
-  WRITE 6 '*      FS NICA 4 SOL 11 OCT 2021 (CW)      *';
+  WRITE 6 '*        yG=2 NICA 11 FEB 2022 (CW)        *';
   WRITE 6 '********************************************';
 
   WRITE 6 'REVOLUTION FREQUENCY: '&ST(REVFREQ(fACCLEN(1))/1E6)&' MHZ';
@@ -57,7 +58,7 @@ PROCEDURE LATTICE X {2 stuck} XS {2} KS {2} RFFLAG {1} ;
   DL 2.88475 ; {Drift_18}
   DL 2.085 ; {Drift_19}
   DL 2.48475 ; {Drift_20}
-  SOLENOID 1. 0.562435429445*KoeffSolSPD ; {Solen_21}
+  SOLENOID 1. 0 ; {Solen_21}
   DL 2.44 ; {Drift_22}
   DL 8.1 ; {Drift_23}
   QUAD 0.545 0 (-0.51445610009908*(1+X2+XSQW)) ; {Quadr_24}
@@ -79,7 +80,7 @@ PROCEDURE LATTICE X {2 stuck} XS {2} KS {2} RFFLAG {1} ;
   QUAD 0.785 0 (-0.5184853392*(1+X2)) ; {Quadr_40}
   DL 0.085 ; {Drift_41}
   DL 0.215 ; {Drift_42}
-  RBEND 1.9395014178063565 0.0785398163399978 0 ; {RBend_44}
+  RBEND 1.9395014178063565 0.0785398163399978 0 ; {RBend_44}  {first arc beginning}
   DL 0.3 ; {Drift_46}
   RBEND 1.9395014178063565 0.0785398163399978 0 ; {RBend_48}
   DL 0.4865 ; {Drift_50}
@@ -127,13 +128,11 @@ PROCEDURE LATTICE X {2 stuck} XS {2} KS {2} RFFLAG {1} ;
   DL 0.19574 ; {Drift_104}
   RBEND 1.9395014178063565 0.0785398163399978 0 ; {RBend_106}
   DL 0.3 ; {Drift_108}
-  RBEND 1.9395014178063565 0.0785398163399978 0 ; {RBend_110}
+  RBEND 1.9395014178063565 0.0785398163399978 0 ; {RBend_110}    {first 10 RBENDS of arc; psi = pi/4}
   DL 0.439 ; {Drift_112}
   DL 0.226 ; {Drift_113}
   QUAD 0.47 0 (0.5148373645*(1+X2)) ; {Quadr_114}
-  DL 0.20326 ; {Drift_115}
-  DL 0.266 ; {Drift_116}
-  DL 0.19574 ; {Drift_117}
+  SOLENOID 0.665 (0.562435429445/.665)*KoeffSol2 ;        {inserted second solenoid (in place of three DLs); */0.665 b/c def Ks2 in header}
   RBEND 1.9395014178063565 0.0785398163399978 0 ; {RBend_119}
   DL 0.3 ; {Drift_121}
   RBEND 1.9395014178063565 0.0785398163399978 0 ; {RBend_123}
@@ -172,7 +171,7 @@ PROCEDURE LATTICE X {2 stuck} XS {2} KS {2} RFFLAG {1} ;
   DL 0.19574 ; {Drift_169}
   RBEND 1.9395014178063565 0.0785398163399978 0 ; {RBend_171}
   DL 0.3 ; {Drift_173}
-  RBEND 1.9395014178063565 0.0785398163399978 0 ; {RBend_175}
+  RBEND 1.9395014178063565 0.0785398163399978 0 ; {RBend_175}    {second 10 RBENDS in arc; psi = pi/2}
   DL 0.439 ; {Drift_177}
   DL 0.226 ; {Drift_178}
   QUAD 0.47 0 (-0.5037116682*(1+X2+X3)) ; {Quadr_179}
@@ -217,7 +216,7 @@ PROCEDURE LATTICE X {2 stuck} XS {2} KS {2} RFFLAG {1} ;
   DL 0.19574 ; {Drift_234}
   RBEND 1.9395014178063565 0.0785398163399978 0 ; {RBend_236}
   DL 0.3 ; {Drift_238}
-  RBEND 1.9395014178063565 0.0785398163399978 0 ; {RBend_240}
+  RBEND 1.9395014178063565 0.0785398163399978 0 ; {RBend_240}   {third 10 RBENDS; psi = 3*pi/4}
   DL 0.439 ; {Drift_242}
   DL 0.226 ; {Drift_243}
   QUAD 0.47 0 (0.5148373645*(1+X2)) ; {Quadr_244}
@@ -272,7 +271,7 @@ PROCEDURE LATTICE X {2 stuck} XS {2} KS {2} RFFLAG {1} ;
   DL 0.24324 ; {Drift_309}
   RBEND 1.9395014178063565 0.0785398163399978 0 ; {RBend_311}
   DL 0.3 ; {Drift_313}
-  RBEND 1.9395014178063565 0.0785398163399978 0 ; {RBend_315}
+  RBEND 1.9395014178063565 0.0785398163399978 0 ; {RBend_315}    {last 10 arc RBENDS; psi = pi; beginning straight section}
   DL 0.215 ; {Drift_317}
   DL 0.085 ; {Drift_318}
   QUAD 0.785 0 (-0.5184853392*(1+X2)) ; {Quadr_319}
@@ -293,7 +292,7 @@ PROCEDURE LATTICE X {2 stuck} XS {2} KS {2} RFFLAG {1} ;
   QUAD 0.545 0 (-0.51445610009908*(1+X2+XSQW)) ; {Quadr_334}
   DL 8.1 ; {Drift_335}
   DL 2.44 ; {Drift_336}
-  SOLENOID 1. 0.562435429445*KoeffSolMPD ; {Solen_337}
+  SOLENOID 1. 0 ; {Solen_337}
   DL 7.4545 ; {Drift_338}
   DL 1. ; {Drift_339}
   DL 0.1 ; {Drift_340}
@@ -329,7 +328,7 @@ PROCEDURE LATTICE X {2 stuck} XS {2} KS {2} RFFLAG {1} ;
   DL 0.1 ; {Drift_370}
   DL 1. ; {Drift_371}
   DL 7.4545 ; {Drift_372}
-  SOLENOID 1. 0.562435429445*KoeffSolMPD ; {Solen_373}
+  SOLENOID 1. 0 ; {Solen_373}
   DL 2.44 ; {Drift_374}
   DL 8.1 ; {Drift_375}
   QUAD 0.545 0 (-0.51445610009908*(1+X2+XSQW)) ; {Quadr_376}
@@ -354,7 +353,7 @@ PROCEDURE LATTICE X {2 stuck} XS {2} KS {2} RFFLAG {1} ;
   QUAD 0.785 0 (-0.5184853392*(1+X2)) ; {Quadr_395}
   DL 0.085 ; {Drift_396}
   DL 0.215 ; {Drift_397}
-  RBEND 1.9395014178063565 0.0785398163399978 0 ; {RBend_399}
+  RBEND 1.9395014178063565 0.0785398163399978 0 ; {RBend_399}     {beginning second arc}
   DL 0.3 ; {Drift_401}
   RBEND 1.9395014178063565 0.0785398163399978 0 ; {RBend_403}
   DL 0.4865 ; {Drift_405}
@@ -402,7 +401,7 @@ PROCEDURE LATTICE X {2 stuck} XS {2} KS {2} RFFLAG {1} ;
   DL 0.19574 ; {Drift_459}
   RBEND 1.9395014178063565 0.0785398163399978 0 ; {RBend_461}
   DL 0.3 ; {Drift_463}
-  RBEND 1.9395014178063565 0.0785398163399978 0 ; {RBend_465}
+  RBEND 1.9395014178063565 0.0785398163399978 0 ; {RBend_465}   {first 10 RBENDS, psi = pi/4}
   DL 0.439 ; {Drift_467}
   DL 0.226 ; {Drift_468}
   QUAD 0.47 0 (0.5148373645*(1+X2)) ; {Quadr_469}
@@ -447,7 +446,7 @@ PROCEDURE LATTICE X {2 stuck} XS {2} KS {2} RFFLAG {1} ;
   DL 0.19574 ; {Drift_524}
   RBEND 1.9395014178063565 0.0785398163399978 0 ; {RBend_526}
   DL 0.3 ; {Drift_528}
-  RBEND 1.9395014178063565 0.0785398163399978 0 ; {RBend_530}
+  RBEND 1.9395014178063565 0.0785398163399978 0 ; {RBend_530}   {second 10 RBENDS, psi = pi/2}
   DL 0.439 ; {Drift_532}
   DL 0.226 ; {Drift_533}
   QUAD 0.47 0 (-0.5037116682*(1+X2+X3)) ; {Quadr_534}
@@ -492,7 +491,7 @@ PROCEDURE LATTICE X {2 stuck} XS {2} KS {2} RFFLAG {1} ;
   DL 0.19574 ; {Drift_589}
   RBEND 1.9395014178063565 0.0785398163399978 0 ; {RBend_591}
   DL 0.3 ; {Drift_593}
-  RBEND 1.9395014178063565 0.0785398163399978 0 ; {RBend_595}
+  RBEND 1.9395014178063565 0.0785398163399978 0 ; {RBend_595}   {third 10 RBENDS, psi = 3*pi/4}
   DL 0.439 ; {Drift_597}
   DL 0.226 ; {Drift_598}
   QUAD 0.47 0 (0.5148373645*(1+X2)) ; {Quadr_599}
@@ -547,7 +546,7 @@ PROCEDURE LATTICE X {2 stuck} XS {2} KS {2} RFFLAG {1} ;
   DL 0.24324 ; {Drift_664}
   RBEND 1.9395014178063565 0.0785398163399978 0 ; {RBend_666}
   DL 0.3 ; {Drift_668}
-  RBEND 1.9395014178063565 0.0785398163399978 0 ; {RBend_670}
+  RBEND 1.9395014178063565 0.0785398163399978 0 ; {RBend_670}    {last 10 RBENDS, psi = pi; beginning straight section}
   DL 0.215 ; {Drift_672}
   DL 0.085 ; {Drift_673}
   QUAD 0.785 0 (-0.5184853392*(1+X2)) ; {Quadr_674}
@@ -566,7 +565,7 @@ PROCEDURE LATTICE X {2 stuck} XS {2} KS {2} RFFLAG {1} ;
   QUAD 0.545 0 (-0.51445610009908*(1+X2+XSQW)) ; {Quadr_687}
   DL 8.1 ; {Drift_688}
   DL 2.44 ; {Drift_689}
-  SOLENOID 1. 0.562435429445*KoeffSolSPD ; {Solen_690}
+  SOLENOID 1. 0.562435429445*KoeffSol1 ; {Solen_690}           {FIRST SOLENOID of this option}
   DL 7.4545 ; {Drift_691}
   DL 1. ; {Drift_692}
   DL 0.1 ; {Drift_693}
@@ -585,5 +584,5 @@ PROCEDURE LATTICE X {2 stuck} XS {2} KS {2} RFFLAG {1} ;
   DL 5.25 ; {Drift_706}
 ENDPROCEDURE; {SECOND-ST SETUP}
 
-{number of elements (w/o RF): 546}
-SAVE 'bin/setups/SECOND-ST/FULL';
+{number of elements (w/o RF): 544}
+SAVE 'bin/setups/2ST+/FULL';

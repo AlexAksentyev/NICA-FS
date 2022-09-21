@@ -77,23 +77,18 @@ PROCEDURE SET_FOR_PROTONS0 EKIN X XS;  {FROM 1.4.2, p. 11}
   WRITE 6 '+++++++++++++++++++++++++++++++++++';
 ENDPROCEDURE;
 
-PROCEDURE NAVIGATORS FREEZE NU PSI_DEG KS; {the FREEZE flag determines whether the 4 6T solenoids are used}
-                                              {as siberian snakes in addition to as navigators; when FALSE, the spin-freezing}
-                                              {snake-capability is turned OFF, the solenoids operate as navigators ONLY}
+PROCEDURE NAVIGATORS NU PSI_DEG KS;
   VARIABLE GAMMA 1; VARIABLE PHIY 1;
-  VARIABLE PSI 1; VARIABLE NZ 1; VARIABLE NY 1;
-  VARIABLE BASE 1;
+  VARIABLE PSI 1; VARIABLE NZ 1; VARIABLE NX 1;
   PSI := DEG2RAD(PSI_DEG);
-  NZ := COS(PSI); NY := SIN(PSI); WRITE 6 'NZ, NY ='&ST(NZ)&'   '&ST(NY);
+  NZ := COS(PSI); NX := SIN(PSI); WRITE 6 'NZ, NX ='&ST(NZ)&'   '&ST(NX);
   GAMMA := CONS(1 + E0/(M0*AMUMEV));
-  PHIY := GAMMA*G0*PI; WRITE 6 'PHIY, TAN(PHIY) = '&ST(PHIY/PI)&'*PI   '&ST(TAN(PHIY));
-  WRITE 6 '@@@@ siberian snakes freeze:' FREEZE; WRITE 6 'BASE ='&ST(BASE);
-  IF FREEZE; BASE := 1; ENDIF; { if FREEZE is FALSE, BASE == 0 }
-  KS(1) := -1*BASE + 2*NU*(NZ - NY/TAN(PHIY)); {SPD}
-  KS(2) := +1*BASE + 2*NU*NY/SIN(PHIY);        {MPD}
+  PHIY := GAMMA*G0*PI/4; WRITE 6 'PHIY, TAN(PHIY) = '&ST(PHIY/PI)&'*PI   '&ST(TAN(PHIY)); {placed solenoid after first 10 RBENDs}
+  KS(1) := 2*2*NU*(NZ - NX/TAN(PHIY)); {solen1}   {2* in front b/c i removed 2 solenoids out of 4, the other 2 must pick up, therefore}
+  KS(2) := 2*2*NU*NX/SIN(PHIY);        {solen2}   {same here}
   WRITE 6 '+++++++ NAVIGATOR strength coefficients +++++++';
-  WRITE 6 '        KsSPD: '&SF(KS(1), '(F15.7)');
-  WRITE 6 '        KsMPD: '&SF(KS(2), '(F15.7)');
+  WRITE 6 '        Ks1: '&SF(KS(1), '(F15.7)');
+  WRITE 6 '        Ks2: '&SF(KS(2), '(F15.7)');
 ENDPROCEDURE;
 
-SAVE '~/REPOS/NICA-FS/bin/common/SECOND-ST/header';
+SAVE '~/REPOS/NICA-FS/bin/common/2ST+/header';

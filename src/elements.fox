@@ -72,7 +72,7 @@ PROCEDURE QUAD L {m} TILT {rad} K1 {m^-2} ;
   VARIABLE TILT0 1;
   TILT0 := RAD2DEG(TILT);
   A:=.05;
-  Bpt := K1*CONS(CHIM)*A; {in Tesla}
+  Bpt := K1*CONS(CHIM)*A; {in Tesla}WRITE 6 'LENGTH'&SF(L, '(E15.7)');
   { WRITE 6 'K1[m^-2]        B[Tl]          G[kG/cm]       ' }
   {          SF(CONS(K1), '(E15.7)')&SF(CONS(Bpt), '(E15.7)')&SF(CONS(Bpt)/A/10,'(E15.7)'); }
   IF Bpt=0; DL L;
@@ -86,7 +86,8 @@ ENDPROCEDURE; {QUAD}
 PROCEDURE SEXT L {m} TILT {rad} KNL {unit};
   VARIABLE Bpt 1; VARIABLE TILT0 1;
   VARIABLE L0 1;
-  Bpt := BMULT(KNL, L);
+  Bpt := 0;{*BMULT(KNL, L);}
+  WRITE 6 'Bpt = '&SF(Bpt, '(E15.7)');
   TILT0 := RAD2DEG(TILT);
   IF Bpt=0; DL L;
   ELSEIF TRUE;
@@ -98,7 +99,8 @@ ENDPROCEDURE; {SEXT}
 
 PROCEDURE OCT L {m} TILT {rad} KNL {unit};
   VARIABLE Bpt 1; VARIABLE TILT0 1;
-  Bpt := BMULT(KNL, L);
+  Bpt := 0;{*BMULT(KNL, L);}
+  WRITE 6 'Bpt = '&SF(Bpt, '(E15.7)');
   IF Bpt=0; DL L;
   ELSEIF TRUE;
     ROTATE TILT0;
@@ -111,14 +113,14 @@ PROCEDURE MULT TILT {rad} KNL {unit} N;
   VARIABLE Bpt 1 N; VARIABLE I 1;
   VARIABLE L0 1; VARIABLE FLAG 1; {used to check magnetic field components against 0}
   VARIABLE TILT0 1;
-  L0 := .1;
+  L0 := 0;
   TILT0 := RAD2DEG(TILT);
-  IF N=2;
-    QUAD L0 TILT (KNL(2)/L0); WRITE 6 'QUAD';
-  ELSEIF N=3;
-    SEXT L0 TILT (KNL(3)/L0); WRITE 6 'SEXT';
-  ELSEIF N=4;
-    OCT L0 TILT (KNL(4)/L0); WRITE 6 'OCT';
+  IF N=2; WRITE 6 'QUAD';
+    {QUAD L0 TILT KNL(2);} DL L0;
+  ELSEIF N=3; WRITE 6 'SEXT';
+    {SEXT L0 TILT KNL(3);} DL L0;
+  ELSEIF N=4; WRITE 6 'OCT';
+    {OCT  L0 TILT KNL(4); } DL L0;
   ELSEIF TRUE;
     WRITE 6 '*** UNDEFINED ELEMENT ERROR ***';
   ENDIF;
@@ -181,7 +183,8 @@ PROCEDURE SOL L {m} KS {m^-2}; {TO BE FINISHED !!!!!!!!!!!!!!!!!!!!!}
   LOCSET 0 0 0 0 0 0 ; UPDATE 1 1;
 ENDPROCEDURE;
 
-PROCEDURE SOLENOID L {m} KS {rad/m};
+PROCEDURE SOLENOID_0 L {m} KS {rad/m}; {this is the ORIGINAL IMPLEMENTATION used in test2ST (contract 100-3596)}
+                                         {which doesn't account for the saturation in the solenoid magnets}
   VARIABLE B0 1; VARIABLE A 1;
   VARIABLE MU 1 ; {MAGNETIC PERMEABILITY}
   VARIABLE N 1; {NUMBER OF SOLENOID TURNS}
@@ -191,6 +194,20 @@ PROCEDURE SOLENOID L {m} KS {rad/m};
   B0 := KS * CONS(CHIM);
   I  := 2*B0/MU/N;
   IF (B0 = 0); DL L; WRITE 6 'SOLENOID IS OFF';
+  ELSEIF TRUE;
+    CMS B0 A L;
+  ENDIF;
+ENDPROCEDURE; {SOLENOID_0}
+
+PROCEDURE SOLENOID L {m} KS {rad/m}; {this solenoid implementation accounts for the saturation effect (top B-field)}
+  VARIABLE B0 1; VARIABLE A 1;
+  VARIABLE BTOP 1; {maximum magnetic field in solenoid; cannot go any further}
+  BTOP := 6; {the 2ST scheme requires 4 6-T solenoids, so I assume 6T is reacheable}
+  A  := .05;
+  B0 := KS * CONS(CHIM); WRITE 6 'SOLENOID MAGNETIC FIELD COMPUTED:'&SF(B0, '(F15.7)')&' Tl';
+  IF (B0>BTOP); B0 := BTOP; WRITE 6 'SOLENOID REACHED SATURATION; SETTING Btop FIELD (6T)!'; ENDIF;
+  IF (B0 = 0);
+    DL L; WRITE 6 'SOLENOID IS OFF';
   ELSEIF TRUE;
     CMS B0 A L;
   ENDIF;
@@ -212,8 +229,7 @@ PROCEDURE KICK L {m} KX {unit} KY {unit};
   ENDIF;
 ENDPROCEDURE;
 
-{I PUT THIS ELEMENT HERE TO CHECK AGAINST THE BNL LATTICE}
-PROCEDURE WIEN L2 B1 B2 TILT; {homogenous WF; closed orbit preserved}
+PROCEDURE WIEN L2 {m} B1 {kGs} B2 {kV/cm} TILT {rad}; {homogenous WF; closed orbit preserved}
 {parasitic (tilt) fields are implemented via a spin kick like Eremey thesis section 6.5.3}
   VARIABLE R1 1;
   VARIABLE R2 1;
@@ -222,13 +238,14 @@ PROCEDURE WIEN L2 B1 B2 TILT; {homogenous WF; closed orbit preserved}
   VARIABLE TILT0 1; VARIABLE TOF 1;
   VARIABLE BX 1; VARIABLE EY 1;
   VARIABLE BETA 1; VARIABLE DWMDM 1; 
-  L1:=L2/100; {in meters}
+  L1:=L2; {in meters}
   B0:=ABS(B1)/10; {in Tesla}
   B3:=ABS(B2)*1e5;   {in V/m}
   R2:=CONS(CHIM)/B0;
   R1:=CONS(CHIE)/B3;
+  WRITE 6 'RE = '&SF(R1, '(E15.7)')&' RB ='&SF(R2, '(E15.7)');
   TILT0 := TILT;
-  WF R1 R2 L1 0.05;
+  WF R1 R1 L1 0.05;             {I use equal radii (R1 R1) for no bend effect in the Wien-filter}
   IF TILT0#0;
     BX := B0*TAN(TILT0);
     EY := CONS(CHIE)/CONS(CHIM)*BX;
