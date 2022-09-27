@@ -86,7 +86,7 @@ ENDPROCEDURE; {QUAD}
 PROCEDURE SEXT L {m} TILT {rad} KNL {unit};
   VARIABLE Bpt 1; VARIABLE TILT0 1;
   VARIABLE L0 1;
-  Bpt := 0;{*BMULT(KNL, L);}
+  Bpt := BMULT(KNL, L);
   WRITE 6 'Bpt = '&SF(Bpt, '(E15.7)');
   TILT0 := RAD2DEG(TILT);
   IF Bpt=0; DL L;
@@ -99,7 +99,7 @@ ENDPROCEDURE; {SEXT}
 
 PROCEDURE OCT L {m} TILT {rad} KNL {unit};
   VARIABLE Bpt 1; VARIABLE TILT0 1;
-  Bpt := 0;{*BMULT(KNL, L);}
+  Bpt := BMULT(KNL, L);
   WRITE 6 'Bpt = '&SF(Bpt, '(E15.7)');
   IF Bpt=0; DL L;
   ELSEIF TRUE;
@@ -116,11 +116,11 @@ PROCEDURE MULT TILT {rad} KNL {unit} N;
   L0 := 0;
   TILT0 := RAD2DEG(TILT);
   IF N=2; WRITE 6 'QUAD';
-    {QUAD L0 TILT KNL(2);} DL L0;
+    {QUAD L0 TILT KNL(2)/L0;} DL L0;
   ELSEIF N=3; WRITE 6 'SEXT';
     {SEXT L0 TILT KNL(3);} DL L0;
   ELSEIF N=4; WRITE 6 'OCT';
-    {OCT  L0 TILT KNL(4); } DL L0;
+    {OCT  L0 TILT KNL(4);} DL L0;
   ELSEIF TRUE;
     WRITE 6 '*** UNDEFINED ELEMENT ERROR ***';
   ENDIF;
