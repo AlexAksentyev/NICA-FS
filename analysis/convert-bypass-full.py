@@ -5,6 +5,8 @@ HOME = '/Users/alexaksentyev/REPOS/NICA-FS/'
 INFILE = 'madx-scripts/BYPASS/bypass.seq'
 OUTFILE = 'src/setups/BYPASS/FULL-test.fox'
 
+ELNAMES = [] # element names to be written as the .npy archive
+
 SELECT_ELEMENTS = [] # elements to be swapped for DL
 NULL_ELEMENTS= []#['HD', 'HQ', 'HQFF', 'KHV',
                   #  'MCQ0', 'MCS0', 'MCS1', 'MCS2', 'MCO0', 'MCO3', 'MB2L']
@@ -129,10 +131,11 @@ def write_dict(line):
     
 
 def write_file(line, fout):
+    global ELNAMES
     seq = "".join(line.split())[:-1] # remove trailing comma
     seq = seq.strip(');')
     seq = seq.split(',')
-    np.save(HOME+OUTFILE[:-4], seq)
+    ELNAMES += seq
     for element in seq:
         if (element in NULL_ELEMENTS):
             continue
@@ -161,6 +164,7 @@ with open(HOME+INFILE, 'r') as fin:
                 pass
 
 fout.close()
+np.save(HOME+OUTFILE[:-4], ELNAMES)
 
 with open(HOME+OUTFILE,'r+') as fout:
     content = fout.read()
