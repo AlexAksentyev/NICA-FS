@@ -3,8 +3,8 @@ import matplotlib.pyplot as plt; plt.ion()
 from analysis import HOMEDIR, DAVEC, load_data
 
 LATTICE = 'BYPASS'
-MRKR = 'SEQ'
-SEQ = True
+MRKR = 'FULL-optSGx'
+SEQ = False
 
 def load_trMap(fname):
     VARS  = ['X','A','Y','B','T','D']
@@ -18,9 +18,9 @@ def load_trMap(fname):
     return tmp
 
 if not SEQ:
-    DIR  = '../data/CLEAN_BYPASS/'
+    DIR  = '../data/BYPASS/'
 else:
-    DIR  = '../data/CLEAN_BYPASS/'
+    DIR  = '../data/BYPASS/'
 
 def load_tss(path=HOMEDIR+DIR+'MU.dat'):
     d_type = [('EL', int), ('PID', int)] + list(zip(['NU', 'NX','NY','NZ'], [float]*4))

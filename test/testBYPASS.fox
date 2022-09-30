@@ -19,24 +19,33 @@ PROCEDURE MAIN;
   VARIABLE GAMMA 1; VARIABLE MAPSE 1;
   VARIABLE MU 800; VARIABLE NBAR 800 3; VARIABLE EL 1;
 
+  VARIABLE SEXTGx 1; VARIABLE SEXTGy 1; VARIABLE EBEopt 1;
+
   VARIABLE PNUM 1;
   VARIABLE PSI0_DEG 1;
   VARIABLE NTURN 1;
 
+  SEXTGx := 0.4400000434; SEXTGy := -0.8199998015; {default sextupole grad values}
+
   MRKR := 'FULL'; WRITE 6 'MAIN test';
-  DIRSET WHERE 'data/BYPASS/WF2WF/';
+  DIRSET WHERE 'data/BYPASS/';
   GROUTF 'img/dump/TR' 1;
   GAMMA := 1.129;
-  NTURN := 3000000;
+  NTURN := 30000;
   PSI0_DEG := 0;
   PNUM := 10;
+  EBEopt := 100.1289268339351; {new optimum value found via minimization of MU0}
   
   
   OV 3 3 0;
   DAEPS 1E-12; {this sets DA garbage collection tolerance so that the TRANSFER MAP doesn't get the 1e-15 ABERRATION coefficient}
   { SET lattice parameters }
   SET_FOR_DEUTERONS GAMMA;
-  LATTICE 1;
+  LATTICE SEXTGx SEXTGy EBEopt 1;
+  OPENF 9292 WHERE&'LATTICE-PARAMETERS:'&MRKR 'REPLACE';
+    WRITE 9292 '    SEXT-GX         SEXT-GY          EBE ';
+    WRITE 9292 SF(SEXTGx, '(F15.7)')&SF(SEXTGy, '(F15.7)')&SF(EBEopt, '(F15.7)');
+  CLOSEF 9292;
   TSS MU NBAR 0;
    OPENF 3618 WHERE&'NU:'&MRKR&'.da' 'REPLACE';
       WRITE 3618 MU;

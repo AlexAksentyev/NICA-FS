@@ -118,13 +118,13 @@ PROCEDURE MULT TILT {rad} KNL {unit} N;
   L0 := 1e-6; A:= .05;
   Kpt := KMULT(KNL(N), L0);
   TILT0 := RAD2DEG(TILT);
-  IF N=2; WRITE 6 'QUAD'; { DL 0; }
+  IF N=2; { WRITE 6 'QUAD'; } { DL 0; }
     MQ L0 Kpt*A A;
     DL -L0;
-  ELSEIF N=3; WRITE 6 'SEXT'; { DL 0; }
+  ELSEIF N=3; { WRITE 6 'SEXT'; } { DL 0; }
     MH L0 Kpt*A*A A;
     DL -L0;
-  ELSEIF N=4; WRITE 6 'OCT'; { DL 0; }
+  ELSEIF N=4; { WRITE 6 'OCT';  }{ DL 0; }
     MO L0 Kpt*A*A*A A;
     DL -L0;
   ELSEIF TRUE;
