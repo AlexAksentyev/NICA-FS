@@ -15,36 +15,45 @@ PROCEDURE INJECT NUM PSI_DEG; {at injection: SX = 0, SY, SZ = sin PSI, cos PSI}
 ENDPROCEDURE;
 
 PROCEDURE MAIN;
-  VARIABLE WHERE 100; VARIABLE MRKR 10;
+  VARIABLE WHERE 100; VARIABLE MRKR 50;
   VARIABLE GAMMA 1; VARIABLE MAPSE 1;
   VARIABLE MU 800; VARIABLE NBAR 800 3; VARIABLE EL 1;
 
-  VARIABLE SEXTGx 1; VARIABLE SEXTGy 1; VARIABLE EBEopt 1;
+  VARIABLE SEXTGx 1; VARIABLE SEXTGy 1; VARIABLE EBE 1;
 
   VARIABLE PNUM 1;
   VARIABLE PSI0_DEG 1;
   VARIABLE NTURN 1;
+  VARIABLE OPTFLAG 10;
 
-  SEXTGx := 0.4400000434; SEXTGy := -0.8199998015; {default sextupole grad values}
+  OPTFLAG = '-optSGxy';
 
-  MRKR := 'FULL'; WRITE 6 'MAIN test';
+  MRKR := '9M'&OPTFLAG&'_psi45'; WRITE 6 'MAIN test' OPTFLAG;
   DIRSET WHERE 'data/BYPASS/';
   GROUTF 'img/dump/TR' 1;
   GAMMA := 1.129;
-  NTURN := 30000;
-  PSI0_DEG := 0;
+  NTURN := 9000000;
+  PSI0_DEG := 45;
   PNUM := 10;
-  EBEopt := 100.1289268339351; {new optimum value found via minimization of MU0}
+  {lattice parameters}
+  IF OPTFLAG=''; {optimized sextupole grad values}
+     SEXTGx := 0.0475358; SEXTGy := -0.0124713; 
+  ELSEIF TRUE; {original values}
+     SEXTGx := 0.4400000; SEXTGy := -0.8199998;
+  ENDIF;
+  EBE := 100;    {this value gives spin-tune 2e-4}
+                 {EBE = 100.1344126       FS optimum from sext-opt script}
+                 {EBE = 100.1289268339351 FS optimum value found via minimization of MU0}
   
   
   OV 3 3 0;
   DAEPS 1E-12; {this sets DA garbage collection tolerance so that the TRANSFER MAP doesn't get the 1e-15 ABERRATION coefficient}
   { SET lattice parameters }
   SET_FOR_DEUTERONS GAMMA;
-  LATTICE SEXTGx SEXTGy EBEopt 1;
+  LATTICE SEXTGx SEXTGy EBE 1;
   OPENF 9292 WHERE&'LATTICE-PARAMETERS:'&MRKR 'REPLACE';
     WRITE 9292 '    SEXT-GX         SEXT-GY          EBE ';
-    WRITE 9292 SF(SEXTGx, '(F15.7)')&SF(SEXTGy, '(F15.7)')&SF(EBEopt, '(F15.7)');
+    WRITE 9292 SF(SEXTGx, '(F15.7)')&SF(SEXTGy, '(F15.7)')&SF(EBE, '(F15.7)');
   CLOSEF 9292;
   TSS MU NBAR 0;
    OPENF 3618 WHERE&'NU:'&MRKR&'.da' 'REPLACE';
