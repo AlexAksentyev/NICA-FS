@@ -7,6 +7,12 @@ from mpl_toolkits import mplot3d
 
 HOME = "../data/BYPASS/"
 
+BETA = 0.4641825 # injection at y = 1.129 (242.01975 MeV) Deuterons
+CLIGHT = 3e8
+Lacc = 503.04
+v = CLIGHT*BETA
+TAU = Lacc/v
+
 def load_trMap(fname):
     VARS  = ['X','A','Y','B','T','D']
     NVARS = len(VARS)
@@ -30,11 +36,20 @@ def plot_spin(spdat, rng=slice(0,-1,50),pid = [1,2,3], title=''):
     ax[2].set_xlabel('turn [x1000]'); ax[2].set_ylabel('S_Z')
     return fig, ax
 
+def load_nbar(fname, mrkr):
+    return [DAVEC(HOME+"NBAR{}:".format(i)+mrkr+".da") for i in range(1,4)]
+
+def vecdisp(spdat):
+    SX, SY, SZ = [spdat['S_'+lbl] for lbl in ('X','Y','Z')]
+    Nray = SX.shape[1]-1 # bar the referecne ray
+    SX0, SY0, SZ0 = [el[:,0].repeat(Nray).reshape(-1,Nray) for el in (SX, SY, SZ)]
+    prod = SX[:,1:]*SX0 + SY[:,1:]*SY0 + SZ[:, 1:]*SZ0
+    return prod
 
 if __name__ == '__main__':
     z = np.zeros(11, dtype=list(zip(['X','A','Y','B','T','D'], [float]*6)))
-    nu_pri = DAVEC(HOME+"NU:FULL.da")
-    nu_opt = DAVEC(HOME+"NU:FULL-optSGxy.da")
+    nu_pri = DAVEC(HOME+"NU:3M_psi45.da")
+    nu_opt = DAVEC(HOME+"NU:3M-optSGxy_psi45.da")
     ## plot
     fig, ax = plt.subplots(1,2)
     ## vs X
@@ -51,7 +66,22 @@ if __name__ == '__main__':
     ax[1].ticklabel_format(style='sci', scilimits=(0,0), useMathText=True, axis='y')
    
     # look at the tracking data
-    spdat_opt = load_data(HOME,'TRPSPI:FULL-optSGxy.dat')
-    spdat = load_data(HOME,'TRPSPI:FULL.dat')
+    spdat_opt = load_data(HOME,'TRPSPI:3M-optSGxy_psi45.dat')
+    spdat = load_data(HOME,'TRPSPI:3M_psi45.dat')
     plot_spin(spdat, title='NO SEXT')
     plot_spin(spdat_opt, title='W/SEXT')
+
+    # polarization
+    P_pri = Polarization.on_axis(spdat, axis=[0,-1,0])
+    P_opt = Polarization.on_axis(spdat_opt, axis=[0,-1,0])
+    # vector dispersion
+    disp_pri = vecdisp(spdat)
+    disp_opt = vecdisp(spdat_opt)
+    t = spdat[:,0]['iteration']*TAU
+    fig, ax = plt.subplots(1,1)
+    ax.plot(disp_pri.std(1), label='unoptimized')
+    ax.plot(disp_opt.std(1), label='optimized')
+    ax.set_ylabel(r'$\sigma[cos(\vec s\cdot\vec s_0)]$')
+    ax.set_xlabel('time [sec]')
+    ax.legend()
+    ax.ticklabel_format(style='sci', scilimits=(0,0), useMathText=True, axis='y')
