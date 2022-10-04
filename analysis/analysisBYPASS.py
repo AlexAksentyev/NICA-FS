@@ -49,7 +49,7 @@ def vecdisp(spdat):
 if __name__ == '__main__':
     z = np.zeros(11, dtype=list(zip(['X','A','Y','B','T','D'], [float]*6)))
     nu_pri = DAVEC(HOME+"NU:3M_psi45.da")
-    nu_opt = DAVEC(HOME+"NU:3M-optSGxy_psi45.da")
+    nu_opt = DAVEC(HOME+"NU:9M-optSGxy_psi45.da")
     ## plot
     fig, ax = plt.subplots(1,2)
     ## vs X
@@ -66,14 +66,14 @@ if __name__ == '__main__':
     ax[1].ticklabel_format(style='sci', scilimits=(0,0), useMathText=True, axis='y')
    
     # look at the tracking data
-    spdat_opt = load_data(HOME,'TRPSPI:3M-optSGxy_psi45.dat')
+    spdat_opt = load_data(HOME,'TRPSPI:9M-optSGxy_psi45.dat')
     spdat = load_data(HOME,'TRPSPI:3M_psi45.dat')
     plot_spin(spdat, title='NO SEXT')
     plot_spin(spdat_opt, title='W/SEXT')
 
     # polarization
-    P_pri = Polarization.on_axis(spdat, axis=[0,-1,0])
-    P_opt = Polarization.on_axis(spdat_opt, axis=[0,-1,0])
+    P_pri = Polarization.on_axis(spdat, axis=[0,1,0])
+    P_opt = Polarization.on_axis(spdat_opt, axis=[0,1,0])
     # vector dispersion
     disp_pri = vecdisp(spdat)
     disp_opt = vecdisp(spdat_opt)
