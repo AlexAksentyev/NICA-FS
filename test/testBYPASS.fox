@@ -38,7 +38,7 @@ PROCEDURE MAIN;
   {lattice parameters}
   IF OPTFLAG=''; {optimized sextupole grad values}
      SEXTGx := 0.0475358; SEXTGy := -0.0124713; 
-  ELSEIF TRUE; {original values}
+  ELSEIF LO(1); {original values}
      SEXTGx := 0.4400000; SEXTGy := -0.8199998;
   ENDIF;
   EBE := 100;    {this value gives spin-tune 2e-4}
