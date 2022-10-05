@@ -14,37 +14,71 @@ PROCEDURE INJECT NUM PSI_DEG; {at injection: SX = 0, SY, SZ = sin PSI, cos PSI}
   ENDLOOP;
 ENDPROCEDURE;
 
+PROCEDURE OUTPUT_MAP_DATA WHERE MRKR;
+  VARIABLE MU 800; VARIABLE NBAR 800 3; VARIABLE EL 1;
+  
+  TSS MU NBAR 0;
+  OPENF 3618 WHERE&'NU:'&MRKR&'.da' 'REPLACE'; WRITE 3618 MU; CLOSEF 3618;
+  LOOP EL 1 3;
+    OPENF 3618 WHERE&'NBAR'&MRK(EL)&':'&MRKR&'.da' 'REPLACE';
+      WRITE 3618 NBAR(EL);
+      CLOSEF 3618;
+  ENDLOOP;
+  {print transfer map}
+  OPENF 636 WHERE&'TrMAP:'&MRKR 'REPLACE';
+  PM 636; CLOSEF 636;
+  {print spin transfer map}
+  OPENF 636 WHERE&'SpTrMAP:'&MRKR 'REPLACE';
+  PSM 636; CLOSEF 636;
+  {print aberrations}
+  OPENF 636 WHERE&'ABERRATIONS:'&MRKR 'REPLACE';
+  PA 636; CLOSEF 636;
+ENDPROCEDURE; {map data output}
+
+FUNCTION TURNNUM NUM;
+    VARIABLE KILOS 1; VARIABLE MILS 1;
+    KILOS := NUM/1000;
+    MILS := NUM/1000000;
+    IF MILS<1;
+      TURNNUM := MRK(KILOS)&'K';
+    ELSEIF LO(1);
+      TURNNUM := MRK(MILS)&'M';
+    ENDIF;
+  ENDFUNCTION;
+
 PROCEDURE MAIN;
   VARIABLE WHERE 100; VARIABLE MRKR 50;
   VARIABLE GAMMA 1; VARIABLE MAPSE 1;
-  VARIABLE MU 800; VARIABLE NBAR 800 3; VARIABLE EL 1;
 
   VARIABLE SEXTGx 1; VARIABLE SEXTGy 1; VARIABLE EBE 1;
-
+  VARIABLE OPTFLAG 10; {determines whether to use the optimized sextupole gradients}
+  
   VARIABLE PNUM 1;
   VARIABLE PSI0_DEG 1;
   VARIABLE NTURN 1;
-  VARIABLE OPTFLAG 10;
 
-  OPTFLAG = '-optSGxy';
+  OPTFLAG := 'yes';
 
-  MRKR := '9M'&OPTFLAG&'_psi45'; WRITE 6 'MAIN test' OPTFLAG;
-  DIRSET WHERE 'data/BYPASS/';
-  GROUTF 'img/dump/TR' 1;
-  GAMMA := 1.129;
-  NTURN := 9000000;
+  GAMMA := 1.1279235;
+  NTURN := 300000;
   PSI0_DEG := 45;
   PNUM := 10;
   {lattice parameters}
-  IF OPTFLAG=''; {optimized sextupole grad values}
-     SEXTGx := 0.0475358; SEXTGy := -0.0124713; 
+  IF OPTFLAG='yes'; {optimized sextupole grad values}
+     SEXTGx := 0.0475358; SEXTGy := -0.0124713;
+     OPTFLAG := '-optSGxy';
   ELSEIF LO(1); {original values}
      SEXTGx := 0.4400000; SEXTGy := -0.8199998;
+     OPTFLAG := '';
   ENDIF;
   EBE := 100;    {this value gives spin-tune 2e-4}
                  {EBE = 100.1344126       FS optimum from sext-opt script}
                  {EBE = 100.1289268339351 FS optimum value found via minimization of MU0}
   
+  MRKR := TURNNUM(NTURN)&OPTFLAG&'_psi'&MRK(PSI0_DEG);
+  WRITE 6 'MAIN test' OPTFLAG; WRITE 6 'MARKER:' MRKR;
+  DIRSET WHERE 'data/BYPASS/';
+  GROUTF 'img/dump/TR' 1;
   
   OV 3 3 0;
   DAEPS 1E-12; {this sets DA garbage collection tolerance so that the TRANSFER MAP doesn't get the 1e-15 ABERRATION coefficient}
@@ -54,31 +88,14 @@ PROCEDURE MAIN;
   OPENF 9292 WHERE&'LATTICE-PARAMETERS:'&MRKR 'REPLACE';
     WRITE 9292 '    SEXT-GX         SEXT-GY          EBE ';
     WRITE 9292 SF(SEXTGx, '(F15.7)')&SF(SEXTGy, '(F15.7)')&SF(EBE, '(F15.7)');
-  CLOSEF 9292;
-  TSS MU NBAR 0;
-   OPENF 3618 WHERE&'NU:'&MRKR&'.da' 'REPLACE';
-      WRITE 3618 MU;
-    CLOSEF 3618;
-    LOOP EL 1 3;
-      OPENF 3618 WHERE&'NBAR'&MRK(EL)&':'&MRKR&'.da' 'REPLACE';
-        WRITE 3618 NBAR(EL);
-      CLOSEF 3618;
-    ENDLOOP;
-     {print transfer map}
-      OPENF 636 WHERE&'TrMAP:'&MRKR 'REPLACE';
-      PM 636; CLOSEF 636;
-      {pront spin transfer map}
-      OPENF 636 WHERE&'SpTrMAP:'&MRKR 'REPLACE';
-      PSM 636; CLOSEF 636;
-      {print aberrations}
-      OPENF 636 WHERE&'ABERRATIONS:'&MRKR 'REPLACE';
-      PA 636; CLOSEF 636;
-      {other stats about the map}
-      MAPSE := SE(MAP);
-      OPENF 636 WHERE&'MAP-SYM-ERR:'&MRKR 'REPLACE';
-      WRITE 636 MAPSE; CLOSEF 636;
-      WRITE 6 'MAP SYMPLECTIFICATION ERROR' MAPSE;
-      WRITE 6 'LATTICE LENGTH' SPOS;
+    CLOSEF 9292;
+  OUTPUT_MAP_DATA WHERE MRKR;
+    {other stats about the map}
+    MAPSE := SE(MAP);
+    OPENF 636 WHERE&'MAP-SYM-ERR:'&MRKR 'REPLACE';
+    WRITE 636 MAPSE; CLOSEF 636;
+    WRITE 6 'MAP SYMPLECTIFICATION ERROR' MAPSE;
+    WRITE 6 'LATTICE LENGTH' SPOS;
 
 
   INJECT PNUM PSI0_DEG;
@@ -106,33 +123,15 @@ PROCEDURE TMAP;
   
   OV 1 3 0;
   DAEPS 1E-12; {this sets DA garbage collection tolerance so that the TRANSFER MAP doesn't get the 1e-15 ABERRATION coefficient}
-  { SET lattice parameters }
-  SET_FOR_DEUTERONS GAMMA;
-  LATTICE 1;
-  TSS MU NBAR 0;
-   OPENF 3618 WHERE&'NU:'&MRKR&'.da' 'REPLACE';
-      WRITE 3618 MU;
-    CLOSEF 3618;
-    LOOP EL 1 3;
-      OPENF 3618 WHERE&'NBAR'&MRK(EL)&':'&MRKR&'.da' 'REPLACE';
-        WRITE 3618 NBAR(EL);
-      CLOSEF 3618;
-    ENDLOOP;
-     {print transfer map}
-      OPENF 636 WHERE&'TrMAP:'&MRKR 'REPLACE';
-      PM 636; CLOSEF 636;
-      {pront spin transfer map}
-      OPENF 636 WHERE&'SpTrMAP:'&MRKR 'REPLACE';
-      PSM 636; CLOSEF 636;
-      {print aberrations}
-      OPENF 636 WHERE&'ABERRATIONS:'&MRKR 'REPLACE';
-      PA 636; CLOSEF 636;
-      {other stats about the map}
-      MAPSE := SE(MAP);
-      OPENF 636 WHERE&'MAP-SYM-ERR:'&MRKR 'REPLACE';
-      WRITE 636 MAPSE; CLOSEF 636;
-      WRITE 6 'MAP SYMPLECTIFICATION ERROR' MAPSE;
-      WRITE 6 'LATTICE LENGTH' SPOS;
+  SET_FOR_DEUTERONS GAMMA; { SET lattice parameters }
+  LATTICE 1;  {this will generate an error b/c LATTICE requires sext grads and EB E-field input}
+  OUTPUT_MAP_DATA WHERE MRKR;  {this outputs the TMAP}
+  {other stats about the map}
+  MAPSE := SE(MAP);
+  OPENF 636 WHERE&'MAP-SYM-ERR:'&MRKR 'REPLACE';
+  WRITE 636 MAPSE; CLOSEF 636;
+  WRITE 6 'MAP SYMPLECTIFICATION ERROR' MAPSE;
+  WRITE 6 'LATTICE LENGTH' SPOS;
 
 ENDPROCEDURE; {TMAP}
 
