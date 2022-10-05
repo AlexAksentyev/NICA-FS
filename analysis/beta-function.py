@@ -13,7 +13,7 @@ def prep_elnames(lattice, rf=True):
 LATTICE = 'BYPASS'
 DATADIR = 'data/BETA-FUNCTION/'+LATTICE+'/SEQFULL/'
 ELNAMES = prep_elnames(LATTICE)
-TICK_STP = 20
+TICK_STP = 1 #20
 D_TYPE = [('EL', int)] + list(zip(['1RE', '1IM', '2RE','2IM'], [float]*4))
 
 

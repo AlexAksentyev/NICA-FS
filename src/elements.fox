@@ -13,9 +13,9 @@ PROCEDURE ROTATE PHI;
   RSA PHI;
 ENDPROCEDURE; {ROTATE}
 
-FUNCTION BMULT KNL L; {COMPUTES MAGNETIC INDUCTION FOR A MADX MULTIPOLE ELEMENT}
-  BMULT := KNL/L * CONS(CHIM);
-ENDFUNCTION; {BMULT}
+FUNCTION KMULT KNL L; {COMPUTES MAGNETIC INDUCTION gradient^n FOR A MADX MULTIPOLE ELEMENT}
+  KMULT := KNL/L * CONS(CHIM);  {this is Kn = d^n B / dx^n; to get the B multiply by Aperture^n}
+ENDFUNCTION; {KMULT}
 
 PROCEDURE THINMQ L {m} TILT {rad} K1 {m^-2};
                  {see QUAD for parameter explanations}
@@ -72,7 +72,7 @@ PROCEDURE QUAD L {m} TILT {rad} K1 {m^-2} ;
   VARIABLE TILT0 1;
   TILT0 := RAD2DEG(TILT);
   A:=.05;
-  Bpt := K1*CONS(CHIM)*A; {in Tesla}WRITE 6 'LENGTH'&SF(L, '(E15.7)');
+  Bpt := K1*CONS(CHIM)*A; {in Tesla}
   { WRITE 6 'K1[m^-2]        B[Tl]          G[kG/cm]       ' }
   {          SF(CONS(K1), '(E15.7)')&SF(CONS(Bpt), '(E15.7)')&SF(CONS(Bpt)/A/10,'(E15.7)'); }
   IF Bpt=0; DL L;
@@ -84,9 +84,10 @@ PROCEDURE QUAD L {m} TILT {rad} K1 {m^-2} ;
 ENDPROCEDURE; {QUAD}
 
 PROCEDURE SEXT L {m} TILT {rad} KNL {unit};
-  VARIABLE Bpt 1; VARIABLE TILT0 1;
+  VARIABLE Bpt 1; VARIABLE TILT0 1; VARIABLE A 1;
   VARIABLE L0 1;
-  Bpt := 0;{*BMULT(KNL, L);}
+  A := .05;
+  Bpt := KMULT(KNL, L)*A*A;
   WRITE 6 'Bpt = '&SF(Bpt, '(E15.7)');
   TILT0 := RAD2DEG(TILT);
   IF Bpt=0; DL L;
@@ -98,29 +99,34 @@ PROCEDURE SEXT L {m} TILT {rad} KNL {unit};
 ENDPROCEDURE; {SEXT}
 
 PROCEDURE OCT L {m} TILT {rad} KNL {unit};
-  VARIABLE Bpt 1; VARIABLE TILT0 1;
-  Bpt := 0;{*BMULT(KNL, L);}
+  VARIABLE Bpt 1; VARIABLE TILT0 1; VARIABLE A 1;
+  A := .05;
+  Bpt := KMULT(KNL, L)*A*A*A;
   WRITE 6 'Bpt = '&SF(Bpt, '(E15.7)');
   IF Bpt=0; DL L;
   ELSEIF TRUE;
     ROTATE TILT0;
-      MO L Bpt .05;
+      MO L Bpt A;
     ROTATE -TILT0;
   ENDIF;
 ENDPROCEDURE; {OCT}
 
 PROCEDURE MULT TILT {rad} KNL {unit} N;
-  VARIABLE Bpt 1 N; VARIABLE I 1;
+  VARIABLE Kpt 1; VARIABLE I 1; VARIABLE A 1;
   VARIABLE L0 1; VARIABLE FLAG 1; {used to check magnetic field components against 0}
   VARIABLE TILT0 1;
-  L0 := 0;
+  L0 := 1e-6; A:= .05;
+  Kpt := KMULT(KNL(N), L0);
   TILT0 := RAD2DEG(TILT);
-  IF N=2; WRITE 6 'QUAD';
-    {QUAD L0 TILT KNL(2);} DL L0;
-  ELSEIF N=3; WRITE 6 'SEXT';
-    {SEXT L0 TILT KNL(3);} DL L0;
-  ELSEIF N=4; WRITE 6 'OCT';
-    {OCT  L0 TILT KNL(4); } DL L0;
+  IF N=2; { WRITE 6 'QUAD'; } { DL 0; }
+    MQ L0 Kpt*A A;
+    DL -L0;
+  ELSEIF N=3; { WRITE 6 'SEXT'; } { DL 0; }
+    MH L0 Kpt*A*A A;
+    DL -L0;
+  ELSEIF N=4; { WRITE 6 'OCT';  }{ DL 0; }
+    MO L0 Kpt*A*A*A A;
+    DL -L0;
   ELSEIF TRUE;
     WRITE 6 '*** UNDEFINED ELEMENT ERROR ***';
   ENDIF;
@@ -166,38 +172,6 @@ PROCEDURE RBEND L {m} ANGLE {rad} TILT {rad};
   IF ANGLE<0; CB; ENDIF;
 ENDPROCEDURE; {RBEND}
 
-PROCEDURE SOL L {m} KS {m^-2}; {TO BE FINISHED !!!!!!!!!!!!!!!!!!!!!}
-  VARIABLE C 1; VARIABLE S 1; VARIABLE GAMMA NM1;
-  WRITE 6 '!!! ******** CUSTOM SOLENOID DEF';
-  C := COS(KS*L);
-  S := SIN(KS*L);
-  GAMMA := 1 + E0/(M0*AMUMEV) ;
-  UMS;
-  IF KS#0;
-    MSC(1) := 1*DD(1) + S/KS*DD(2)      + (1-C)/KS*DD(4);
-    MSC(2) :=           C*DD(2)         + S*DD(4);
-    MSC(3) :=         - (1-C)/KS*DD(2)  + S/KS*DD(4);
-    MSC(4) :=         - S*DD(2)         + C*DD(4);
-    MSC(5) := L/GAMMA/GAMMA;
-  ELSEIF TRUE; DL L; ENDIF;
-  LOCSET 0 0 0 0 0 0 ; UPDATE 1 1;
-ENDPROCEDURE;
-
-PROCEDURE SOLENOID_0 L {m} KS {rad/m}; {this is the ORIGINAL IMPLEMENTATION used in test2ST (contract 100-3596)}
-                                         {which doesn't account for the saturation in the solenoid magnets}
-  VARIABLE B0 1; VARIABLE A 1;
-  VARIABLE MU 1 ; {MAGNETIC PERMEABILITY}
-  VARIABLE N 1; {NUMBER OF SOLENOID TURNS}
-  VARIABLE I 1; {SOLENOID CURRENT IN AMPERES}
-  MU := 1.2566E-6; N := 100;
-  A  := .05;
-  B0 := KS * CONS(CHIM);
-  I  := 2*B0/MU/N;
-  IF (B0 = 0); DL L; WRITE 6 'SOLENOID IS OFF';
-  ELSEIF TRUE;
-    CMS B0 A L;
-  ENDIF;
-ENDPROCEDURE; {SOLENOID_0}
 
 PROCEDURE SOLENOID L {m} KS {rad/m}; {this solenoid implementation accounts for the saturation effect (top B-field)}
   VARIABLE B0 1; VARIABLE A 1;
@@ -243,9 +217,9 @@ PROCEDURE WIEN L2 {m} B1 {kGs} B2 {kV/cm} TILT {rad}; {homogenous WF; closed orb
   B3:=ABS(B2)*1e5;   {in V/m}
   R2:=CONS(CHIM)/B0;
   R1:=CONS(CHIE)/B3;
-  WRITE 6 'RE = '&SF(R1, '(E15.7)')&' RB ='&SF(R2, '(E15.7)');
+  { WRITE 6 'RE = '&SF(R1, '(E15.7)')&' RB ='&SF(R2, '(E15.7)'); }
   TILT0 := TILT;
-  WF R1 R1 L1 0.05;             {I use equal radii (R1 R1) for no bend effect in the Wien-filter}
+  WF R1 R1 L1 0.05;             {use equal radii (R1 R1) for no bend effect in the Wien-filter}
   IF TILT0#0;
     BX := B0*TAN(TILT0);
     EY := CONS(CHIE)/CONS(CHIM)*BX;

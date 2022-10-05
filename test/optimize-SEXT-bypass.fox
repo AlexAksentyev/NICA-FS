@@ -1,0 +1,112 @@
+INCLUDE 'bin/setups/BYPASS/FULL';
+
+PROCEDURE INJECT NUM PSI_DEG; {at injection: SX = 0, SY, SZ = sin PSI, cos PSI}
+  VARIABLE X 100; VARIABLE I 1;
+  VARIABLE PSI 1; VARIABLE SY 1; VARIABLE SZ 1;
+  PSI := DEG2RAD(PSI_DEG); {PSI IN RADIANS}
+  X := LINSPACE(-1E-3, 1E-3, NUM);
+  SY := SIN(PSI); SZ := COS(PSI);
+  SR 0 0 0 0 0 0 0 0 1; SSR 0 SY SZ;
+  LOOP I 1 NUM;
+    SR X|I 0 0 0 0 0 0 0 1; SSR 0 SY SZ;
+    SR 0 0 X|I 0 0 0 0 0 1; SSR 0 SY SZ;
+    SR 0 0 0 0 0 (X|I)/10 0 0 1; SSR 0 SY SZ;
+  ENDLOOP;
+ENDPROCEDURE;
+
+PROCEDURE OPTIMIZE SEXTGx SEXTGy EBE;
+  VARIABLE MU 800; VARIABLE NBAR 800 3;
+  VARIABLE OBJ 1; VARIABLE SGx 1;
+                   VARIABLE SGy 1;
+                   VARIABLE E1 1;
+  VARIABLE quadKx 1; VARIABLE quadKy 1; VARIABLE MU0 1;
+
+  SGx := SEXTGx; SGy := SEXTGy; E1 := EBE;
+  FIT SGx SGy E1;
+    LATTICE SGx SGy E1 1; {optimize assuming EBE=100 kV/cm (BBE irrelevant b/c R1=R2 in WIEN)}
+    TSS MU NBAR 0;
+    MU0 := CONS(MU);
+    DAPEE MU 11 quadKx;
+    DAPEE MU 33 quadKy;
+    OBJ := SQRT(SQR(quadKx) + SQR(quadKy) + SQR(MU0));
+    WRITE 6 'SGx, SGy, EBE = '&ST(SGx)&' '&ST(SGy)&' '&ST(E1);
+    WRITE 6 'quadKx, quadKy= '&ST(quadKx)&' '&ST(quadKy);
+    WRITE 6 'MU0 = '&ST(MU0);
+    WRITE 6 'OBJ ='&ST(OBJ);
+  ENDFIT 1E-5 1000 1 OBJ;
+
+  SEXTGx := SGx; SEXTGy := SGy; EBE := E1;
+ENDPROCEDURE; {OPTIMIZE}
+
+PROCEDURE MAIN;
+  VARIABLE WHERE 100; VARIABLE MRKR 50;
+  VARIABLE GAMMA 1;
+  {optimization}
+  VARIABLE SGx 1; VARIABLE SGy 1;
+  VARIABLE MU 800; VARIABLE NBAR 800 3;
+  VARIABLE EL 1;
+  {post-opt tracking}
+  VARIABLE PNUM 1;
+  VARIABLE PSI0_DEG 1;
+  VARIABLE NTURN 1;
+  VARIABLE EBE 1; VARIABLE EBEopt 1;
+
+  MRKR := 'FULL-optSGxy';
+  DIRSET WHERE 'data/BYPASS/';
+  GROUTF 'img/dump/TR' 1;
+  GAMMA := 1.129;
+  SGx := 0.4400000434;  { default }
+  SGy := -0.8199998015; { values }
+  EBE := 100; {optimize around EBE = 100 Kv/cm}
+  EBEopt := 100.1289268339351; { optimal EBE from the opt-EB script }
+  NTURN := 30000;
+  PSI0_DEG := 0;
+  PNUM := 10;
+  
+  
+  OV 3 3 0;
+  DAEPS 1E-12; {this sets DA garbage collection tolerance so that the TRANSFER MAP doesn't get the 1e-15 ABERRATION coefficient}
+  { SET lattice parameters }
+  SET_FOR_DEUTERONS GAMMA;
+  
+  OPTIMIZE SGx SGy EBE;  {optimize at EBE = 100 kV/cm ***}
+  WRITE 6 'USE SGx, SGy = '&ST(SGx)&', '&ST(SGy);
+  {print transfer map}
+   OPENF 636 WHERE&'TrMAP:'&MRKR 'REPLACE';
+   PM 636; CLOSEF 636;
+   {print spin transfer map}
+   OPENF 636 WHERE&'SpTrMAP:'&MRKR 'REPLACE';
+   PSM 636; CLOSEF 636;
+
+
+  {tracking with new values}
+  LATTICE SGx SGy EBE 1; {track at EBE = optimal kV/cm ***}
+    OPENF 9292 WHERE&'LATTICE-PARAMETERS:'&MRKR 'REPLACE';
+      WRITE 9292 '    SEXT-GX         SEXT-GY          EBE ';
+      WRITE 9292 SF(SGx, '(F15.7)')&SF(SGy, '(F15.7)')&SF(EBE, '(F15.7)');
+      CLOSEF 9292;
+  TSS MU NBAR 0;
+   OPENF 3618 WHERE&'NU:'&MRKR&'.da' 'REPLACE';
+      WRITE 3618 MU;
+    CLOSEF 3618;
+    LOOP EL 1 3;
+      OPENF 3618 WHERE&'NBAR'&MRK(EL)&':'&MRKR&'.da' 'REPLACE';
+        WRITE 3618 NBAR(EL);
+      CLOSEF 3618;
+    ENDLOOP;
+  INJECT PNUM PSI0_DEG;
+  WRITE 6 '******************** STARTING TRACKING';
+  OPENF 99 WHERE&'PRAY:'&MRKR&'.dat' 'REPLACE';
+  PRAY 99; CLOSEF 99;
+  OPENF 772 WHERE&'TRPRAY:'&MRKR&'.dat' 'REPLACE';
+  OPENF 893 WHERE&'TRPSPI:'&MRKR&'.dat' 'REPLACE';
+  TRPRAY 772; TRPSPI 893;
+  TR NTURN NINT(NTURN/5000) -1 -3 1.2 1.2 0 0 -12;
+  CLOSEF 772; CLOSEF 893;
+
+ENDPROCEDURE; {MAIN}
+
+PROCEDURE RUN;
+  MAIN;
+ENDPROCEDURE;
+RUN; END;
