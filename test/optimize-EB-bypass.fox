@@ -76,6 +76,38 @@ PROCEDURE TSS_OUTPUT DIR TAG MU NBAR;
     CLOSEF 8294;ENDLOOP;
 ENDPROCEDURE;
 
+PROCEDURE ANALYSIS DIR TAG {output loc} COMMENT SGF1 SGF2 SGD EBE {lattice pars};
+  {TSS}
+  VARIABLE MU 800; VARIABLE NBAR 800 3;
+  {tracking}
+  VARIABLE PNUM 1;
+  VARIABLE PSI0_DEG 1;
+  VARIABLE NTURN 1;
+  
+  NTURN := 300000;
+  PSI0_DEG := 45;
+  PNUM := 10;
+
+  { *** analysis *** }
+  LATTICE SGF1 SGF2 SGD EBE 0.0 {ignored} 1;
+    {print transfer map}
+     OPENF 636 DIR&'ORBITAL:'&TAG&'.tm' 'REPLACE';
+     PM 636; CLOSEF 636;
+     {print spin transfer map}
+     OPENF 636 DIR&'SPIN:'&TAG&'.tm' 'REPLACE';
+  TSS MU NBAR 0; TSS_OUTPUT DIR TAG MU NBAR;
+  PARAMETER_OUTPUT DIR TAG COMMENT SGF1 SGF2 SGD EBE;
+  INJECT PNUM PSI0_DEG;
+  WRITE 6 '******************** STARTING TRACKING';
+  OPENF 99 DIR&'PRAY:'&TAG&'.dat' 'REPLACE';
+    PRAY 99; CLOSEF 99;
+  OPENF 772 DIR&'TRPRAY:'&TAG&'.dat' 'REPLACE';
+  OPENF 893 DIR&'TRPSPI:'&TAG&'.dat' 'REPLACE';
+    TRPRAY 772; TRPSPI 893;
+    TR NTURN NINT(NTURN/5000) -1 -3 1.2 1.2 0 0 -12;
+    CLOSEF 772; CLOSEF 893;
+ENDPROCEDURE;
+
 PROCEDURE MAIN;
   VARIABLE WHERE 100; VARIABLE MRKR 50;
   {lattice parameters}
@@ -84,12 +116,6 @@ PROCEDURE MAIN;
   VARIABLE SGD 1;
   {optimization}
   VARIABLE EBE 1;
-  {tracking}
-  VARIABLE PNUM 1;
-  VARIABLE PSI0_DEG 1;
-  VARIABLE NTURN 1;
-  {TSS}
-  VARIABLE MU 800; VARIABLE NBAR 800 3;
 
   DIRSET WHERE 'data/BYPASS_SEX_CLEAR/optimize-EB/';
   GROUTF 'img/dump/TR' 1;
@@ -108,51 +134,16 @@ PROCEDURE MAIN;
   DAEPS 1E-12; {this sets DA garbage collection tolerance so that the TRANSFER MAP doesn't get the 1e-15 ABERRATION coefficient}
   SET_FOR_DEUTERONS GAMMA; { SET lattice parameters }
 
-  { *** PRE-OPT TRACKING *** }
-  MRKR := 'pre-opt';
-  LATTICE SGF1 SGF2 SGD EBE 0.0 {ignored} 1;
-    {print transfer map}
-     OPENF 636 WHERE&'ORBITAL:'&MRKR&'.tm' 'REPLACE';
-     PM 636; CLOSEF 636;
-     {print spin transfer map}
-     OPENF 636 WHERE&'SPIN:'&MRKR&'.tm' 'REPLACE';
-  TSS MU NBAR 0; TSS_OUTPUT WHERE MRKR MU NBAR;
-  PARAMETER_OUTPUT WHERE MRKR 'lattice parameters prior to optimization (of MU0)' SGF1 SGF2 SGD EBE;
-  INJECT PNUM PSI0_DEG;
-  WRITE 6 '******************** STARTING TRACKING';
-  OPENF 99 WHERE&'PRAY:'&MRKR&'.dat' 'REPLACE';
-  PRAY 99; CLOSEF 99;
-  OPENF 772 WHERE&'TRPRAY:'&MRKR&'.dat' 'REPLACE';
-  OPENF 893 WHERE&'TRPSPI:'&MRKR&'.dat' 'REPLACE';
-  TRPRAY 772; TRPSPI 893;
-  TR NTURN NINT(NTURN/5000) -1 -3 1.2 1.2 0 0 -12;
-  CLOSEF 772; CLOSEF 893;
+  { *** PRE-OPT ANALYSIS *** }
+  ANALYSIS WHERE 'pre-opt' 'lattice parameters prior to optimization (of MU0)' SGF1 SGF2 SGD EBE;
 
   { *** OPTIMIZATION *** }
   OPTIMIZE EBE {argument} SGF1 SGF2 SGD {parameters};
   WRITE 6 'USE EBE = '&ST(EBE);
   
 
-  { *** POST-OPT TRACKING *** }
-  MRKR := 'post-opt';
-  LATTICE SGF1 SGF2 SGD EBE 0.0 {ignored} 1; { installing new Wien-filter E-field value }
-   {print transfer map}
-    OPENF 636 WHERE&'ORBITAL:'&MRKR&'.tm' 'REPLACE';
-    PM 636; CLOSEF 636;
-    {print spin transfer map}
-    OPENF 636 WHERE&'SPIN:'&MRKR&'.tm' 'REPLACE';
-    PSM 636; CLOSEF 636;
-  TSS MU NBAR 0; TSS_OUTPUT WHERE MRKR MU NBAR;
-  PARAMETER_OUTPUT WHERE MRKR 'lattice parameters after optimization (of MU0)' SGF1 SGF2 SGD EBE;
-  INJECT PNUM PSI0_DEG;
-  WRITE 6 '******************** STARTING TRACKING';
-  OPENF 99 WHERE&'PRAY:'&MRKR&'.dat' 'REPLACE';
-  PRAY 99; CLOSEF 99;
-  OPENF 772 WHERE&'TRPRAY:'&MRKR&'.dat' 'REPLACE';
-  OPENF 893 WHERE&'TRPSPI:'&MRKR&'.dat' 'REPLACE';
-  TRPRAY 772; TRPSPI 893;
-  TR NTURN NINT(NTURN/5000) -1 -3 1.2 1.2 0 0 -12;
-  CLOSEF 772; CLOSEF 893;
+  { *** POST-OPT ANALYSIS *** }
+  ANALYSIS WHERE 'post-opt' 'lattice parameters after to optimization (of MU0)' SGF1 SGF2 SGD EBE;
 
 ENDPROCEDURE; {MAIN}
 
