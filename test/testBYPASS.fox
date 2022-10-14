@@ -1,4 +1,4 @@
-INCLUDE 'bin/setups/BYPASS/FULL';
+INCLUDE 'bin/setups/BYPASS/FULL_SEX_CLEAR';
 
 PROCEDURE INJECT NUM PSI_DEG; {at injection: SX = 0, SY, SZ = sin PSI, cos PSI}
   VARIABLE X 100; VARIABLE I 1;
@@ -60,7 +60,7 @@ PROCEDURE MAIN;
   OPTFLAG := 'yes';
 
   GAMMA := 1.1279235;
-  NTURN := 300000;
+  NTURN := 30000;
   PSI0_DEG := 45;
   PNUM := 10;
   {lattice parameters}
@@ -77,14 +77,14 @@ PROCEDURE MAIN;
   
   MRKR := TURNNUM(NTURN)&OPTFLAG&'_psi'&MRK(PSI0_DEG);
   WRITE 6 'MAIN test' OPTFLAG; WRITE 6 'MARKER:' MRKR;
-  DIRSET WHERE 'data/BYPASS/';
+  DIRSET WHERE 'data/BYPASS/FULL_SEX_CLEAR/';
   GROUTF 'img/dump/TR' 1;
   
   OV 3 3 0;
   DAEPS 1E-12; {this sets DA garbage collection tolerance so that the TRANSFER MAP doesn't get the 1e-15 ABERRATION coefficient}
   { SET lattice parameters }
   SET_FOR_DEUTERONS GAMMA;
-  LATTICE SEXTGx SEXTGy EBE 1;
+  LATTICE SEXTGx SEXTGx SEXTGy EBE 0 1;
   OPENF 9292 WHERE&'LATTICE-PARAMETERS:'&MRKR 'REPLACE';
     WRITE 9292 '    SEXT-GX         SEXT-GY          EBE ';
     WRITE 9292 SF(SEXTGx, '(F15.7)')&SF(SEXTGy, '(F15.7)')&SF(EBE, '(F15.7)');

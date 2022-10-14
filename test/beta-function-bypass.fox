@@ -1,4 +1,4 @@
-INCLUDE 'bin/setups/BYPASS/SEQFULL';
+INCLUDE 'bin/setups/BYPASS/SEQFULL_SEX_CLEAR';
 
 
 PROCEDURE BETAFUNC;
@@ -11,7 +11,7 @@ PROCEDURE BETAFUNC;
   {lattice parameters}
   VARIABLE KS 1 2; VARIABLE X 1 2;  VARIABLE XS 1 2;
   VARIABLE MAPPARAMS 1 6; {HOLDS THE ABOVE VALUES}
-  VARIABLE MAPARR 1000 6 1291; VARIABLE SPNRARR 1000 3 3 1291; {element map arrays}
+  VARIABLE MAPARR 1000 6 537; VARIABLE SPNRARR 1000 3 3 537; {element map arrays}
   {variables required by GT}
   VARIABLE F 100 6; VARIABLE A 100 2; VARIABLE B 100 2;
   VARIABLE G 100 2; VARIABLE R 100 2; VARIABLE MU 100 2; 
@@ -39,9 +39,9 @@ PROCEDURE BETAFUNC;
   ENDPROCEDURE;
 
   {********** CONTROLS **********}
-  GAMMA := 1.14; {beam injection energy}
+  GAMMA := 1.1279235; {beam injection energy}
   RFFLAG := 1; {insert RF at the beginning of lattice}
-  NSEQ := 1290; {number of elements in sequence PRIOR to the inserion}
+  NSEQ := 536; {number of elements in sequence PRIOR to the inserion}
   {******************************}
 
   DIRSET WHERE 'data/BETA-FUNCTION/BYPASS/SEQFULL/';
