@@ -3,7 +3,7 @@ import matplotlib.pyplot as plt; plt.ion()
 from analysis import load_data, DAVEC
 
 
-DIR = '../data/BYPASS_SEX_CLEAR/'
+DIR = '../data/BYPASS_SEX_CLEAR/optimize-EB/'
 
 GAMMA = 1.1279235
 BETA = np.sqrt(GAMMA**2-1)/GAMMA # injection at y = 1.129 (242.01975 MeV) Deuterons
@@ -24,10 +24,9 @@ def plot_spin(spdat, rng=slice(0,-1,50),pid = [1,2,3], title=''):
     return fig, ax
 
 if __name__ == '__main__':
-    TAG = 'optimize-EB'
     
-    nu_pre  = DAVEC(DIR+"NU:pre-{}.da".format(TAG)); nu_pre0 = nu_pre.const
-    nu_post = DAVEC(DIR+"NU:post-{}.da".format(TAG)); nu_post0 = nu_post.const
-    spdat_pre  = load_data(DIR, "TRPSPI:pre-{}.dat".format(TAG))
-    spdat_post = load_data(DIR, "TRPSPI:post-{}.dat".format(TAG))
+    nu_pre  = DAVEC(DIR+"NU:pre-opt.da"); nu_pre0 = nu_pre.const
+    nu_post = DAVEC(DIR+"NU:post-opt.da"); nu_post0 = nu_post.const
+    spdat_pre  = load_data(DIR, "TRPSPI:pre-opt.dat")
+    spdat_post = load_data(DIR, "TRPSPI:post-opt.dat")
     plot_spin(spdat_pre); plot_spin(spdat_post)
