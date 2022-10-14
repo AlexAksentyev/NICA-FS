@@ -1,6 +1,6 @@
 import numpy as np
 import matplotlib.pyplot as plt; plt.ion()
-from analysis import load_data
+from analysis import load_data, DAVEC
 
 
 DIR = '../data/BYPASS_SEX_CLEAR/'
@@ -25,7 +25,9 @@ def plot_spin(spdat, rng=slice(0,-1,50),pid = [1,2,3], title=''):
 
 if __name__ == '__main__':
     TAG = 'optimize-EB'
-
+    
+    nu_pre  = DAVEC(DIR+"NU:pre-{}.da".format(TAG)); nu_pre0 = nu_pre.const
+    nu_post = DAVEC(DIR+"NU:post-{}.da".format(TAG)); nu_post0 = nu_post.const
     spdat_pre  = load_data(DIR, "TRPSPI:pre-{}.dat".format(TAG))
     spdat_post = load_data(DIR, "TRPSPI:post-{}.dat".format(TAG))
     plot_spin(spdat_pre); plot_spin(spdat_post)
