@@ -16,7 +16,7 @@ PROCEDURE LATTICE SEXTGx SEXTGy EBE RFFLAG {1} ;   {BEWARE: the EB-element now u
   { VARIABLE EBE 1; } VARIABLE BBE 1;
   { WIEN-filter optimal parameters found by optimize-EB-bypass }
   { EBE := 100; } { 101.8726388306976; }   {sub-optimal value (100 kV/cm) to avoid resonance in TSS  *}
-  BBE := 0.7909823739837908;  {this is inored in WIEN r.n. (set R2=R1)}
+  BBE := 0.7909823739837908;  {this is ignored in WIEN r.n. (set R2=R1)}
   {SEXTUPOLE parameters}
               
   {SETTING RF PARAMETERS}
