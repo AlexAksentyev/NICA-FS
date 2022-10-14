@@ -1,4 +1,4 @@
-INCLUDE 'bin/setups/BYPASS/FULL';
+INCLUDE 'bin/setups/BYPASS/FULL_SEX_CLEAR';
 
 PROCEDURE INJECT NUM PSI_DEG; {at injection: SX = 0, SY, SZ = sin PSI, cos PSI}
   VARIABLE X 100; VARIABLE I 1;
@@ -36,73 +36,108 @@ PROCEDURE OPTIMIZE_old EBE BBE;
   EBE := EB1; BBE := EB2;
 ENDPROCEDURE; {OPTIMIZE old (via Spin-Transfer map}
 
-PROCEDURE OPTIMIZE EBE;
-  VARIABLE MU 800; VARIABLE NBAR 800 3; VARIABLE MU0 1;
-  VARIABLE OBJ 1; VARIABLE EB1 1; {optimized value of the EB element's electric field}
-                                       {magnetic field is ignneored b/c in WIEN R2=R1}
-  VARIABLE SGx 1; VARIABLE SGy 1; {sextupole gradients}
-  SGx := 0.4400000434; SGy := -0.8199998015; {default sextupole grad values}
+PROCEDURE OPTIMIZE EBE {argument} SF1 SF2 SD {parameters}; { optimizes the Wien-filter's * E-field * }
+                                                            { with spin-tune constant MU0 as target }
+  VARIABLE MU 800; VARIABLE NBAR 800 3; 
+  {optimized variables}
+  VARIABLE E1 1; { optimized value of the EB element's electric field }
+                                                      { magnetic field is ignored # b/c in WIEN R2=R1 }
+  {target}
+  VARIABLE OBJ 1; VARIABLE MU0 1;
+  VARIABLE EB1 1; 
 
   EB1 := EBE;
   FIT EB1;
-    LATTICE SGx SGy EB1 1;
+    LATTICE SF1 SF2 SD EB1 0.0 {BBE ignored # } 1;
     TSS MU NBAR 0;
-    MU0 := CONS(MU);
-    OBJ := ABS(MU0);
+      MU0 := CONS(MU);
+      OBJ := ABS(MU0);
     WRITE 6 'EBE, MU0 = '&ST(EB1)&', '&ST(MU0);
     WRITE 6 'OBJ ='&ST(OBJ);
-  ENDFIT 1E-9 1000 1 OBJ;
+  ENDFIT 1E-7 1000 1 OBJ;
 
   EBE := EB1;
 ENDPROCEDURE; {OPTIMIZE (via TSS)}
 
+PROCEDURE PARAMETER_OUTPUT DIR TAG COMMENT SF1 SF2 SD EBE;
+  OPENF 9292 DIR&'LATTICE-PARAMETERS:'&TAG&'.txt' 'REPLACE';
+    WRITE 9292 '# '&COMMENT;
+    WRITE 9292 '#    SF1       SF2            SD             EBE';
+    WRITE 9292 SF(SF1, '(F15.7)')&SF(SF2, '(F15.7)')&SF(SD, '(F15.7)')&SF(EBE, '(F15.7)');
+    CLOSEF 9292;
+ENDPROCEDURE;
+
 PROCEDURE MAIN;
-  VARIABLE WHERE 100; VARIABLE MRKR 50;
+  VARIABLE WHERE 100; VARIABLE MRKR 50 2;
+  {lattice parameters}
   VARIABLE GAMMA 1;
+  VARIABLE SGF1 1; VARIABLE SGF2 1; {sextupole gradients}
+  VARIABLE SGD 1;
   {optimization}
-  VARIABLE EBE 1; VARIABLE BBE 1; 
+  VARIABLE EBE 1;
   {post-opt tracking}
   VARIABLE PNUM 1;
   VARIABLE PSI0_DEG 1;
   VARIABLE NTURN 1;
-  VARIABLE SEXTGx 1; VARIABLE SEXTGy 1;
 
-  MRKR := 'FULL-optEB';
-  DIRSET WHERE 'data/BYPASS/';
+  MRKR(1) := 'optimize-EB';
+  DIRSET WHERE 'data/BYPASS_SEX_CLEAR/';
   GROUTF 'img/dump/TR' 1;
-  GAMMA := 1.129;
-  EBE := 100;     {search for optimum around 100 kV/cm ...}
-  BBE := 0.72975; {... and 0.72975 kGs}
+  GAMMA := 1.1279235; {240 MeV for deuterons}
+  {optimization}
+  EBE := 100;     { <- target: search for optimum around 100 kV/cm }
+  SGF1 := 0.4400000434*0; SGF2 := SGF1; {parameters}
+  SGD := -0.8199998015*0; {default sextupole grad values}
+  {tracking}
   NTURN := 30000;
-  PSI0_DEG := 0;
+  PSI0_DEG := 45;
   PNUM := 10;
-
-  SEXTGx := 0.4400000434; SEXTGy := -0.8199998015; {default sextupole grad values}
   
   
   OV 3 3 0;
   DAEPS 1E-12; {this sets DA garbage collection tolerance so that the TRANSFER MAP doesn't get the 1e-15 ABERRATION coefficient}
-  { SET lattice parameters }
-  SET_FOR_DEUTERONS GAMMA;
-  
-  OPTIMIZE EBE;
-  WRITE 6 'USE EBE = '&ST(EBE);
-  {print transfer map}
-   OPENF 636 WHERE&'TrMAP:'&MRKR 'REPLACE';
-   PM 636; CLOSEF 636;
-   {print spin transfer map}
-   OPENF 636 WHERE&'SpTrMAP:'&MRKR 'REPLACE';
-   PSM 636; CLOSEF 636;
+  SET_FOR_DEUTERONS GAMMA; { SET lattice parameters }
 
-
-  {tracking with new values}
-  LATTICE SEXTGx SEXTGy EBE 1;
+  { *** PRE-OPT TRACKING *** }
+  MRKR(2) := 'pre-'&MRKR(1);
+  LATTICE SGF1 SGF2 SGD EBE 0.0 {ignored} 1;
+    {print transfer map}
+     OPENF 636 WHERE&'ORBITAL:'&MRKR(2)&'.tm' 'REPLACE';
+     PM 636; CLOSEF 636;
+     {print spin transfer map}
+     OPENF 636 WHERE&'SPIN:'&MRKR(2)&'.tm' 'REPLACE';
+  PARAMETER_OUTPUT WHERE MRKR(2) 'lattice parameters prior to optimization (of MU0)' SGF1 SGF2 SGD EBE;
   INJECT PNUM PSI0_DEG;
   WRITE 6 '******************** STARTING TRACKING';
-  OPENF 99 WHERE&'PRAY:'&MRKR&'.dat' 'REPLACE';
+  OPENF 99 WHERE&'PRAY:'&MRKR(2)&'.dat' 'REPLACE';
   PRAY 99; CLOSEF 99;
-  OPENF 772 WHERE&'TRPRAY:'&MRKR&'.dat' 'REPLACE';
-  OPENF 893 WHERE&'TRPSPI:'&MRKR&'.dat' 'REPLACE';
+  OPENF 772 WHERE&'TRPRAY:'&MRKR(2)&'.dat' 'REPLACE';
+  OPENF 893 WHERE&'TRPSPI:'&MRKR(2)&'.dat' 'REPLACE';
+  TRPRAY 772; TRPSPI 893;
+  TR NTURN NINT(NTURN/5000) -1 -3 1.2 1.2 0 0 -12;
+  CLOSEF 772; CLOSEF 893;
+
+  { *** OPTIMIZATION *** }
+  OPTIMIZE EBE {argument} SGF1 SGF2 SGD {parameters};
+  WRITE 6 'USE EBE = '&ST(EBE);
+  
+
+  { *** POST-OPT TRACKING *** }
+  MRKR(2) := 'post-'&MRKR(1);
+  LATTICE SGF1 SGF2 SGD EBE 0.0 {ignored} 1; { installing new Wien-filter E-field value }
+   {print transfer map}
+    OPENF 636 WHERE&'ORBITAL:'&MRKR(2)&'.tm' 'REPLACE';
+    PM 636; CLOSEF 636;
+    {print spin transfer map}
+    OPENF 636 WHERE&'SPIN:'&MRKR(2)&'.tm' 'REPLACE';
+    PSM 636; CLOSEF 636;
+  PARAMETER_OUTPUT WHERE MRKR(2) 'lattice parameters after optimization (of MU0)' SGF1 SGF2 SGD EBE;
+  INJECT PNUM PSI0_DEG;
+  WRITE 6 '******************** STARTING TRACKING';
+  OPENF 99 WHERE&'PRAY:'&MRKR(2)&'.dat' 'REPLACE';
+  PRAY 99; CLOSEF 99;
+  OPENF 772 WHERE&'TRPRAY:'&MRKR(2)&'.dat' 'REPLACE';
+  OPENF 893 WHERE&'TRPSPI:'&MRKR(2)&'.dat' 'REPLACE';
   TRPRAY 772; TRPSPI 893;
   TR NTURN NINT(NTURN/5000) -1 -3 1.2 1.2 0 0 -12;
   CLOSEF 772; CLOSEF 893;
