@@ -1,0 +1,189 @@
+INCLUDE 'bin/setups/BYPASS/FULL_SEX_CLEAR';
+
+PROCEDURE OPTIMIZE_EB SF1 SF2 SD {parameters} EBE {argument}; { optimizes the Wien-filter's * E-field * }
+                                                               { with spin-tune constant MU0 as target }
+  VARIABLE MU 800; VARIABLE NBAR 800 3; 
+  {optimized variables}
+  VARIABLE E1 1; { optimized value of the EB element's electric field }
+                                                      { magnetic field is ignored # b/c in WIEN R2=R1 }
+  {target}
+  VARIABLE OBJ 1; VARIABLE MU0 1;
+  VARIABLE EB1 1; 
+
+  EB1 := EBE;
+  FIT EB1;
+    LATTICE SF1 SF2 SD EB1 0.0 {BBE ignored # } 1;
+    TSS MU NBAR 0;
+      MU0 := CONS(MU);
+      OBJ := ABS(MU0);
+    WRITE 6 'EBE, MU0 = '&ST(EB1)&', '&ST(MU0);
+    WRITE 6 'OBJ ='&ST(OBJ);
+  ENDFIT 1E-7 1000 1 OBJ;
+
+  EBE := EB1;
+ENDPROCEDURE; {OPTIMIZE EB with respect to BASE spin-tune}
+
+PROCEDURE OPTIMIZE_SEXT1 SEXTGF1 SEXTGF2 SEXTGD {arguments} EBE {parameter};
+                                           {optimizes the sextupoles with spin-tune quadratic coefficients as target}
+  VARIABLE MU 800; VARIABLE NBAR 800 3;  {where the coefficients are taken from}
+  {optimized variables}
+  VARIABLE SGF1 1; VARIABLE SGF2 1;  { at this point I * DON'T * distinguish }
+  VARIABLE SGD 1;
+  VARIABLE E1 1;                     {stays * FIXED * }
+  {target}      
+  VARIABLE quadKx 1; VARIABLE quadKy 1; VARIABLE quadKd 1; VARIABLE MU0 1;
+  VARIABLE OBJ 1;
+
+  SGF1 := SEXTGF1; SGF2 := SEXTGF2; SGD := SEXTGD; E1 := EBE; {set initial values for optimization}
+  FIT SGF1 SGD;
+    SGF2 := SGF1;
+    LATTICE SGF1 SGF2 SGD E1 0 1; {optimize assuming EBE=100 kV/cm (BBE[=0] irrelevant b/c R1=R2 in WIEN)}
+    TSS MU NBAR 0;
+      MU0 := CONS(MU);
+      DAPEE MU 11 quadKx;
+      DAPEE MU 33 quadKy;
+      DAPEE MU 66 quadKd;
+    OBJ := SQRT(SQR(quadKx) + SQR(quadKy));
+    WRITE 6 'SGF, SGD, EBE = '&ST(SGF1)&' '&ST(SGD)&' '&ST(E1);
+    WRITE 6 'Kx^2, Ky^2, Kd^2= '&ST(quadKx)&' '&ST(quadKy)&ST(quadKd);
+    WRITE 6 'MU0 = '&ST(MU0);
+    WRITE 6 'OBJ ='&ST(OBJ);
+  ENDFIT 1E-5 1000 1 OBJ;
+
+  SEXTGF1 := SGF1; SEXTGF2 := SGF2; SEXTGD := SGD; EBE := E1;
+ENDPROCEDURE; {OPTIMIZE SEXTUPOLES with respect to SPIN chromaticity}
+
+PROCEDURE ORDER3RUN COMMENT;
+  VARIABLE WHERE 100; {to locate data files}
+  VARIABLE GAMMA 1;
+  {optimization}
+  VARIABLE SGF1 1; VARIABLE SGF2 1; VARIABLE SGD 1;
+  VARIABLE EBE 1; {fixed}
+  
+
+  DIRSET WHERE 'data/BYPASS_SEX_CLEAR/optimize-TEST/';     { <---------------------------------------------------- HERE folder }
+  GROUTF 'img/dump/TR' 1;
+  GAMMA := 1.1279235; {240 MeV for deuterons}
+  {initial values for optimization}
+  SGF1 := 0;  { default }
+  SGF2 := SGF1;
+  SGD := 0; { values }
+  EBE := 99.1485; { optimize around FS EBE }
+  
+  
+  OV 3 3 0;
+  DAEPS 1E-12; {this sets DA garbage collection tolerance so that the TRANSFER MAP doesn't get the 1e-15 ABERRATION coefficient}
+  SET_FOR_DEUTERONS GAMMA; { SET lattice parameters }
+
+  {*** PRE-OPT TRACKING *** }
+  LATTICE SGF1 SGF2 SGD EBE 0.0 {ignored} 1;
+  ANALYSIS WHERE 'pre-opt' 'lattice parameters prior to '&COMMENT SGF1 SGF2 SGD EBE;
+
+  { *** OPTIMIZATION *** }
+  OPTIMIZE_SEXT1 SGF1 SGF2 SGD {arguments} EBE {parameter};   { <--------------------------------------------- HERE procedure }
+  WRITE 6 'USE SF1, SF2, SD = '&ST(SGF1)&', '&ST(SGF2)&', '&ST(SGD);
+
+  {*** POST-OPT TRACKING *** }
+  LATTICE SGF1 SGF2 SGD EBE 0.0 {ignored} 1;
+  ANALYSIS WHERE 'post-opt' 'lattice parameters after the '&COMMENT SGF1 SGF2 SGD EBE;
+
+ENDPROCEDURE; {3rd order run}
+
+PROCEDURE CHROMA GAMMA CHRX CHRY; {computes betatron tune chromaticities}
+    VARIABLE MU_TP 100 2; VARIABLE CHROM_X 100; VARIABLE CHROM_Y 100;
+    TP MU_TP ;WRITE 6 'DELTA DEPENDENT TUNES' MU_TP(1) MU_TP(2) ;
+    CHROM_X:= (MU_TP(1)|(0&0&0&0&1))*(1+1/GAMMA);
+    CHROM_Y:= (MU_TP(2)|(0&0&0&0&1))*(1+1/GAMMA);
+    WRITE 6 'CHROM_X' CHROM_X 'CHROM_Y' CHROM_Y;
+    CHRX := CHROM_X; CHRY := CHROM_Y;
+ENDPROCEDURE;
+
+PROCEDURE CHROMA_OUTPUT DIR TAG GAMMA CHRX CHRY;
+  CHROMA GAMMA CHRX CHRY;
+  OPENF 3362 DIR&'BTUNE_X:'&TAG&'.txt' 'REPLACE';
+    WRITE 3362 CHRX; CLOSEF 3362;
+  OPENF 3362 DIR&'BTUNE_Y:'&TAG&'.txt' 'REPLACE';
+    WRITE 3362 CHRY; CLOSEF 3362;
+ENDPROCEDURE;
+
+PROCEDURE OPTIMIZE_SEXT2 SGF1 SGF2 SGD EBE GAMMA; {optimizes sextupoles with respect to betatron tunes}
+  VARIABLE MU 800; VARIABLE NBAR 800 3;
+  VARIABLE CHROM_X 100; VARIABLE CHROM_Y 100;
+  VARIABLE OBJ 1; VARIABLE SF1 1; VARIABLE SF2 1; {focusing sextupoles in beta_x, D maxima}
+                   VARIABLE SD 1; {defocusing sextupoles in beta_x maxima}
+                   VARIABLE E1 1; {Wien-filter E-field}
+  VARIABLE quadKx 1; VARIABLE quadKy 1; VARIABLE MU0 1;
+
+  SF1 := SGF1; SF2 := SGF2; SD := SGD; E1 := EBE;
+  FIT SF1 SD ;
+    SF2 := SF1;
+    LATTICE SF1 SF2 SD E1 0 1; {optimize assuming EBE=100 kV/cm (BBE irrelevant b/c R1=R2 in WIEN)}
+    TSS MU NBAR 0;
+    MU0 := CONS(MU);
+    DAPEE MU 11 quadKx;
+    DAPEE MU 33 quadKy;
+    { OBJ := SQRT(SQR(quadKx) + SQR(quadKy) + SQR(MU0)); }
+    CHROMA GAMMA CHROM_X CHROM_Y; {computes betatron chromaticities}
+    OBJ := SQRT(SQR(CHROM_X) + SQR(CHROM_Y));
+    WRITE 6 'SF1, SF2, SD, EBE = '&ST(SF1)&' '&ST(SF2)&ST(SD)&' '&ST(E1);
+    WRITE 6 'quadKx, quadKy= '&ST(quadKx)&' '&ST(quadKy);
+    WRITE 6 'MU0 = '&ST(MU0);
+    WRITE 6 'OBJ ='&ST(OBJ);
+  ENDFIT 1E-5 1000 1 OBJ;
+
+  SGF1 := SF1; SGF2 := SF2; SGD := SD; EBE := E1;
+ENDPROCEDURE; {OPTIMIZE SEXTUPOLES with respect to BETATRON chromaticities}
+
+PROCEDURE ORDER2RUN COMMENT;
+  VARIABLE WHERE 100; VARIABLE MRKR 50; {to locate data files}
+  VARIABLE RESTMASSAMU 1; VARIABLE RESTMASSMEV 1;
+  VARIABLE EKIN 1; VARIABLE GAMMA 1; VARIABLE BETA 1;
+  VARIABLE CHRX 100; VARIABLE CHRY 100;
+  {optimization}
+  VARIABLE SGF1 1; VARIABLE SGF2 1; VARIABLE SGD 1;
+  VARIABLE EBE 1; {fixed}
+  
+
+  DIRSET WHERE 'data/BYPASS_SEX_CLEAR/optimize-BETATUNES/';     { <---------------------------------------------------- HERE folder }
+  GROUTF 'img/dump/TR' 1;
+  GAMMA := 1.1279235; {240 MeV for deuterons}
+  {initial values for optimization}
+  SGF1 := 0.0013073;  { default founnd in optimize_sext1}
+  SGF2 := SGF1;
+  SGD := -0.0003465;  { values }
+  EBE := 100; { optimize around non-FS EBE }
+  
+  
+  OV 3 2 1;
+  DAEPS 1E-12; {this sets DA garbage collection tolerance so that the TRANSFER MAP doesn't get the 1e-15 ABERRATION coefficient}
+  GAMMA := 1.1279235;
+  RESTMASSAMU := 2.01410; RESTMASSMEV := RESTMASSAMU*AMUMEV;
+  BETA := SQRT(GAMMA*GAMMA - 1)/GAMMA;
+  EKIN := (GAMMA-1)*RESTMASSMEV;
+  RP EKIN*PARA(1) RESTMASSAMU 1;
+  RPS 1 -.142987;
+  WRITE 6 '++++++++++ SETTING UP FOR DEUTERONS:';
+  WRITE 6 'EKIN [MeV]          GAMMA          BETA';
+  WRITE 6 SF(EKIN, '(F15.7)')&SF(GAMMA, '(F15.7)')&SF(BETA, '(F15.7)');
+  WRITE 6 '+++++++++++++++++++++++++++++++++++';
+
+  {*** PRE-OPT TRACKING *** }
+  MRKR := 'pre-opt';
+  LATTICE SGF1 SGF2 SGD EBE 0.0 {ignored} 1;
+  CHROMA_OUTPUT WHERE MRKR GAMMA CHRX CHRY;
+  ANALYSIS WHERE MRKR 'lattice parameters prior to '&COMMENT SGF1 SGF2 SGD EBE;
+
+  { *** OPTIMIZATION *** }
+  OPTIMIZE_SEXT2 SGF1 SGF2 SGD {arguments} EBE GAMMA{parameters};   { <---------------------------------------------- HERE procedure }
+  WRITE 6 'USE SF1, SF2, SD = '&ST(SGF1)&', '&ST(SGF2)&', '&ST(SGD);
+
+  {*** POST-OPT TRACKING *** }
+  MRKR := 'post-opt';
+  LATTICE SGF1 SGF2 SGD EBE 0.0 {ignored} 1;
+  CHROMA_OUTPUT WHERE MRKR GAMMA CHRX CHRY;
+  ANALYSIS WHERE MRKR 'lattice parameters after the '&COMMENT SGF1 SGF2 SGD EBE;
+
+ENDPROCEDURE; {MAIN}
+
+
+ORDER2RUN 'optimization of Qx, Qy'; END;

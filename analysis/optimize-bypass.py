@@ -3,7 +3,7 @@ import matplotlib.pyplot as plt; plt.ion()
 from analysis import DAVEC, Polarization, load_data
 
 
-DIR = '../data/BYPASS_SEX_CLEAR/optimize-SEXT/'
+DIR = '../data/BYPASS_SEX_CLEAR/optimize-BETATUNES/'
 
 GAMMA = 1.1279235
 BETA = np.sqrt(GAMMA**2-1)/GAMMA # injection at y = 1.129 (242.01975 MeV) Deuterons
