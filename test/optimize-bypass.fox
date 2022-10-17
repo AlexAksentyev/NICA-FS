@@ -91,7 +91,7 @@ ENDPROCEDURE; {3rd order run}
 
 PROCEDURE CHROMA GAMMA CHRX CHRY; {computes betatron tune chromaticities}
     VARIABLE MU_TP 100 2; VARIABLE CHROM_X 100; VARIABLE CHROM_Y 100;
-    TP MU_TP ;WRITE 6 'DELTA DEPENDENT TUNES' MU_TP(1) MU_TP(2) ;
+    TP MU_TP ; WRITE 6 'DELTA DEPENDENT TUNES' MU_TP(1) MU_TP(2) ;
     CHROM_X:= (MU_TP(1)|(0&0&0&0&1))*(1+1/GAMMA);
     CHROM_Y:= (MU_TP(2)|(0&0&0&0&1))*(1+1/GAMMA);
     WRITE 6 'CHROM_X' CHROM_X 'CHROM_Y' CHROM_Y;
@@ -106,7 +106,7 @@ PROCEDURE CHROMA_OUTPUT DIR TAG GAMMA CHRX CHRY;
     WRITE 3362 CHRY; CLOSEF 3362;
 ENDPROCEDURE;
 
-PROCEDURE OPTIMIZE_SEXT2 SGF1 SGF2 SGD EBE GAMMA; {optimizes sextupoles with respect to betatron tunes}
+PROCEDURE OPTIMIZE_SEXT2 DIR SGF1 SGF2 SGD EBE GAMMA; {optimizes sextupoles with respect to betatron tunes}
   VARIABLE MU 800; VARIABLE NBAR 800 3;
   VARIABLE CHROM_X 100; VARIABLE CHROM_Y 100;
   VARIABLE OBJ 1; VARIABLE SF1 1; VARIABLE SF2 1; {focusing sextupoles in beta_x, D maxima}
@@ -114,6 +114,8 @@ PROCEDURE OPTIMIZE_SEXT2 SGF1 SGF2 SGD EBE GAMMA; {optimizes sextupoles with res
                    VARIABLE E1 1; {Wien-filter E-field}
   VARIABLE quadKx 1; VARIABLE quadKy 1; VARIABLE MU0 1;
 
+  OPENF 8305 DIR&'OPTIMIZATION_LOG:BETATRON.dat' 'REPLACE';
+  WRITE 8305 '# SGF1          SGF2           SGD            EBE            quadKx          quadKy          Qx             Qy';
   SF1 := SGF1; SF2 := SGF2; SD := SGD; E1 := EBE;
   FIT SF1 SD ;
     SF2 := SF1;
@@ -125,11 +127,13 @@ PROCEDURE OPTIMIZE_SEXT2 SGF1 SGF2 SGD EBE GAMMA; {optimizes sextupoles with res
     { OBJ := SQRT(SQR(quadKx) + SQR(quadKy) + SQR(MU0)); }
     CHROMA GAMMA CHROM_X CHROM_Y; {computes betatron chromaticities}
     OBJ := SQRT(SQR(CHROM_X) + SQR(CHROM_Y));
+    WRITE 8305 SF(SF1, '(E15.7)')&SF(SF2, '(E15.7)')&SF(SD, '(E15.7)')&SF(E1, '(E15.7)')&SF(quadKx,'(E15.7)')&SF(quadKy, '(E15.7)')&SF(CHROM_X, '(E15.7)')&SF(CHROM_Y, '(E15.7)');
     WRITE 6 'SF1, SF2, SD, EBE = '&ST(SF1)&' '&ST(SF2)&ST(SD)&' '&ST(E1);
     WRITE 6 'quadKx, quadKy= '&ST(quadKx)&' '&ST(quadKy);
     WRITE 6 'MU0 = '&ST(MU0);
     WRITE 6 'OBJ ='&ST(OBJ);
   ENDFIT 1E-5 1000 1 OBJ;
+  CLOSEF 8305;
 
   SGF1 := SF1; SGF2 := SF2; SGD := SD; EBE := E1;
 ENDPROCEDURE; {OPTIMIZE SEXTUPOLES with respect to BETATRON chromaticities}
@@ -148,10 +152,10 @@ PROCEDURE ORDER2RUN COMMENT;
   GROUTF 'img/dump/TR' 1;
   GAMMA := 1.1279235; {240 MeV for deuterons}
   {initial values for optimization}
-  SGF1 := 0.0013073;  { default founnd in optimize_sext1}
+  SGF1 := 0.0013073;  { default found in optimize_sext1}
   SGF2 := SGF1;
   SGD := -0.0003465;  { values }
-  EBE := 100; { optimize around non-FS EBE }
+  EBE := 99.1475; { optimize around non-FS EBE }
   
   
   OV 3 2 1;
@@ -174,7 +178,7 @@ PROCEDURE ORDER2RUN COMMENT;
   ANALYSIS WHERE MRKR 'lattice parameters prior to '&COMMENT SGF1 SGF2 SGD EBE;
 
   { *** OPTIMIZATION *** }
-  OPTIMIZE_SEXT2 SGF1 SGF2 SGD {arguments} EBE GAMMA{parameters};   { <---------------------------------------------- HERE procedure }
+  OPTIMIZE_SEXT2 WHERE SGF1 SGF2 SGD {arguments} EBE GAMMA{parameters};   { <-------------------------------------- HERE procedure }
   WRITE 6 'USE SF1, SF2, SD = '&ST(SGF1)&', '&ST(SGF2)&', '&ST(SGD);
 
   {*** POST-OPT TRACKING *** }
@@ -183,7 +187,7 @@ PROCEDURE ORDER2RUN COMMENT;
   CHROMA_OUTPUT WHERE MRKR GAMMA CHRX CHRY;
   ANALYSIS WHERE MRKR 'lattice parameters after the '&COMMENT SGF1 SGF2 SGD EBE;
 
-ENDPROCEDURE; {MAIN}
+ENDPROCEDURE; {2nd order run}
 
 
 ORDER2RUN 'optimization of Qx, Qy'; END;
