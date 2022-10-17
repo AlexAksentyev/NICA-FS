@@ -123,12 +123,7 @@ PROCEDURE MAIN;
   {optimization}
   EBE := 100;     { <- target: search for optimum around 100 kV/cm }
   SGF1 := 0.4400000434*0; SGF2 := SGF1; {parameters}
-  SGD := -0.8199998015*0; {default sextupole grad values}
-  {tracking}
-  NTURN := 30000;
-  PSI0_DEG := 45;
-  PNUM := 10;
-  
+  SGD := -0.8199998015*0; {default sextupole grad values}  
   
   OV 3 3 0;
   DAEPS 1E-12; {this sets DA garbage collection tolerance so that the TRANSFER MAP doesn't get the 1e-15 ABERRATION coefficient}
@@ -147,7 +142,40 @@ PROCEDURE MAIN;
 
 ENDPROCEDURE; {MAIN}
 
+PROCEDURE EBSWEEP FROM TO STEP; { check spin tune at different EBE values with SEXT GRADS FIXED }
+  VARIABLE WHERE 100; VARIABLE MRKR 50; 
+  {lattice parameters}
+  VARIABLE GAMMA 1;
+  VARIABLE SGF1 1; VARIABLE SGF2 1; {sextupole gradients}
+  VARIABLE SGD 1;
+  {sweep}
+  VARIABLE EBE 1;
+  {TSS}
+  VARIABLE MU 800; VARIABLE NBAR 800 3;
+  {sweep loop}
+  VARIABLE I 1; VARIABLE NCNT 1;
+
+  DIRSET WHERE 'data/BYPASS_SEX_CLEAR/optimize-EB-sweep/';
+  MRKR := 'opt-SEXT-sext';
+  GROUTF 'img/dump/TR' 1;
+  GAMMA := 1.1279235; {240 MeV for deuterons}
+  {fixed parameters}
+  SGF1 := 0.0013073; SGF2 := SGF1; {parameters}
+  SGD := -0.0003465; {default sextupole grad values}
+  {loop parameters}
+  NCNT := (TO-FROM)/STEP + 1;
+  
+  OV 3 3 0;
+  DAEPS 1E-12; {this sets DA garbage collection tolerance so that the TRANSFER MAP doesn't get the 1e-15 ABERRATION coefficient}
+  SET_FOR_DEUTERONS GAMMA; { SET lattice parameters }
+  LOOP I 1 NCNT; EBE := FROM + (I-1)*STEP;
+    LATTICE SGF1 SGF2 SGD EBE 0.0 {ignored} 1;
+    TSS MU NBAR 0; TSS_OUTPUT WHERE MRKR&MRK(I) MU NBAR;
+    PARAMETER_OUTPUT WHERE MRKR&MRK(I) '' SGF1 SGF2 SGD EBE;
+    ENDLOOP;
+ENDPROCEDURE;
+
 PROCEDURE RUN;
-  MAIN;
+  EBSWEEP 98 102 .1;
 ENDPROCEDURE;
 RUN; END;
