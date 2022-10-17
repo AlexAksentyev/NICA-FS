@@ -69,7 +69,7 @@ PROCEDURE ANALYSIS DIR TAG {output loc} COMMENT SGF1 SGF2 SGD EBE {lattice pars}
   VARIABLE PSI0_DEG 1;
   VARIABLE NTURN 1;
   
-  NTURN := 300000;
+  NTURN := 3000000;
   PSI0_DEG := 45;
   PNUM := 10;
 
@@ -101,7 +101,7 @@ PROCEDURE MAIN;
   VARIABLE EBE 1; {fixed}
   
 
-  DIRSET WHERE 'data/BYPASS_SEX_CLEAR/optimize-SEXT/';
+  DIRSET WHERE 'data/BYPASS_SEX_CLEAR/optimize-SEXT/3M/';
   GROUTF 'img/dump/TR' 1;
   GAMMA := 1.1279235; {240 MeV for deuterons}
   {initial values for optimization}
