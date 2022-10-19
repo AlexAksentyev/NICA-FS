@@ -3,7 +3,7 @@ import matplotlib.pyplot as plt; plt.ion()
 from analysis import DAVEC, Polarization, load_data
 
 
-DIR = '../data/BYPASS_SEX_CLEAR/optimize-SEXT/3M/'
+DIR = '../data/BYPASS_SEX_CLEAR/optimize-SEXT/All-3/'
 
 GAMMA = 1.1279235
 BETA = np.sqrt(GAMMA**2-1)/GAMMA # injection at y = 1.129 (242.01975 MeV) Deuterons
@@ -42,10 +42,10 @@ def vecdisp(spdat):
     prod = SX[:,1:]*SX0 + SY[:,1:]*SY0 + SZ[:, 1:]*SZ0
     return prod
 
-def nu_analysis():
+def nu_analysis(dir):
     z = np.zeros(11, dtype=list(zip(['X','A','Y','B','T','D'], [float]*6)))
-    nu_pre  = DAVEC(DIR+"NU:pre-opt.da")
-    nu_post = DAVEC(DIR+"NU:post-opt.da")
+    nu_pre  = DAVEC(dir+"NU:pre-opt.da")
+    nu_post = DAVEC(dir+"NU:post-opt.da")
     ## plot
     fig, ax = plt.subplots(1,3)
     ## vs X
@@ -67,9 +67,9 @@ def nu_analysis():
     ax[2].legend(); ax[2].set_xlabel('D'); ax[2].set_ylabel(r'$\nu$')
     ax[2].ticklabel_format(style='sci', scilimits=(0,0), useMathText=True, axis='both')
 
-def spin_analysis():
-    spdat_pre = load_data(DIR,'TRPSPI:pre-opt.dat')
-    spdat_post = load_data(DIR,'TRPSPI:post-opt.dat')
+def spin_analysis(dir):
+    spdat_pre = load_data(dir,'TRPSPI:pre-opt.dat')
+    spdat_post = load_data(dir,'TRPSPI:post-opt.dat')
     plot_spin(spdat_pre,  title='NO SEXT')
     plot_spin(spdat_post, title='W/SEXT')
     return spdat_pre, spdat_post
@@ -93,6 +93,6 @@ def polarization_analysis(spdat_pre, spdat_post):
 if __name__ == '__main__':
     # nu_analysis()
    
-    spdat_pre, spdat_post = spin_analysis()   
+    spdat_pre, spdat_post = spin_analysis(DIR)   
     P_pre, P_post = polarization_analysis(spdat_pre, spdat_post)
     
