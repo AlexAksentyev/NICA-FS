@@ -35,16 +35,16 @@ PROCEDURE OPTIMIZE_SEXT1 SEXTGF1 SEXTGF2 SEXTGD {arguments} EBE {parameter};
   VARIABLE OBJ 1;
 
   SGF1 := SEXTGF1; SGF2 := SEXTGF2; SGD := SEXTGD; E1 := EBE; {set initial values for optimization}
-  FIT SGF1 SGD;
-    SGF2 := SGF1;
+  FIT SGF1 SGF2 SGD;
+    { SGF2 := SGF1; }
     LATTICE SGF1 SGF2 SGD E1 0 1; {optimize assuming EBE=100 kV/cm (BBE[=0] irrelevant b/c R1=R2 in WIEN)}
     TSS MU NBAR 0;
       MU0 := CONS(MU);
       DAPEE MU 11 quadKx;
       DAPEE MU 33 quadKy;
       DAPEE MU 66 quadKd;
-    OBJ := SQRT(SQR(quadKx) + SQR(quadKy));
-    WRITE 6 'SGF, SGD, EBE = '&ST(SGF1)&' '&ST(SGD)&' '&ST(E1);
+    OBJ := SQRT(SQR(quadKx) + SQR(quadKy) + SQR(quadKd));
+    WRITE 6 'SGF1, SGF2, SGD = '&ST(SGF1)&' '&ST(SGF2)&' '&ST(SGD);
     WRITE 6 'Kx^2, Ky^2, Kd^2= '&ST(quadKx)&' '&ST(quadKy)&ST(quadKd);
     WRITE 6 'MU0 = '&ST(MU0);
     WRITE 6 'OBJ ='&ST(OBJ);
@@ -61,7 +61,7 @@ PROCEDURE ORDER3RUN COMMENT;
   VARIABLE EBE 1; {fixed}
   
 
-  DIRSET WHERE 'data/BYPASS_SEX_CLEAR/optimize-TEST/';     { <---------------------------------------------------- HERE folder }
+  DIRSET WHERE 'data/BYPASS_SEX_CLEAR/optimize-SEXT/ALL-3/';     { <---------------------------------------------------- HERE folder }
   GROUTF 'img/dump/TR' 1;
   GAMMA := 1.1279235; {240 MeV for deuterons}
   {initial values for optimization}
@@ -117,8 +117,8 @@ PROCEDURE OPTIMIZE_SEXT2 DIR SGF1 SGF2 SGD EBE GAMMA; {optimizes sextupoles with
   OPENF 8305 DIR&'OPTIMIZATION_LOG:BETATRON.dat' 'REPLACE';
   WRITE 8305 '# SGF1          SGF2           SGD            EBE            quadKx          quadKy          Qx             Qy';
   SF1 := SGF1; SF2 := SGF2; SD := SGD; E1 := EBE;
-  FIT SF1 SD ;
-    SF2 := SF1;
+  FIT SF1 SF2 SD;
+    { SF2 := SF1; }
     LATTICE SF1 SF2 SD E1 0 1; {optimize assuming EBE=100 kV/cm (BBE irrelevant b/c R1=R2 in WIEN)}
     TSS MU NBAR 0;
     MU0 := CONS(MU);
@@ -152,9 +152,9 @@ PROCEDURE ORDER2RUN COMMENT;
   GROUTF 'img/dump/TR' 1;
   GAMMA := 1.1279235; {240 MeV for deuterons}
   {initial values for optimization}
-  SGF1 := 0.0013073;  { default found in optimize_sext1}
-  SGF2 := SGF1;
-  SGD := -0.0003465;  { values }
+  SGF1 := -0.0003492;  { default found in optimize_sext1}
+  SGF2 := 0.0030593;
+  SGD := -0.0003640;  { values }
   EBE := 99.1475; { optimize around non-FS EBE }
   
   
@@ -189,5 +189,63 @@ PROCEDURE ORDER2RUN COMMENT;
 
 ENDPROCEDURE; {2nd order run}
 
+PROCEDURE GRADSWEEP FROM TO STEP; {check chromaticities at different gradient values}
+  VARIABLE WHERE 100; VARIABLE MRKR 50; {to locate data files}
+  {LATTICE setup}
+  VARIABLE RESTMASSAMU 1; VARIABLE RESTMASSMEV 1;
+  VARIABLE EKIN 1; VARIABLE GAMMA 1; VARIABLE BETA 1;
+  {LATTICE parameters}
+  VARIABLE SGF1 1; VARIABLE SGF2 1; VARIABLE SGD 1; {sweeping}
+  VARIABLE EBE 1; {fixed}
+  {chromaticities}
+  VARIABLE CHRX 100; VARIABLE CHRY 100;
+  {spin-tune}
+  VARIABLE MU 800; VARIABLE NBAR 800 3;
+  VARIABLE quadKx 1; VARIABLE quadKy 1; VARIABLE quadKd 1;
+  {sweep loop}
+  VARIABLE I 1; VARIABLE J 1; VARIABLE K 1; VARIABLE NCNT 1;
 
-ORDER2RUN 'optimization of Qx, Qy'; END;
+  DIRSET WHERE 'data/BYPASS_SEX_CLEAR/optimize-BETATUNES-gradsweep/';
+  MRKR := 'FS-EBE';
+  GROUTF 'img/dump/TR' 1;
+  GAMMA := 1.1279235; {240 MeV for deuterons}
+  {fixed parameters}
+  EBE := 99.1475; { non-FS EBE to avoid resonance }
+  {loop parameters}
+  NCNT := (TO-FROM)/STEP + 1;  
+  
+  OV 3 2 1;
+  DAEPS 1E-12; {this sets DA garbage collection tolerance so that the TRANSFER MAP doesn't get the 1e-15 ABERRATION coefficient}
+  { --- set for deuterons}
+  GAMMA := 1.1279235;
+  RESTMASSAMU := 2.01410; RESTMASSMEV := RESTMASSAMU*AMUMEV;
+  BETA := SQRT(GAMMA*GAMMA - 1)/GAMMA;
+  EKIN := (GAMMA-1)*RESTMASSMEV;
+  RP EKIN*PARA(1) RESTMASSAMU 1;
+  RPS 1 -.142987;
+  WRITE 6 '++++++++++ SETTING UP FOR DEUTERONS:';
+  WRITE 6 'EKIN [MeV]          GAMMA          BETA';
+  WRITE 6 SF(EKIN, '(F15.7)')&SF(GAMMA, '(F15.7)')&SF(BETA, '(F15.7)');
+  WRITE 6 '+++++++++++++++++++++++++++++++++++';
+  { --- }
+  OPENF 8305 WHERE&'BETATRON-LOG-SWEEP:'&MRKR&'.dat' 'REPLACE';
+  WRITE 8305 '# SGF1          SGF2           SGD            EBE            quadKx          quadKy          quadKd          Qx             Qy'; 
+  LOOP I 1 NCNT; SGF1 := FROM + (I-1)*STEP;
+    LOOP J 1 NCNT; SGF2 := FROM + (J-1)*STEP;
+      LOOP K 1 NCNT; SGD := FROM + (K-1)*STEP;
+        LATTICE SGF1 SGF2 SGD EBE 0.0 {ignored} 1;
+        TSS MU NBAR 0;
+        DAPEE MU 11 quadKx;
+        DAPEE MU 33 quadKy;
+        DAPEE MU 66 quadKd;
+        CHROMA GAMMA CHRX CHRY;
+        WRITE 8305 SF(SGF1, '(E15.7)')&SF(SGF2, '(E15.7)')&SF(SGD, '(E15.7)')&SF(EBE, '(E15.7)')&SF(quadKx,'(E15.7)')&SF(quadKy, '(E15.7)')&SF(quadKd, '(E15.7)')&SF(CHRX, '(E15.7)')&SF(CHRY, '(E15.7)');
+      ENDLOOP;
+    ENDLOOP;
+  ENDLOOP;
+  CLOSEF 8305;
+
+ENDPROCEDURE;
+
+
+GRADSWEEP -3E-3 3E-3 5E-4; END;
