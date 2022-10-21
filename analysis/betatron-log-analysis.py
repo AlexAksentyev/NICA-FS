@@ -3,6 +3,7 @@ import matplotlib.pyplot as plt; plt.ion()
 import pandas as pds
 from sklearn import linear_model
 from mpl_toolkits import mplot3d
+from scipy.optimize import curve_fit
 
 def norm(vec):
     return np.sqrt(np.sum(np.square(vec)))
@@ -16,20 +17,73 @@ def proj(v1, v2):
     norm2 = norm(v2)
     return v1.dot(v2)/norm2
 
+def deltaC(ex, ey, Qx, Qy, a0, a1, deltam):
+    term1 = -2*np.pi*(ex*Qx + ey*Qy)
+    term2 = deltam*(a0 + a1*deltam)
+    return term1 + term2
+
+def deltaeq(a0, a1, y0, deltam, ex, ey, Qx, Qy):
+    ftr1 = y0**2/(y0**2*a0 - 1)
+    ftr2 = 0.5*(a1 - a0/y0**2 + 1/y0**4)
+    return ftr1 * (ftr2 * deltam**2 + deltaC(ex, ey, Qx, Qy, a0, a1, deltam))
+    
+
+## CONSTANTS
+ALPHA0X = -1.17578
+ALPHA0Y = +2.40443
+GAMMA0 = 1.1279235
+EX = 3e-3 # emittance [m*rad]
+EY = 3e-3 #           [m*rad]
+DELTAM = 1e-4 # amplitude of synchrotron oscillations
+## OPTIMUMS
+# spin-chromaticity
+SGopt = np.array([-0.0003492, 0.0030593, -0.0003640])
+BGopt = np.array([ 0.0027942, 0.0051272, -0.0078698])
+def opt_spin_sub(log):
+    sub1 = log[ abs( log.SGF1 - -0.0003492)<5e-4]
+    sub2 = sub1[abs(sub1.SGF2 -  0.0030593)<5e-4]
+    sub3 = sub2[abs(sub2.SGD  - -0.0003640)<5e-4]
+    return sub3
+# beta chromaticities
+def opt_beta_sub(log):
+    sub1 = log[ abs( log.SGF1 -  0.0027942)<5e-4]
+    sub2 = sub1[abs(sub1.SGF2 -  0.0051272)<5e-4]
+    sub3 = sub2[abs(sub2.SGD  - -0.0078698)<5e-4]
+    return sub3
+
+def nearness(a, b):
+    return np.sqrt(np.sum(np.square(r-point),axis=1))
+
+def grad_nearness(point, log):
+    r = np.array(list(zip(log.SGF1, log.SGF2, log.SGD)))
+    return np.sqrt(np.sum(np.square(r-point),axis=1))
+
+def st_chrom(log):
+    qKx, qKy, qKd = log.qKx, log.qKy, log.qKd
+
+## loading data
 path = path = '../data/BYPASS_SEX_CLEAR/optimize-BETATUNES-gradsweep/BETATRON-LOG-SWEEP:FS-EBE.dat'
 
-log = np.loadtxt(path,dtype=list(zip(['SGF1','SGF2','SGD','EBE','qKx','qKy','qKd','Qx','Qy'],[float]*9)), skiprows=1)
+log = np.loadtxt(path,dtype=list(zip(['SGF1','SGF2','SGD','EBE','qKx','qKy','qKd','Qx','Qy', 'a1x','a1y'],[float]*11)), skiprows=1)
 log = pds.DataFrame(log)
 
-sub = log[(log['SGF1']==-3e-3)&(log['SGF2']==-3e-3)]
+a1x, a1y, Qx, Qy = [log[e] for e in ('a1x','a1y','Qx','Qy')]
 
-X = log[['SGF1','SGF2','SGD']]
-qKx, qKy, qKd, Qx, Qy = [log[e] for e in ('qKx','qKy','qKd','Qx','Qy')]
+## computing ANALYTICS
+deltaC_x = deltaC(EX, EY, Qx, Qy, ALPHA0X, a1x, DELTAM)
+deltaC_y = deltaC(EX, EY, Qx, Qy, ALPHA0Y, a1y, DELTAM)
+deltaeq_x = deltaeq(ALPHA0X, a1x, GAMMA0, DELTAM, EX, EY, Qx, Qy)
+deltaeq_y = deltaeq(ALPHA0Y, a1y, GAMMA0, DELTAM, EX, EY, Qx, Qy)
+log.insert(11, "deltaC_x", deltaC_x)
+log.insert(12, "deltaX_y", deltaC_y)
+log.insert(13, "deltaeq_x", deltaeq_x)
+log.insert(14, "deltaeq_y", deltaeq_y)
 
+## multiple linear reression on sextupole grads
 regr = linear_model.LinearRegression()
-
+X = log[['SGF1','SGF2','SGD']]
 vec = {}
-for e in ['qKx','qKy','qKd','Qx','Qy']:
+for e in ['qKx','qKy','qKd','Qx','Qy','a1x']:
     y = log[e]
     regr.fit(X,y)
     vec.update({e: regr.coef_})
@@ -38,31 +92,6 @@ for n, v in vec.items():
     vecn.update({n: normalize(v)})
 
 # plotting regression vectors
-# fig1 = plt.figure()
-# ax1 = fig1.add_subplot(111, projection='3d')
-# ax1.plot([0, vec['qKx'][0]],[0, vec['qKx'][1]], [0, vec['qKd'][2]], '->k', label='qKx')
-# ax1.plot([0, vec['qKy'][0]],[0, vec['qKy'][1]], [0, vec['qKy'][2]], '->r', label='qKy')
-# ax1.plot([0, vec['qKd'][0]],[0, vec['qKd'][1]], [0, vec['qKd'][2]], '->b', label='qKd')
-# ax1.plot([0, 0],[0, 0], [0, 0], '*r')
-# ax1.set_xlim([-3.5,11.5])
-# ax1.set_ylim([-3.5,11])
-# ax1.set_zlim([-16.5,3])
-# ax1.set_xlabel('SGF1')
-# ax1.set_ylabel('SGF2')
-# ax1.set_zlabel('SGD')
-# plt.legend()
-# fig2 = plt.figure()
-# ax2 = fig2.add_subplot(111, projection='3d')
-# ax2.plot([0, vec['Qx'][0]], [0, vec['Qx'][1]],  [0, vec['Qx'][2]],  '->g', label='Qx')
-# ax2.plot([0, vec['Qy'][0]], [0, vec['Qy'][1]],  [0, vec['Qy'][2]],  '->m', label='Qy')
-# ax2.plot([0, 0],[0, 0], [0, 0], '*r')
-# ax2.set_xlim([-500,2300])
-# ax2.set_ylim([-500,2200])
-# ax2.set_zlim([-2250,550])
-# ax2.set_xlabel('SGF1')
-# ax2.set_ylabel('SGF2')
-# ax2.set_zlabel('SGD')
-# plt.legend()
 fig3 = plt.figure()
 ax3 = fig3.add_subplot(111, projection='3d')
 ax3.plot([0, vecn['qKx'][0]],[0, vecn['qKx'][1]], [0, vecn['qKd'][2]], '->k', label='qKx')
