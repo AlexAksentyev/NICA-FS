@@ -26,15 +26,15 @@ PROCEDURE OPTIMIZE SEXTGF1 SEXTGF2 SEXTGD {arguments} EBE {parameter};
   VARIABLE OBJ 1;
 
   SGF1 := SEXTGF1; SGF2 := SEXTGF2; SGD := SEXTGD; E1 := EBE; {set initial values for optimization}
-  FIT SGF1 SGD;
-    SGF2 := SGF1;
+  FIT SGF1 SGF2 SGD;
+    { SGF2 := SGF1; }
     LATTICE SGF1 SGF2 SGD E1 0 1; {optimize assuming EBE=100 kV/cm (BBE[=0] irrelevant b/c R1=R2 in WIEN)}
     TSS MU NBAR 0;
       MU0 := CONS(MU);
       DAPEE MU 11 quadKx;
       DAPEE MU 33 quadKy;
       DAPEE MU 66 quadKd;
-    OBJ := SQRT(SQR(quadKx) + SQR(quadKy));
+    OBJ := SQRT(SQR(quadKx) + SQR(quadKy) + SQR(quadKd));
     WRITE 6 'SGF, SGD, EBE = '&ST(SGF1)&' '&ST(SGD)&' '&ST(E1);
     WRITE 6 'Kx^2, Ky^2, Kd^2= '&ST(quadKx)&' '&ST(quadKy)&ST(quadKd);
     WRITE 6 'MU0 = '&ST(MU0);
@@ -69,7 +69,7 @@ PROCEDURE ANALYSIS DIR TAG {output loc} COMMENT SGF1 SGF2 SGD EBE {lattice pars}
   VARIABLE PSI0_DEG 1;
   VARIABLE NTURN 1;
   
-  NTURN := 3000000;
+  NTURN := 300000;
   PSI0_DEG := 45;
   PNUM := 10;
 
@@ -101,17 +101,17 @@ PROCEDURE MAIN;
   VARIABLE EBE 1; {fixed}
   
 
-  DIRSET WHERE 'data/BYPASS_SEX_CLEAR/optimize-SEXT/3M/';
+  DIRSET WHERE 'data/BYPASS_SEX_CLEAR/optimize-SEXT/All-3/';
   GROUTF 'img/dump/TR' 1;
   GAMMA := 1.1279235; {240 MeV for deuterons}
   {initial values for optimization}
   SGF1 := 0.4400000434*0;  { default }
   SGF2 := SGF1;
   SGD := -0.8199998015*0; { values }
-  EBE := 99.1485; { optimize around FS EBE }
+  EBE := 99.1475; { optimize around FS EBE }
   
   
-  OV 3 3 0;
+  OV 5 3 0;
   DAEPS 1E-12; {this sets DA garbage collection tolerance so that the TRANSFER MAP doesn't get the 1e-15 ABERRATION coefficient}
   SET_FOR_DEUTERONS GAMMA; { SET lattice parameters }
 

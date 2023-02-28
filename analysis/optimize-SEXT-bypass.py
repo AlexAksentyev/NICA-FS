@@ -3,7 +3,7 @@ import matplotlib.pyplot as plt; plt.ion()
 from analysis import DAVEC, Polarization, load_data
 
 
-DIR = '../data/BYPASS_SEX_CLEAR/optimize-SEXT/All-3/'
+DIR = '../data/BYPASS_SEX_CLEAR/optimize-SEXT/NO-DELTAP/'
 
 GAMMA = 1.1279235
 BETA = np.sqrt(GAMMA**2-1)/GAMMA # injection at y = 1.129 (242.01975 MeV) Deuterons
@@ -91,7 +91,7 @@ def polarization_analysis(spdat_pre, spdat_post):
     return P_pre, P_post
     
 if __name__ == '__main__':
-    # nu_analysis()
+    nu_analysis(DIR)
    
     spdat_pre, spdat_post = spin_analysis(DIR)   
     P_pre, P_post = polarization_analysis(spdat_pre, spdat_post)

@@ -148,13 +148,13 @@ PROCEDURE ORDER2RUN COMMENT;
   VARIABLE EBE 1; {fixed}
   
 
-  DIRSET WHERE 'data/BYPASS_SEX_CLEAR/optimize-BETATUNES/';     { <---------------------------------------------------- HERE folder }
+  DIRSET WHERE 'data/BYPASS_SEX_CLEAR/optimize-BETATUNES/NO-DELTAP/';     { <---------------------------------------------------- HERE folder }
   GROUTF 'img/dump/TR' 1;
   GAMMA := 1.1279235; {240 MeV for deuterons}
   {initial values for optimization}
-  SGF1 := -0.0003492;  { default found in optimize_sext1}
-  SGF2 := 0.0030593;
-  SGD := -0.0003640;  { values }
+  SGF1 := -0.0002998;  { default found in optimize_sext1}
+  SGF2 := 0.0029780;
+  SGD := -0.0003559;  { values }
   EBE := 99.1475; { optimize around non-FS EBE }
   
   
@@ -202,15 +202,19 @@ PROCEDURE GRADSWEEP FROM TO STEP; {check chromaticities at different gradient va
   {spin-tune}
   VARIABLE MU 800; VARIABLE NBAR 800 3;
   VARIABLE quadKx 1; VARIABLE quadKy 1; VARIABLE quadKd 1;
+  {twiss}
+  VARIABLE F 100 6; VARIABLE A 100 2; VARIABLE B 100 2;
+  VARIABLE G 100 2; VARIABLE R 100 2; VARIABLE MUT 100 2;
+  VARIABLE A1X 1;   VARIABLE A1Y 1;
   {sweep loop}
   VARIABLE I 1; VARIABLE J 1; VARIABLE K 1; VARIABLE NCNT 1;
 
   DIRSET WHERE 'data/BYPASS_SEX_CLEAR/optimize-BETATUNES-gradsweep/';
-  MRKR := 'FS-EBE';
+  MRKR := 'nonFS-EBE';
   GROUTF 'img/dump/TR' 1;
   GAMMA := 1.1279235; {240 MeV for deuterons}
   {fixed parameters}
-  EBE := 99.1475; { non-FS EBE to avoid resonance }
+  EBE := 98{.1475}; { non-FS EBE to avoid resonance }
   {loop parameters}
   NCNT := (TO-FROM)/STEP + 1;  
   
@@ -229,17 +233,21 @@ PROCEDURE GRADSWEEP FROM TO STEP; {check chromaticities at different gradient va
   WRITE 6 '+++++++++++++++++++++++++++++++++++';
   { --- }
   OPENF 8305 WHERE&'BETATRON-LOG-SWEEP:'&MRKR&'.dat' 'REPLACE';
-  WRITE 8305 '# SGF1          SGF2           SGD            EBE            quadKx          quadKy          quadKd          Qx             Qy'; 
+  WRITE 8305 '#    SGF1           SGF2           SGD            EBE            quadKx         quadKy         quadKd        Qx              Qy           ALPHA1X        ALPHA1Y'; 
   LOOP I 1 NCNT; SGF1 := FROM + (I-1)*STEP;
     LOOP J 1 NCNT; SGF2 := FROM + (J-1)*STEP;
       LOOP K 1 NCNT; SGD := FROM + (K-1)*STEP;
         LATTICE SGF1 SGF2 SGD EBE 0.0 {ignored} 1;
-        TSS MU NBAR 0;
-        DAPEE MU 11 quadKx;
-        DAPEE MU 33 quadKy;
-        DAPEE MU 66 quadKd;
-        CHROMA GAMMA CHRX CHRY;
-        WRITE 8305 SF(SGF1, '(E15.7)')&SF(SGF2, '(E15.7)')&SF(SGD, '(E15.7)')&SF(EBE, '(E15.7)')&SF(quadKx,'(E15.7)')&SF(quadKy, '(E15.7)')&SF(quadKd, '(E15.7)')&SF(CHRX, '(E15.7)')&SF(CHRY, '(E15.7)');
+        TSS MU NBAR 0;             {spin tune data}
+          DAPEE MU 11 quadKx;
+          DAPEE MU 33 quadKy;
+          DAPEE MU 66 quadKd;
+        GT MAP F MUT A B G R;     {twiss data}
+          WRITE 6 'DELTA DEPENDENT ALPHAS' A(1) A(2);
+          A1X := A(1)|(0&0&0&0&2); { index 2 here because I want the coefficient ... }
+          A1Y := A(2)|(0&0&0&0&2); { ... before the delta^2 }
+        CHROMA GAMMA CHRX CHRY;   {chromaticities data}
+        WRITE 8305 SF(SGF1, '(F15.7)')&SF(SGF2, '(F15.7)')&SF(SGD, '(F15.7)')&SF(EBE, '(F15.7)')&SF(quadKx,'(F15.7)')&SF(quadKy, '(F15.7)')&SF(quadKd, '(F15.7)')&SF(CHRX, '(F15.7)')&SF(CHRY, '(F15.7)')&SF(A1X, '(F15.7)')&SF(A1Y, '(F15.7)');
       ENDLOOP;
     ENDLOOP;
   ENDLOOP;
@@ -248,4 +256,4 @@ PROCEDURE GRADSWEEP FROM TO STEP; {check chromaticities at different gradient va
 ENDPROCEDURE;
 
 
-GRADSWEEP -3E-3 3E-3 5E-4; END;
+ORDER2RUN 'optimize betatunes'; END;

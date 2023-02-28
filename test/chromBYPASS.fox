@@ -1,53 +1,30 @@
-INCLUDE 'bin/setups/BYPASS/FULL';
-
-PROCEDURE INJECT NUM PSI_DEG; {at injection: SX = 0, SY, SZ = sin PSI, cos PSI}
-  VARIABLE X 100; VARIABLE I 1;
-  VARIABLE PSI 1; VARIABLE SY 1; VARIABLE SZ 1;
-  PSI := DEG2RAD(PSI_DEG); {PSI IN RADIANS}
-  X := LINSPACE(-1E-3, 1E-3, NUM);
-  SY := SIN(PSI); SZ := COS(PSI);
-  SR 0 0 0 0 0 0 0 0 1; SSR 0 SY SZ;
-  LOOP I 1 NUM;
-    SR X|I 0 0 0 0 0 0 0 1; SSR 0 SY SZ;
-    SR 0 0 X|I 0 0 0 0 0 1; SSR 0 SY SZ;
-    SR 0 0 0 0 0 (X|I)/10 0 0 1; SSR 0 SY SZ;
-  ENDLOOP;
-ENDPROCEDURE;
-
-PROCEDURE CHROMA GAMMA CHRX CHRY;
-    VARIABLE MU_TP 100 2; VARIABLE CHROM_X 100; VARIABLE CHROM_Y 100;
-    TP MU_TP ;WRITE 6 'DELTA DEPENDENT TUNES' MU_TP(1) MU_TP(2) ;
-    CHROM_X:= (MU_TP(1)|(0&0&0&0&1))*(1+1/GAMMA);
-    CHROM_Y:= (MU_TP(2)|(0&0&0&0&1))*(1+1/GAMMA);
-    WRITE 6 'CHROM_X' CHROM_X 'CHROM_Y' CHROM_Y;
-    CHRX := CHROM_X; CHRY := CHROM_Y;
-ENDPROCEDURE;
+INCLUDE 'bin/setups/BYPASS/FULL_SEX_CLEAR';
   
-PROCEDURE OPTIMIZE SEXTGx SEXTGy EBE GAMMA;
+PROCEDURE OPTIMIZE SGF1 SGF2 SGD EBE GAMMA;
   VARIABLE MU 800; VARIABLE NBAR 800 3;
   VARIABLE CHROM_X 100; VARIABLE CHROM_Y 100;
-  VARIABLE OBJ 1; VARIABLE SGx 1;
-                   VARIABLE SGy 1;
-                   VARIABLE E1 1;
+  VARIABLE OBJ 1; VARIABLE SF1 1; VARIABLE SF2 1; {focusing sextupoles in beta_x, D maxima}
+                   VARIABLE SD 1; {defocusing sextupoles in beta_x maxima}
+                   VARIABLE E1 1; {Wien-filter E-field}
   VARIABLE quadKx 1; VARIABLE quadKy 1; VARIABLE MU0 1;
 
-  SGx := SEXTGx; SGy := SEXTGy; E1 := EBE;
-  FIT SGx SGy { E1 };
-    LATTICE SGx SGy E1 1; {optimize assuming EBE=100 kV/cm (BBE irrelevant b/c R1=R2 in WIEN)}
+  SF1 := SGF1; SF2 := SGF2; SD := SGD; E1 := EBE;
+  FIT SF1 SF2 SD { E1 };
+    LATTICE SF1 SF2 SD E1 0 1; {optimize assuming EBE=100 kV/cm (BBE irrelevant b/c R1=R2 in WIEN)}
     TSS MU NBAR 0;
     MU0 := CONS(MU);
     DAPEE MU 11 quadKx;
     DAPEE MU 33 quadKy;
     { OBJ := SQRT(SQR(quadKx) + SQR(quadKy) + SQR(MU0)); }
-    CHROMA GAMMA CHROM_X CHROM_Y;
-    OBJ := SQRT(SQR(CHROM_X) + SQR(CHROM_Y) + SQR(quadKx) + SQR(quadKy));
-    WRITE 6 'SGx, SGy, EBE = '&ST(SGx)&' '&ST(SGy)&' '&ST(E1);
+    CHROMA GAMMA CHROM_X CHROM_Y; {computes betatron chromaticities}
+    OBJ := SQRT(SQR(CHROM_X) + SQR(CHROM_Y));
+    WRITE 6 'SF1, SF2, SD, EBE = '&ST(SF1)&' '&ST(SF2)&ST(SD)&' '&ST(E1);
     WRITE 6 'quadKx, quadKy= '&ST(quadKx)&' '&ST(quadKy);
     WRITE 6 'MU0 = '&ST(MU0);
     WRITE 6 'OBJ ='&ST(OBJ);
   ENDFIT 1E-5 1000 1 OBJ;
 
-  SEXTGx := SGx; SEXTGy := SGy; EBE := E1;
+  SGF1 := SF1; SF2 := SF2; SGD := SD; EBE := E1;
 ENDPROCEDURE; {OPTIMIZE}
 
 
@@ -57,17 +34,17 @@ PROCEDURE MAIN;
   VARIABLE EKIN 1; VARIABLE GAMMA 1; VARIABLE BETA 1;
   VARIABLE CHRX 100; VARIABLE CHRY 100;
 
-  VARIABLE SEXTGx 1; VARIABLE SEXTGy 1; VARIABLE EBE 1;
+  VARIABLE SGF1 1; VARIABLE SGF2 1; VARIABLE SGD 1; VARIABLE EBE 1;
   VARIABLE OPTFLAG 10; {determines whether to use the optimized sextupole gradients}
 
   OPTFLAG := 'yes';
 
   {lattice parameters}
   IF OPTFLAG='yes'; {optimized sextupole grad values}
-     SEXTGx := 0.0475358; SEXTGy := -0.0124713;
+     SGF1 := 0.0475358; SGF2 := SGF1; SGD := -0.0124713;
      OPTFLAG := '-optSGxy';
   ELSEIF LO(1); {original values}
-     SEXTGx := 0.4400000; SEXTGy := -0.8199998;
+     SGF1 := 0.4400000; SGF2 := SGF1; SGD := -0.8199998;
      OPTFLAG := '';
   ENDIF;
   EBE := 100;
@@ -76,14 +53,14 @@ PROCEDURE MAIN;
   MRKR := 'CHROM'&OPTFLAG;
   WRITE 6 'CHROM test' OPTFLAG; WRITE 6 'MARKER:' MRKR;
   DIRSET_AUTO 0;
-  DIRSET WHERE 'data/BYPASS/CHROM/';
+  DIRSET WHERE 'data/BYPASS_SEX_CLEAR/CHROM/';
   GROUTF 'img/dump/TR' 1;
   
-  OV 3 2 1; DAEPS 1E-12; {this sets DA garbage collection tolerance}
+  OV 3 2 1; { FR 3; } {DAEPS 1E-12;} {this sets DA garbage collection tolerance}
   GAMMA := 1.1279235;
   RESTMASSAMU := 2.01410; RESTMASSMEV := RESTMASSAMU*AMUMEV;
   BETA := SQRT(GAMMA*GAMMA - 1)/GAMMA;
-  EKIN := (GAMMA-1)*RESTMASSMEV; WRITE 6 RESTMASSAMU AMUMEV GAMMA EKIN;
+  EKIN := (GAMMA-1)*RESTMASSMEV;
   RP EKIN*PARA(1) RESTMASSAMU 1;
   RPS 1 -.142987;
   WRITE 6 '++++++++++ SETTING UP FOR DEUTERONS:';
@@ -91,10 +68,10 @@ PROCEDURE MAIN;
   WRITE 6 SF(EKIN, '(F15.7)')&SF(GAMMA, '(F15.7)')&SF(BETA, '(F15.7)');
   WRITE 6 '+++++++++++++++++++++++++++++++++++';
   { SET lattice parameters }
-  LATTICE SEXTGx SEXTGy EBE 1;
+  LATTICE SGF1 SGF2 SGD EBE 0 1;
   OPENF 9292 WHERE&'LATTICE-PARAMETERS:'&MRKR 'REPLACE';
-    WRITE 9292 '    SEXT-GX         SEXT-GY          EBE ';
-    WRITE 9292 SF(SEXTGx, '(F15.7)')&SF(SEXTGy, '(F15.7)')&SF(EBE, '(F15.7)');
+    WRITE 9292 '     SGF1      SGF2           SGD            EBE  ';
+    WRITE 9292 SF(SGF1, '(F15.7)')&SF(SGF2, '(F15.7)')&SF(SGD, '(F15.7)')&SF(EBE, '(F15.7)');
     CLOSEF 9292;
   CHROMA GAMMA CHRX CHRY;
     OPENF 3362 WHERE&'BTUNE_X:'&MRKR&'.da' 'REPLACE';
@@ -103,10 +80,10 @@ PROCEDURE MAIN;
       WRITE 3362 CHRY; CLOSEF 3362;
   WRITE 6 'LATTICE LENGTH' SPOS;
 
-  OPTIMIZE SEXTGx SEXTGy EBE GAMMA;
+  OPTIMIZE SGF1 SGF2 SGD EBE GAMMA;
   OPENF 9292 WHERE&'LATTICE-PARAMETERS:CHROM-OPT'&MRKR 'REPLACE';
-    WRITE 9292 '    SEXT-GX         SEXT-GY          EBE ';
-    WRITE 9292 SF(SEXTGx, '(F15.7)')&SF(SEXTGy, '(F15.7)')&SF(EBE, '(F15.7)');
+    WRITE 9292 '     SGF1      SGF2           SGD            EBE  ';
+    WRITE 9292 SF(SGF1, '(F15.7)')&SF(SGF2, '(F15.7)')&SF(SGD, '(F15.7)')&SF(EBE, '(F15.7)');
     CLOSEF 9292;
 
 ENDPROCEDURE; {MAIN}

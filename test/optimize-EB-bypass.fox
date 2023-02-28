@@ -155,13 +155,13 @@ PROCEDURE EBSWEEP FROM TO STEP; { check spin tune at different EBE values with S
   {sweep loop}
   VARIABLE I 1; VARIABLE NCNT 1;
 
-  DIRSET WHERE 'data/BYPASS_SEX_CLEAR/optimize-EB-sweep/';
-  MRKR := 'opt-SEXT-sext';
+  DIRSET WHERE 'data/BYPASS_SEX_CLEAR/optimize-EB-sweep/fine-mesh/';
+  MRKR := 'no-SEXT';
   GROUTF 'img/dump/TR' 1;
   GAMMA := 1.1279235; {240 MeV for deuterons}
   {fixed parameters}
-  SGF1 := 0.0013073; SGF2 := SGF1; {parameters}
-  SGD := -0.0003465; {default sextupole grad values}
+  SGF1 := 0.0013073*0; SGF2 := SGF1*0; {parameters}
+  SGD := -0.0003465*0; {default sextupole grad values}
   {loop parameters}
   NCNT := (TO-FROM)/STEP + 1;
   
@@ -176,6 +176,6 @@ PROCEDURE EBSWEEP FROM TO STEP; { check spin tune at different EBE values with S
 ENDPROCEDURE;
 
 PROCEDURE RUN;
-  EBSWEEP 98 102 .1;
+  EBSWEEP 99 100 .001;
 ENDPROCEDURE;
 RUN; END;
