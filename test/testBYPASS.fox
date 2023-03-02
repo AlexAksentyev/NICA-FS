@@ -1,4 +1,4 @@
-INCLUDE 'bin/setups/BYPASS/FULL_SEX_CLEAR';
+INCLUDE 'bin/setups/BYPASS/FULL_SEX_wRC';
 
 PROCEDURE INJECT NUM PSI_DEG; {at injection: SX = 0, SY, SZ = sin PSI, cos PSI}
   VARIABLE X 100; VARIABLE I 1;
@@ -57,12 +57,15 @@ PROCEDURE MAIN;
   VARIABLE PSI0_DEG 1;
   VARIABLE NTURN 1;
 
+  VARIABLE RCRAD 1;
+
   OPTFLAG := 'yes';
 
   GAMMA := 1.1279235;
   NTURN := 30000;
   PSI0_DEG := 45;
   PNUM := 10;
+  RCRAD := 100; {radial spin rotation angular velocity [rad/s] (due to corrector)}
   {lattice parameters}
   IF OPTFLAG='yes'; {optimized sextupole grad values}
      SEXTGx := 0.0475358; SEXTGy := -0.0124713;
@@ -71,20 +74,18 @@ PROCEDURE MAIN;
      SEXTGx := 0.4400000; SEXTGy := -0.8199998;
      OPTFLAG := '';
   ENDIF;
-  EBE := 100;    {this value gives spin-tune 2e-4}
-                 {EBE = 100.1344126       FS optimum from sext-opt script}
-                 {EBE = 100.1289268339351 FS optimum value found via minimization of MU0}
+  EBE := 99.1475;    {this value gives spin-tune 1.5e-6}
   
   MRKR := TURNNUM(NTURN)&OPTFLAG&'_psi'&MRK(PSI0_DEG);
   WRITE 6 'MAIN test' OPTFLAG; WRITE 6 'MARKER:' MRKR;
-  DIRSET WHERE 'data/BYPASS_SEX_CLEAR/';
+  DIRSET WHERE 'data/BYPASS_SEX_wRC/';
   GROUTF 'img/dump/TR' 1;
   
   OV 3 3 0;
   DAEPS 1E-12; {this sets DA garbage collection tolerance so that the TRANSFER MAP doesn't get the 1e-15 ABERRATION coefficient}
   { SET lattice parameters }
   SET_FOR_DEUTERONS GAMMA;
-  LATTICE SEXTGx SEXTGx SEXTGy EBE 0 1;
+  LATTICE SEXTGx SEXTGx SEXTGy EBE RCRAD 1;
   OPENF 9292 WHERE&'LATTICE-PARAMETERS:'&MRKR 'REPLACE';
     WRITE 9292 '    SEXT-GX         SEXT-GY          EBE ';
     WRITE 9292 SF(SEXTGx, '(F15.7)')&SF(SEXTGy, '(F15.7)')&SF(EBE, '(F15.7)');
