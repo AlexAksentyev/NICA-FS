@@ -230,7 +230,7 @@ PROCEDURE WIEN L2 {m} B1 {kGs} B2 {kV/cm} TILT {rad}; {homogenous WF; closed orb
   ENDIF;    
 ENDPROCEDURE; { END OF WIEN }
 
-PROCEDURE RADC L {m} W {rad/s};
+PROCEDURE RADC0 L {m} W {rad/s};
   VARIABLE L1 1; VARIABLE TOF 1;
   TOF := L1/CONS(V0);
   RSX TOF*W;
@@ -254,11 +254,11 @@ ENDPROCEDURE;
 PROCEDURE RADC L {m} W {rad/s};
   VARIABLE L1 1; VARIABLE W1 1; VARIABLE TOF 1;
   VARIABLE DS 1;
-  L1 := L; WRITE 6 'LENGTH = '&SF(L1,'(F15.7)');
-  W1 := W; WRITE 6 'W-VELOCITY = '&SF(W1, '(F15.7)');
+  L1 := L;
+  W1 := W;            WRITE 6 'RADIAL CORRECTOR';
   TOF := L1/CONS(V0); WRITE 6 'TIME-OF-FLIGHT = '&SF(TOF, '(E15.7)');
-  DS := TOF * W; WRITE 6 'DELTA SPIN = '&SF(DS, '(E15.7)');
-  DL L; RSX TOF*W;
+  DS := TOF * W;      WRITE 6 'DELTA SPIN = '&SF(DS, '(E15.7)');
+  DL L; RSX DS;
 ENDPROCEDURE;
  
 SAVE 'bin/elements';

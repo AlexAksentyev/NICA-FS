@@ -3,8 +3,13 @@ import matplotlib.pyplot as plt; plt.ion()
 from analysis import HOMEDIR, DAVEC, load_data
 
 LATTICE = 'BYPASS'
-MRKR = '30K-optSGxy_psi45'
+MRKR = '30K-optSGxy-RC1000'
 SEQ = False
+
+if not SEQ:
+    DIR  = '../data/BYPASS_SEX_wRC/'
+else:
+    DIR  = '../data/BYPASS_SEX_wRC/'
 
 def load_trMap(fname):
     VARS  = ['X','A','Y','B','T','D']
@@ -17,10 +22,17 @@ def load_trMap(fname):
                         usecols = range(1,NVARS))
     return tmp
 
-if not SEQ:
-    DIR  = '../data/BYPASS_SEX_wRC/'
-else:
-    DIR  = '../data/BYPASS_SEX_wRC/'
+def load_nbar(folder, mrkr):
+    nbar = {}
+    for i, lbl in [(1,'X'),(2,'Y'),(3,'Z')]:
+        nbar.update({lbl:DAVEC(folder+'NBAR{:d}:{}.da'.format(i, mrkr))})
+    return nbar
+
+def nbar_mean(nbar_dict):
+    return np.array([nbar_dict[e].const for e in ['X','Y','Z']])
+def nbar_norm(nbar_dict):
+    nx0, ny0, nz0 = nbar_mean(nbar_dict)
+    return np.sqrt(nx0**2 + ny0**2 + nz0**2)
 
 def load_tss(path=HOMEDIR+DIR+'MU.dat'):
     d_type = [('EL', int), ('PID', int)] + list(zip(['NU', 'NX','NY','NZ'], [float]*4))
@@ -99,7 +111,22 @@ def plot_seq(dat, spdat, pid = [1,2,3], itn=(0,1), show_elems=[21, 43, 236, 257,
                             # (the added RF is taken care of due to python indexing starting at 0 while cosy's at 1)
         #plt.xticks(ticks=eid[show_elems], labels=elnames[show_elems], rotation=60)
     return fig, ax
-    
+
+def tss_analysis(folder, mrkr_list):
+    nbar_dict = {}
+    nu_arr = []
+    lbl_list = []
+    for el in mrkr_list:
+        lbl, mrkr = el[0], el[1]
+        lbl_list.append(lbl)
+        nb = load_nbar(folder, mrkr); nb = nbar_mean(nb)
+        nbar_dict.update({lbl:nb})
+        print('norm:', np.sqrt(np.sum(nb**2)))
+        
+        nu = DAVEC(folder+'NU:{}.da'.format(mrkr)).const
+        nu_arr.append(nu)
+    nu_arr = np.array(nu_arr)
+    return nbar_dict, nu_arr
 
 if __name__ == '__main__':
     dat = load_data(DIR, 'TRPRAY:{}.dat'.format(MRKR))
