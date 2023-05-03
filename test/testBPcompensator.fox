@@ -46,60 +46,49 @@ FUNCTION TURNNUM NUM;
     ENDIF;
   ENDFUNCTION;
 
-PROCEDURE MAIN;
-  VARIABLE WHERE 100; VARIABLE MRKR 50;
-  VARIABLE GAMMA 1; VARIABLE MAPSE 1;
+PROCEDURE MAIN mean_tilt;
+  VARIABLE WHERE 100; VARIABLE MRKR 50; {file metadata}
 
-  VARIABLE SEXTGx 1; VARIABLE SEXTGy 1; VARIABLE EBE 1;
-  VARIABLE OPTFLAG 10; {determines whether to use the optimized sextupole gradients}
-  
-  VARIABLE PNUM 1;
-  VARIABLE PSI0_DEG 1;
-  VARIABLE NTURN 1;
+  {for tracking, pertaining to particles}
+  VARIABLE PNUM 1; {particle number}
+  VARIABLE PSI0_DEG 1; {initial spin orientation}
+  VARIABLE NTURN 1; {turns to track}
 
-  VARIABLE RCRAD 1;
+  {lattice parameters}
+  VARIABLE EBE 1; {EB element's E-field value}
+  VARIABLE SGX 1; VARIABLE SGY 1; {sextupole ggradients}
+  VARIABLE RADCP 1; {radial corrector parameter}
+  VARIABLE TILTS 12; {EB elements' tilts vector}
 
-  OPTFLAG := 'yes';
+  MRKR := 'MEAN_'&MRK(mean_tilt);
+  WRITE 6 'MEAN '&ST(MRK(mean_tilt)); WRITE 6 'MARKER:' MRKR;
+  DIRSET WHERE 'data/BYPASS_SEX_wRC/laxer-QFS/'; DIRSET_AUTO 1;
+  GROUTF 'img/dump/TR' 1;
 
-  GAMMA := 1.1279235;
   NTURN := 30000;
   PSI0_DEG := 45;
   PNUM := 10;
-  RCRAD := -1000; {radial spin rotation angular velocity [rad/s] (due to corrector)}
-  {lattice parameters}
-  IF OPTFLAG='yes'; {optimized sextupole grad values}
-     SEXTGx := 0.0475358; SEXTGy := -0.0124713;
-     OPTFLAG := '-optSGxy';
-  ELSEIF LO(1); {original values}
-     SEXTGx := 0.4400000; SEXTGy := -0.8199998;
-     OPTFLAG := '';
-  ENDIF;
-  EBE := 99.1475;    {this value gives spin-tune 1.5e-6}
-  
-  MRKR := TURNNUM(NTURN)&OPTFLAG&'-RC1000';
-  WRITE 6 'MAIN test' OPTFLAG; WRITE 6 'MARKER:' MRKR;
-  DIRSET WHERE 'data/BYPASS_SEX_wRC/';
-  GROUTF 'img/dump/TR' 1;
-  
+
+  EBE := 99.1475; {kV/cm; gives (supposedly) spin-tune = 1.5e-6 (...75) or 7e-8 (...85)}
+  SGX := 0.0475358; SGY := -0.0124713; {optimal sextupole values (at this point)}
+  TILTS := VEGAUSS(mean_tilt*1e-4, 1E-4, 12, WHERE&'EB_GAUSS:'&MRKR); {in radians}
+
   OV 3 3 0;
   DAEPS 1E-12; {this sets DA garbage collection tolerance so that the TRANSFER MAP doesn't get the 1e-15 ABERRATION coefficient}
   { SET lattice parameters }
-  SET_FOR_DEUTERONS GAMMA;
-  LATTICE SEXTGx SEXTGx SEXTGy EBE RCRAD 1;
+  SET_FOR_DEUTERONS 1.1279235;
+  LATTICE SGX SGX SGY
+          EBE
+          RADCP TILTS;
   OPENF 9292 WHERE&'LATTICE-PARAMETERS:'&MRKR 'REPLACE';
     WRITE 9292 '    SEXT-GX         SEXT-GY          EBE ';
-    WRITE 9292 SF(SEXTGx, '(F15.7)')&SF(SEXTGy, '(F15.7)')&SF(EBE, '(F15.7)');
+    WRITE 9292 SF(SGX, '(F15.7)')&SF(SGY, '(F15.7)')&SF(EBE, '(F15.7)');
     CLOSEF 9292;
   OUTPUT_MAP_DATA WHERE MRKR;
-    {other stats about the map}
-    MAPSE := SE(MAP);
-    OPENF 636 WHERE&'MAP-SYM-ERR:'&MRKR 'REPLACE';
-    WRITE 636 MAPSE; CLOSEF 636;
-    WRITE 6 'MAP SYMPLECTIFICATION ERROR' MAPSE;
     WRITE 6 'LATTICE LENGTH' SPOS;
 
 
-  INJECT PNUM PSI0_DEG;
+  {INJECT PNUM PSI0_DEG;
   WRITE 6 '******************** STARTING TRACKING';
   OPENF 99 WHERE&'PRAY:'&MRKR&'.dat' 'REPLACE';
   PRAY 99; CLOSEF 99;
@@ -107,36 +96,13 @@ PROCEDURE MAIN;
   OPENF 893 WHERE&'TRPSPI:'&MRKR&'.dat' 'REPLACE';
   TRPRAY 772; TRPSPI 893;
   TR NTURN NINT(NTURN/5000) -1 -3 1.2 1.2 0 0 -12;
-  CLOSEF 772; CLOSEF 893;
+  CLOSEF 772; CLOSEF 893;}
 
 ENDPROCEDURE; {MAIN}
 
-PROCEDURE TMAP;
-  VARIABLE WHERE 100; VARIABLE MRKR 10;
-  VARIABLE GAMMA 1; VARIABLE MAPSE 1;
-  VARIABLE MU 800; VARIABLE NBAR 800 3; VARIABLE EL 1;
-
-  MRKR := 'FULL-1D'; WRITE 6 'TMAP test';
-  DIRSET WHERE 'data/BYPASS/WF2WF/';
-  GROUTF 'img/dump/TR' 1;
-  GAMMA := 1.129;
-  
-  
-  OV 1 3 0;
-  DAEPS 1E-12; {this sets DA garbage collection tolerance so that the TRANSFER MAP doesn't get the 1e-15 ABERRATION coefficient}
-  SET_FOR_DEUTERONS GAMMA; { SET lattice parameters }
-  LATTICE 1;  {this will generate an error b/c LATTICE requires sext grads and EB E-field input}
-  OUTPUT_MAP_DATA WHERE MRKR;  {this outputs the TMAP}
-  {other stats about the map}
-  MAPSE := SE(MAP);
-  OPENF 636 WHERE&'MAP-SYM-ERR:'&MRKR 'REPLACE';
-  WRITE 636 MAPSE; CLOSEF 636;
-  WRITE 6 'MAP SYMPLECTIFICATION ERROR' MAPSE;
-  WRITE 6 'LATTICE LENGTH' SPOS;
-
-ENDPROCEDURE; {TMAP}
-
 PROCEDURE RUN;
-  MAIN;
+  VARIABLE I 1;
+  LOOP I 1 25;
+    MAIN (I-1); ENDLOOP;
 ENDPROCEDURE;
 RUN; END;

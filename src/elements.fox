@@ -220,13 +220,14 @@ PROCEDURE WIEN L2 {m} B1 {kGs} B2 {kV/cm} TILT {rad}; {homogenous WF; closed orb
   { WRITE 6 'RE = '&SF(R1, '(E15.7)')&' RB ='&SF(R2, '(E15.7)'); }
   TILT0 := TILT;
   WF R1 R1 L1 0.05;             {use equal radii (R1 R1) for no bend effect in the Wien-filter}
-  IF TILT0#0;
-    BX := B0*TAN(TILT0);
-    EY := CONS(CHIE)/CONS(CHIM)*BX;
+  B0 := CONS(CHIM)/R1;          {recompute: R2 = R1 -> B0 = CHIM/R1}
+  IF TILT0#0; { WRITE 6 '-> rotating WF by tilt = '&ST(TILT0); }
+    BX := B0*TAN(TILT0); { WRITE 6 '--> BX, B0 = '&ST(BX)&', '&ST(B0); }
+    EY := CONS(CHIE)/CONS(CHIM)*BX; { WRITE 6 '--> EY = '&ST(EY); }
     BETA := CONS(V0)/CLIGHT;
     DWMDM := Z0/M0*EZERO/AMU*(G0*BX - (G0 - 1/BETA/BETA + 1)*BETA*EY/CLIGHT);
-    TOF := L1/CONS(V0);
-    RSX TOF*DWMDM;
+    TOF := L1/CONS(V0); { WRITE 6 '---> delta W mdm = '&ST(DWMDM); }
+    RSX TOF*DWMDM; { WRITE 6 '---> extra radial spin rotation = '&ST(TOF*DWMDM); }
   ENDIF;    
 ENDPROCEDURE; { END OF WIEN }
 
