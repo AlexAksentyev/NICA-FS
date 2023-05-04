@@ -46,7 +46,7 @@ FUNCTION TURNNUM NUM;
     ENDIF;
   ENDFUNCTION;
 
-PROCEDURE MAIN mean_tilt;
+PROCEDURE MAIN comNU TILTS; { compensator NU input (to be multiplied by Wcyc in lattice.fox for W in rad/sec }
   VARIABLE WHERE 100; VARIABLE MRKR 50; {file metadata}
 
   {for tracking, pertaining to particles}
@@ -58,20 +58,20 @@ PROCEDURE MAIN mean_tilt;
   VARIABLE EBE 1; {EB element's E-field value}
   VARIABLE SGX 1; VARIABLE SGY 1; {sextupole ggradients}
   VARIABLE RADCP 1; {radial corrector parameter}
-  VARIABLE TILTS 12; {EB elements' tilts vector}
 
-  MRKR := 'MEAN_'&MRK(mean_tilt);
-  WRITE 6 'MEAN '&ST(MRK(mean_tilt)); WRITE 6 'MARKER:' MRKR;
-  DIRSET WHERE 'data/BYPASS_SEX_wRC/laxer-QFS/'; DIRSET_AUTO 1;
+  MRKR := 'RCNU_'&MRK(ABS(comNU*1e3));
+  WRITE 6 'RC NU : '&ST(comNU); WRITE 6 'MARKER:' MRKR;
+  DIRSET WHERE 'data/BYPASS_SEX_wRC/RC-vary/'; DIRSET_AUTO 1;
   GROUTF 'img/dump/TR' 1;
 
-  NTURN := 30000;
+  WRITE 6 'TILTS' TILTS;
+
+  NTURN := 30000; 
   PSI0_DEG := 45;
   PNUM := 10;
 
   EBE := 99.1475; {kV/cm; gives (supposedly) spin-tune = 1.5e-6 (...75) or 7e-8 (...85)}
   SGX := 0.0475358; SGY := -0.0124713; {optimal sextupole values (at this point)}
-  TILTS := VEGAUSS(mean_tilt*1e-4, 1E-4, 12, WHERE&'EB_GAUSS:'&MRKR); {in radians}
 
   OV 3 3 0;
   DAEPS 1E-12; {this sets DA garbage collection tolerance so that the TRANSFER MAP doesn't get the 1e-15 ABERRATION coefficient}
@@ -79,10 +79,10 @@ PROCEDURE MAIN mean_tilt;
   SET_FOR_DEUTERONS 1.1279235;
   LATTICE SGX SGX SGY
           EBE
-          RADCP TILTS;
+          comNU TILTS;
   OPENF 9292 WHERE&'LATTICE-PARAMETERS:'&MRKR 'REPLACE';
-    WRITE 9292 '    SEXT-GX         SEXT-GY          EBE ';
-    WRITE 9292 SF(SGX, '(F15.7)')&SF(SGY, '(F15.7)')&SF(EBE, '(F15.7)');
+    WRITE 9292 '    SEXT-GX         SEXT-GY          EBE          RCNU ';
+    WRITE 9292 SF(SGX, '(F15.7)')&SF(SGY, '(F15.7)')&SF(EBE, '(F15.7)')&SF(comNU, '(F15.7)');
     CLOSEF 9292;
   OUTPUT_MAP_DATA WHERE MRKR;
     WRITE 6 'LATTICE LENGTH' SPOS;
@@ -101,8 +101,11 @@ PROCEDURE MAIN mean_tilt;
 ENDPROCEDURE; {MAIN}
 
 PROCEDURE RUN;
-  VARIABLE I 1;
-  LOOP I 1 25;
-    MAIN (I-1); ENDLOOP;
+  VARIABLE TILTS 12; {EB elements' tilts vector}
+  VARIABLE I 1; VARIABLE UNITFORCE 1; {unit SPIN TUNE increase in RADC}
+  TILTS := VEGAUSS(0.5e-4, 1E-4, 12, 'data/BYPASS_SEX_wRC/EB_GAUSS:ALL'); {in radians}  { <- ensure mean tilt value @ half RMS }
+  UNITFORCE := -1.2E-3;
+  LOOP I 1 50;
+    MAIN (I-1)*UNITFORCE TILTS; ENDLOOP;
 ENDPROCEDURE;
 RUN; END;

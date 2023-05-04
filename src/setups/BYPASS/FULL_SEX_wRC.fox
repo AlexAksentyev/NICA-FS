@@ -6,17 +6,19 @@ INCLUDE 'bin/common/BYPASS/header';
 
 {GAMMA := 1.12792344429;}  {this gamma gives 240 MeV for deuterons}
 
-PROCEDURE LATTICE SEXTGx1 SEXTGx2 SEXTGy EB RC TILTVEC;
-                                            {depends on whether RADC or RADC1 is used}
+PROCEDURE LATTICE SEXTGx1 SEXTGx2 SEXTGy EB NURC {RC spin tune} TILTVEC {12 WF tilts};
+                                            
   VARIABLE VRF 1 1 1;
   VARIABLE FREQ 1;
   VARIABLE HNUM 1;
 
+  VARIABLE WCYC 1; {beam revolution frequency used in RF and RADC parametrization}
   VARIABLE EBE 1; VARIABLE BBE 1; {WIEN FILTER parameters. EBE input, BBE=0; ignored in WIEN (r1=r2)}
   VARIABLE RCP 1; {RADIAL COMPENSATOR (for calibration purposes) parameter}
   VARIABLE LEN_S 1; VARIABLE SF1 1; VARIABLE SF2 1;   VARIABLE SD 1; VARIABLE A 1;
+  WCYC := REVFREQ(fACCLEN(1)); { REVFREQ in utilities.fox (uses V0), fACCLEN in the respective lattice's header file }
   EBE := EB; {101.8726388306976}  {WIEN-filter optimal parameters found by optimize-EB-bypass}
-  RCP := RC; {radial compensator B-field (for RADC1) or W-velocity (for RADC)}
+  RCP := NURC*WCYC; {radial compensator B-field (for RADC1) or W-velocity (for RADC)}
   A := 0.05;
   LEN_S := 0.30;  {sextupole length}
 
@@ -39,7 +41,7 @@ PROCEDURE LATTICE SEXTGx1 SEXTGx2 SEXTGy EB RC TILTVEC;
   {SETTING RF PARAMETERS}
   HNUM := 66;
   VRF(1, 1) := 100/HNUM; {RF Voltage [kV]}
-  FREQ := HNUM*REVFREQ(fACCLEN(1)); {RF Frequency}
+  FREQ := HNUM*WCYC; {RF Frequency}
   {SETTING LATTICE PARAMETERS}
 
   WRITE 6 '********************************************';
