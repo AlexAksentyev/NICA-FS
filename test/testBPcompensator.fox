@@ -57,7 +57,6 @@ PROCEDURE MAIN comNU TILTS; { compensator NU input (to be multiplied by Wcyc in 
   {lattice parameters}
   VARIABLE EBE 1; {EB element's E-field value}
   VARIABLE SGX 1; VARIABLE SGY 1; {sextupole ggradients}
-  VARIABLE RADCP 1; {radial corrector parameter}
 
   MRKR := 'RCNU_'&MRK(ABS(comNU*1e3));
   WRITE 6 'RC NU : '&ST(comNU); WRITE 6 'MARKER:' MRKR;
@@ -100,12 +99,62 @@ PROCEDURE MAIN comNU TILTS; { compensator NU input (to be multiplied by Wcyc in 
 
 ENDPROCEDURE; {MAIN}
 
-PROCEDURE RUN;
+PROCEDURE OPTIMIZER CASE;
+  VARIABLE WHERE 100; VARIABLE MRKR 50; {file metadata}
+
+  {lattice parameters}
+  VARIABLE EBE 1; {EB element's E-field value}
+  VARIABLE SGX 1; VARIABLE SGY 1; {sextupole gradients}
+  VARIABLE TILTS 12;
+  VARIABLE MU 800; VARIABLE NBAR 800 3;
+  VARIABLE RCNU 1; {to be optimized} VARIABLE OBJ 1; {measure}
+
+  MRKR := MRK(CASE);
+  WRITE 6 'MARKER:' MRKR;
+  DIRSET WHERE 'data/BYPASS_SEX_wRC/RC-opt-to/'; DIRSET_AUTO 1;
+  GROUTF 'img/dump/TR' 1;
+
+  EBE := 99.1485; {kV/cm; gives (supposedly) spin-tune = 1.5e-6 (...75) or 7e-8 (...85)}
+  SGX := 0.0475358; SGY := -0.0124713; {optimal sextupole values (at this point)}
+
+
+  OV 3 3 0;
+  DAEPS 1E-12; {this sets DA garbage collection tolerance so that the TRANSFER MAP doesn't get the 1e-15 ABERRATION coefficient}
+  { SET lattice parameters }
+  SET_FOR_DEUTERONS 1.1279235;
+  IF CASE=0; TILTS := VEGAUSS(0, 0, 12, WHERE&'EB_GAUSS:'&MRKR);
+  ELSEIF LO(1);
+    TILTS := VEGAUSS((CASE-1)*0.5e-4, 1E-4, 12, WHERE&'EB_GAUSS:'&MRKR);
+  ENDIF;
+
+  FIT RCNU;
+    LATTICE SGX SGX SGY
+            EBE
+            RCNU TILTS;
+    TSS MU NBAR 0;
+    OBJ :=  ABS(CONS(NBAR(1))); {the compensator must reduce the N_x on the CO to zero}
+   ENDFIT 1E-5 1000 1 OBJ;
+          
+  OPENF 9292 WHERE&'LATTICE-PARAMETERS:'&MRKR 'REPLACE';
+    WRITE 9292 '    SEXT-GX         SEXT-GY          EBE          RCNU ';
+    WRITE 9292 SF(SGX, '(F15.7)')&SF(SGY, '(F15.7)')&SF(EBE, '(F15.7)')&SF(RCNU, '(F15.7)');
+    CLOSEF 9292;
+  OUTPUT_MAP_DATA WHERE MRKR;
+  
+ENDPROCEDURE; {OPTIMIZER}
+
+PROCEDURE RUNMAIN;
   VARIABLE TILTS 12; {EB elements' tilts vector}
   VARIABLE I 1; VARIABLE UNITFORCE 1; {unit SPIN TUNE increase in RADC}
   TILTS := VEGAUSS(0.5e-4, 1E-4, 12, 'data/BYPASS_SEX_wRC/EB_GAUSS:ALL'); {in radians}  { <- ensure mean tilt value @ half RMS }
   UNITFORCE := -1.2E-3;
   LOOP I 1 50;
     MAIN (I-1)*UNITFORCE TILTS; ENDLOOP;
+ENDPROCEDURE; {RUNMAIN}
+PROCEDURE RUN;
+  VARIABLE CASE 1;
+  LOOP CASE 0 5;
+    OPTIMIZER CASE;
+  ENDLOOP;
 ENDPROCEDURE;
 RUN; END;

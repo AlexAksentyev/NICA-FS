@@ -1,11 +1,12 @@
 import numpy as np
 import matplotlib.pyplot as plt; plt.ion()
-from analysis import DAVEC
+from analysis import DAVEC, fit_line
 from glob import glob
 import re
 
-DIR = '../data/BYPASS_SEX_wRC/RC-vary/'
-mrkr_form = lambda n: 'RCNU_{:d}'.format(n)
+DIR = '../data/BYPASS_SEX_wRC/RC-opt-to/'
+mrkr_form = lambda n: '{:d}'.format(n)
+case_sign = '*'
 
 class NBAR:
     def __init__(self, folder, mrkr):
@@ -23,13 +24,13 @@ class NBAR:
 
 
 if __name__ == '__main__':
-    cases = [int(re.sub('_','',e[-2:])) for e in glob(DIR+'ABERRATIONS:RCNU_*')]
+    cases = [int(re.sub('_','',e[-1:])) for e in glob(DIR+'ABERRATIONS:'+case_sign)]
     cases.sort()
     ncases = len(cases)
     nbar = {}; nu = {}
     n0 = np.zeros(ncases, dtype=list(zip(['X','Y','Z'],[float]*3))); nu0 = np.zeros(ncases)
-    #tilts = np.zeros((12,ncases))
-    tilts = np.loadtxt('../data/BYPASS_SEX_wRC/EB_GAUSS:ALL.in')/np.pi * 180  # rad -> deg
+    tilts = np.zeros((12,ncases))
+    #tilts = np.loadtxt('../data/BYPASS_SEX_wRC/EB_GAUSS:ALL.in')/np.pi * 180  # rad -> deg
     nuRC = np.zeros(ncases)
     for i, case in enumerate(cases):
         nbar.update({case: NBAR(DIR, mrkr_form(case))})
@@ -37,30 +38,50 @@ if __name__ == '__main__':
         tmp = [nbar[case].mean[e] for e in range(3)]
         n0[i] = tmp[0],tmp[1], tmp[2]
         nu0[i] = nu[case].const
-        #tilts[:,i] = np.loadtxt(DIR+'EB_GAUSS:'+mrkr_form(i)+'.in')/np.pi * 180 # rad -> deg
+        tilts[:,i] = np.loadtxt(DIR+'EB_GAUSS:'+mrkr_form(case)+'.in')/np.pi * 180 # rad -> deg
         nuRC[i] = np.loadtxt(DIR+'/LATTICE-PARAMETERS:'+mrkr_form(case),skiprows=1)[3]                                                      
-    #tilts0 = tilts.mean(axis=0)
+    tilts0 = tilts.mean(axis=0)
 
-    mean_tilt = tilts.mean(); tilt_sd = tilts.std()
-    fig, ax = plt.subplots(3,1,sharex=True)
-    ax[0].set_title(r'$\langle\theta_{tilt}\rangle$ = '+'{:4.2e} [deg]'.format(mean_tilt))
-    ax[0].plot(nuRC, n0['X'],'-.')
-    ax[0].set_ylabel(r'$\bar n_x$')
-    ax[1].plot(nuRC, n0['Y'],'-.')
-    ax[1].set_ylabel(r'$\bar n_y$')
-    ax[1].ticklabel_format(style='sci',scilimits=(0,0),axis='y',useMathText=True)
-    ax[2].plot(nuRC, n0['Z'],'-.')
-    ax[2].set_ylabel(r'$\bar n_z$')
-    ax[2].ticklabel_format(style='sci',scilimits=(0,0),axis='both',useMathText=True)
-    ax[2].set_xlabel(r'$\nu_{rc}$')
-    for i in range(3):
+    fig, ax = plt.subplots(2,1,sharex=True)
+    popt, perr = fit_line(tilts0, nuRC)
+    ax[0].plot(tilts0, popt[0]+popt[1]*tilts0, '--r')
+    ax[0].plot(tilts0, nuRC, '.')
+    ax[0].set_ylabel(r'required $\nu_{rc}$')
+    ax[1].plot(tilts0, n0['X'], 'r.', label=r'$\bar n_x$')
+    ax[1].plot(tilts0, n0['Y'], 'g.', label=r'$\bar n_y$')
+    ax[1].plot(tilts0, n0['Z'], 'b.', label=r'$\bar n_z$')
+    ax[1].set_ylabel(r'effected $\bar n$'); ax[1].legend()
+    ax[1].set_xlabel(r'$\langle\theta_{tilt}\rangle$ compensated [deg]')
+    for i in range(2):
         ax[i].grid()
 
-    phi_XY = np.arctan(n0['Y']/n0['X'])/np.pi*180
-    fig1, ax1 = plt.subplots(1,1)
-    ax1.plot(nuRC, phi_XY, '-.')
-    ax1.set_xlabel(r'$\nu_{rc}$')
-    ax1.set_ylabel(r'$\angle(\bar n_x,\bar n_y)$ [deg]')
+    
+
+
+    
+
+    ###### analysis 'tilt correction' (vs constant 'tilts')   #########
+
+    # mean_tilt = tilts.mean(); tilt_sd = tilts.std()
+    # fig, ax = plt.subplots(3,1,sharex=True)
+    # ax[0].set_title(r'$\langle\theta_{tilt}\rangle$ = '+'{:4.2e} [deg]'.format(mean_tilt))
+    # ax[0].plot(nuRC, n0['X'],'-.')
+    # ax[0].set_ylabel(r'$\bar n_x$')
+    # ax[1].plot(nuRC, n0['Y'],'-.')
+    # ax[1].set_ylabel(r'$\bar n_y$')
+    # ax[1].ticklabel_format(style='sci',scilimits=(0,0),axis='y',useMathText=True)
+    # ax[2].plot(nuRC, n0['Z'],'-.')
+    # ax[2].set_ylabel(r'$\bar n_z$')
+    # ax[2].ticklabel_format(style='sci',scilimits=(0,0),axis='both',useMathText=True)
+    # ax[2].set_xlabel(r'$\nu_{rc}$')
+    # for i in range(3):
+    #     ax[i].grid()
+
+    # phi_XY = np.arctan(n0['Y']/n0['X'])/np.pi*180
+    # fig1, ax1 = plt.subplots(1,1)
+    # ax1.plot(nuRC, phi_XY, '-.')
+    # ax1.set_xlabel(r'$\nu_{rc}$')
+    # ax1.set_ylabel(r'$\angle(\bar n_x,\bar n_y)$ [deg]')
 
 
 
