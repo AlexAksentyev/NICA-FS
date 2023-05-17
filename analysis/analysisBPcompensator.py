@@ -4,7 +4,7 @@ from analysis import DAVEC, fit_line
 from glob import glob
 import re
 
-DIR = '../data/BYPASS_SEX_wRC/RC-opt-to/'
+DIR = '../data/BYPASS_SEX_wRC/RLC-opt-to/'
 mrkr_form = lambda n: '{:d}'.format(n)
 case_sign = '*'
 
@@ -31,7 +31,7 @@ if __name__ == '__main__':
     n0 = np.zeros(ncases, dtype=list(zip(['X','Y','Z'],[float]*3))); nu0 = np.zeros(ncases)
     tilts = np.zeros((12,ncases))
     #tilts = np.loadtxt('../data/BYPASS_SEX_wRC/EB_GAUSS:ALL.in')/np.pi * 180  # rad -> deg
-    nuRC = np.zeros(ncases)
+    nuRLC = np.zeros(ncases, dtype=[('RC', float), ('LC', float)])
     for i, case in enumerate(cases):
         nbar.update({case: NBAR(DIR, mrkr_form(case))})
         nu.update({case: DAVEC(DIR+'NU:'+mrkr_form(case)+'.da')})
@@ -39,13 +39,14 @@ if __name__ == '__main__':
         n0[i] = tmp[0],tmp[1], tmp[2]
         nu0[i] = nu[case].const
         tilts[:,i] = np.loadtxt(DIR+'EB_GAUSS:'+mrkr_form(case)+'.in')/np.pi * 180 # rad -> deg
-        nuRC[i] = np.loadtxt(DIR+'/LATTICE-PARAMETERS:'+mrkr_form(case),skiprows=1)[3]                                                      
+        tmp = np.loadtxt(DIR+'/LATTICE-PARAMETERS:'+mrkr_form(case),skiprows=1)[3:]
+        nuRLC[i] = tmp[0], tmp[1]                                                      
     tilts0 = tilts.mean(axis=0)
 
     fig, ax = plt.subplots(2,1,sharex=True)
-    popt, perr = fit_line(tilts0, nuRC)
+    popt, perr = fit_line(tilts0, nuRLC['RC'])
     ax[0].plot(tilts0, popt[0]+popt[1]*tilts0, '--r')
-    ax[0].plot(tilts0, nuRC, '.')
+    ax[0].plot(tilts0, nuRLC['RC'], '.')
     ax[0].set_ylabel(r'required $\nu_{rc}$')
     ax[1].plot(tilts0, n0['X'], 'r.', label=r'$\bar n_x$')
     ax[1].plot(tilts0, n0['Y'], 'g.', label=r'$\bar n_y$')
@@ -54,6 +55,13 @@ if __name__ == '__main__':
     ax[1].set_xlabel(r'$\langle\theta_{tilt}\rangle$ compensated [deg]')
     for i in range(2):
         ax[i].grid()
+
+    fig1, ax1 = plt.subplots(1,1)
+    ax1.plot(nuRLC['RC'], nuRLC['LC'], '.')
+    ax1.set_ylabel(r'required (longgitudinal) corrector $\nu$')
+    ax1.set_xlabel(r'used (radial) compensator $\nu$')
+    ax1.ticklabel_format(style='sci',scilimits=(0,0),useMathText=True, axis='y')
+    ax1.grid()
 
     
 

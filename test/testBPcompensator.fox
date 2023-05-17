@@ -107,11 +107,11 @@ PROCEDURE OPTIMIZER CASE;
   VARIABLE SGX 1; VARIABLE SGY 1; {sextupole gradients}
   VARIABLE TILTS 12;
   VARIABLE MU 800; VARIABLE NBAR 800 3;
-  VARIABLE RCNU 1; {to be optimized} VARIABLE OBJ 1; {measure}
+  VARIABLE RCNU 1; VARIABLE LCNU 1; {to be optimized} VARIABLE OBJ 1; {measure}
 
   MRKR := MRK(CASE);
   WRITE 6 'MARKER:' MRKR;
-  DIRSET WHERE 'data/BYPASS_SEX_wRC/RC-opt-to/'; DIRSET_AUTO 1;
+  DIRSET WHERE 'data/BYPASS_SEX_wRC/RLC-opt-to/'; DIRSET_AUTO 1;
   GROUTF 'img/dump/TR' 1;
 
   EBE := 99.1485; {kV/cm; gives (supposedly) spin-tune = 1.5e-6 (...75) or 7e-8 (...85)}
@@ -127,17 +127,17 @@ PROCEDURE OPTIMIZER CASE;
     TILTS := VEGAUSS((CASE-1)*0.5e-4, 1E-4, 12, WHERE&'EB_GAUSS:'&MRKR);
   ENDIF;
 
-  FIT RCNU;
+  FIT RCNU LCNU;
     LATTICE SGX SGX SGY
             EBE
-            RCNU TILTS;
+            RCNU LCNU TILTS;
     TSS MU NBAR 0;
-    OBJ :=  ABS(CONS(NBAR(1))); {the compensator must reduce the N_x on the CO to zero}
+    OBJ :=  ABS(CONS(NBAR(2))-1); {the compensator must reduce both the N_x and N_z on the CO to zero}
    ENDFIT 1E-5 1000 1 OBJ;
           
   OPENF 9292 WHERE&'LATTICE-PARAMETERS:'&MRKR 'REPLACE';
-    WRITE 9292 '    SEXT-GX         SEXT-GY          EBE          RCNU ';
-    WRITE 9292 SF(SGX, '(F15.7)')&SF(SGY, '(F15.7)')&SF(EBE, '(F15.7)')&SF(RCNU, '(F15.7)');
+    WRITE 9292 '    SEXT-GX         SEXT-GY          EBE          RCNU           LCNU ';
+    WRITE 9292 SF(SGX, '(F15.7)')&SF(SGY, '(F15.7)')&SF(EBE, '(F15.7)')&SF(RCNU, '(F15.7)')&SF(LCNU, '(F15.7)');
     CLOSEF 9292;
   OUTPUT_MAP_DATA WHERE MRKR;
   
