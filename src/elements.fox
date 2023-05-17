@@ -135,16 +135,24 @@ ENDPROCEDURE;
 PROCEDURE SBEND L {m} ANGLE {rad} TILT {rad} E1 {rad} H1 {1/m} E2 {rad} H2{1/m} FINT {unit} FINTX {unit};
   VARIABLE R 1; VARIABLE ANGLE0 1; VARIABLE TILT0 1;
   VARIABLE E10 1; VARIABLE E20 1;
+  VARIABLE B0 1; VARIABLE BX 1; VARIABLE TOF 1; VARIABLE DWMDM 1;
   E10 := E1/DEGRAD;
   E20 := E2/DEGRAD;
   ANGLE0 := ABS(ANGLE)/DEGRAD;
   TILT0 := TILT/DEGRAD;
-  R := L/ABS(ANGLE);
+  R := L/ABS(ANGLE);  
   IF ANGLE<0; CB; ENDIF;
-  ROTATE TILT0;
+  { ROTATE TILT0; }   { * }
     DI R ANGLE0 .1 E10 H1 E20 H2;
-  ROTATE -TILT0;
+  { ROTATE -TILT0; }  { * }
   IF ANGLE<0; CB; ENDIF;
+  IF TILT#0; {this version of tilt implementation is only spin-dynamics effective * }
+    B0 = CONS(CHIM)/R; {B = BRho/Rho}
+    BX := B0*TAN(TILT0); {B0 = B' cos theta; Bx = B' sin theta}
+    DWMDM := Z0/M0*EZERO/AMU*G0*BX;
+    TOF := L/CONS(V0);
+    RSX TOF*DWMDM;
+  ENDIF;
 ENDPROCEDURE; {SBEND}
 
 PROCEDURE RBEND L {m} ANGLE {rad} TILT {rad};
