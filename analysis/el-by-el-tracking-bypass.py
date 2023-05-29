@@ -2,7 +2,7 @@ import numpy as np
 import matplotlib.pyplot as plt; plt.ion()
 from analysis import load_data
 
-DATADIR = '../data/BYPASS_SEX_CLEAR/EL-BY-EL-TRACKING/'
+DATADIR = '../data/BYPASS_SEX_wRC/EL-BY-EL-TRACKING/'
 
 ps = load_data(DATADIR, 'TRPRAY:SEQ.dat')
 sp = load_data(DATADIR, 'TRPSPI:SEQ.dat')
@@ -23,7 +23,9 @@ ELNAMES = prep_elnames()
 ELNAMES_RAW=prep_elnames(True) # raw names
 iEB = ELNAMES_RAW == 'ra'
 iBH = ELNAMES_RAW == 'BH'
-show_elems = iEB + iBH
+iRCP = ELNAMES == 'MCS0 [5]'
+iLCP = ELNAMES == 'MCS0 [14]'
+show_elems = iEB + iRCP + iLCP
 
 def plot_seq(dat, spdat, pid = [1,2,3], itn=(0,1), show_elems=None):
     if type(itn)==int:
@@ -62,4 +64,6 @@ def plot_seq(dat, spdat, pid = [1,2,3], itn=(0,1), show_elems=None):
 
 
 if __name__ == '__main__':
-    plot_seq(ps,sp, itn=1, show_elems=show_elems)
+    tilts = np.loadtxt(DATADIR+'EB_GAUSS.in')/np.pi * 180 # rad -> deg
+    fig, ax = plot_seq(ps,sp, itn=1, show_elems=show_elems)
+    ax[0].set_title(r'$\langle\theta_{tilt}\rangle = $'+'{:4.2e}'.format(tilts.mean()))

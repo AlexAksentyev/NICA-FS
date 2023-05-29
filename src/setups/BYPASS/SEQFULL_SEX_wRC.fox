@@ -4,14 +4,14 @@ PROCEDURE LATTICE MAPPARAMS MAPARR SPNRARR TILTVEC;
   VARIABLE EBE 1; VARIABLE NURC 1; VARIABLE NUSL 1;
   VARIABLE WCYC 1; VARIABLE RCP 1; VARIABLE LCP 1;
   VARIABLE LEN_S 1; VARIABLE SF1 1; VARIABLE SF2 1;
-  VARIABLE A 1;     VARIABLE SD 1;
+  VARIABLE A 1;     VARIABLE BBE 1; VARIABLE SD 1;
   A := 0.05;
   LEN_S := 0.30;  {sextupole length}
   WCYC := REVFREQ(fACCLEN(1)); { REVFREQ in utilities.fox (uses V0), fACCLEN in the respective lattice's header file }
 
   { reading map parameters }
   SF1 := MAPPARAMS(1); SF2 := MAPPARAMS(2);  SD := MAPPARAMS(3);
-  EBE := MAPPARAMS(4); NURC := MAPPARAMS(5); NUSL = MAPPARAMS(6);
+  EBE := MAPPARAMS(4); NURC := MAPPARAMS(5); NUSL := MAPPARAMS(6);
   { recomputing correctors' }
   RCP := NURC*WCYC;
   LCP := NUSL*WCYC/G0/CONS(CHIM)*M0/Z0*AMU/EZERO; {Ks of MADx definition: Ks = B0/BRho}    {unit: [rad/m]}
