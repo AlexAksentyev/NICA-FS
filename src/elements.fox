@@ -1,16 +1,15 @@
 
 INCLUDE '~/REPOS/COSYINF-CORE/bin/utilities';
 
-PROCEDURE ROTATE PHI;
+PROCEDURE ROTATE PHI {deg};
   VARIABLE M NM1 4; VARIABLE ANG NM2;
   VARIABLE i 1;
-  ANG := PHI*DEGRAD;
+  ANG := PHI*DEGRAD; { deg -> rad }
   M(1):= COS(ANG)*MAP(1) + SIN(ANG)*MAP(3);
   M(3):=-SIN(ANG)*MAP(1) + COS(ANG)*MAP(3);
   M(2):= COS(ANG)*MAP(2) + SIN(ANG)*MAP(4);
   M(4):=-SIN(ANG)*MAP(2) + COS(ANG)*MAP(4);
   LOOP i 1 4; MAP(i):=M(i);  ENDLOOP;
-  { RSA PHI; }    { redundant (check elements.fox in COSY-FS) }
 ENDPROCEDURE; {ROTATE}
 
 FUNCTION KMULT KNL L; {COMPUTES MAGNETIC INDUCTION gradient^n FOR A MADX MULTIPOLE ELEMENT}
@@ -139,7 +138,7 @@ PROCEDURE SBEND L {m} ANGLE {rad} TILT {rad} E1 {rad} H1 {1/m} E2 {rad} H2{1/m} 
   E10 := E1/DEGRAD;
   E20 := E2/DEGRAD;
   ANGLE0 := ABS(ANGLE)/DEGRAD;
-  TILT0 := TILT/DEGRAD;
+  TILT0 := TILT/DEGRAD;  {deg * }
   R := L/ABS(ANGLE);  
   IF ANGLE<0; CB; ENDIF;
   { ROTATE TILT0; }   { * }
@@ -148,10 +147,10 @@ PROCEDURE SBEND L {m} ANGLE {rad} TILT {rad} E1 {rad} H1 {1/m} E2 {rad} H2{1/m} 
   IF ANGLE<0; CB; ENDIF;
   IF TILT#0; {this version of tilt implementation is only spin-dynamics effective * }
     B0 = CONS(CHIM)/R; {B = BRho/Rho}
-    BX := B0*TAN(TILT0); {B0 = B' cos theta; Bx = B' sin theta}
-    DWMDM := Z0/M0*EZERO/AMU*G0*BX;
-    TOF := L/CONS(V0);
-    RSX TOF*DWMDM;
+    BX := B0*TAN(TILT); {B0 = B' cos theta; Bx = B' sin theta}
+    DWMDM := Z0/M0*EZERO/AMU*G0*BX;   {rad/sec}
+    TOF := L/CONS(V0);                {sec}
+    RSX TOF*DWMDM/DEGRAD;             {deg} 
   ENDIF;
 ENDPROCEDURE; {SBEND}
 
@@ -233,9 +232,9 @@ PROCEDURE WIEN L2 {m} B1 {kGs} B2 {kV/cm} TILT {rad}; {homogenous WF; closed orb
     BX := B0*TAN(TILT0); { WRITE 6 '--> BX, B0 = '&ST(BX)&', '&ST(B0); }
     EY := CONS(CHIE)/CONS(CHIM)*BX; { WRITE 6 '--> EY = '&ST(EY); }
     BETA := CONS(V0)/CLIGHT;
-    DWMDM := Z0/M0*EZERO/AMU*(G0*BX - (G0 - 1/BETA/BETA + 1)*BETA*EY/CLIGHT);
-    TOF := L1/CONS(V0); { WRITE 6 '---> delta W mdm = '&ST(DWMDM); }
-    RSX TOF*DWMDM; { WRITE 6 '---> extra radial spin rotation = '&ST(TOF*DWMDM); }
+    DWMDM := Z0/M0*EZERO/AMU*(G0*BX - (G0 - 1/BETA/BETA + 1)*BETA*EY/CLIGHT);              {rad/sec}
+    TOF := L1/CONS(V0); { WRITE 6 '---> delta W mdm = '&ST(DWMDM); }                       {sec}
+    RSX TOF*DWMDM/DEGRAD; { WRITE 6 '---> extra radial spin rotation = '&ST(TOF*DWMDM); }  {deg}
   ENDIF;    
 ENDPROCEDURE; { END OF WIEN }
 
