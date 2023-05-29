@@ -94,6 +94,7 @@ if __name__ == '__main__':
     tilts = np.zeros((92,ncases))
     nuRLC = np.zeros(ncases, dtype=[('RC', float), ('LC', float)])
     for i, case in enumerate(cases):
+        print(case)
         nbar.update({case: NBAR(DIR, mrkr_form(case))})
         nu.update({case: DAVEC(DIR+'NU:'+mrkr_form(case)+'.da')})
         tmp = [nbar[case].mean[e] for e in range(3)]
