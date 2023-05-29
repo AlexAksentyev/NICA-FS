@@ -2,7 +2,7 @@ CORE-DIR= $(HOME)/REPOS/COSYINF-CORE
 CORE = $(addsuffix .bin, cosy utilities elements)
 
 COMMON = $(addsuffix .bin, SECOND-ST/header 2ST+/header BYPASS/header NICA/header)
-SETUPS = $(addsuffix .bin, BYPASS/FULL_SEX_CLEAR BYPASS/SEQFULL_SEX_CLEAR BYPASS/FULL_SEX_wRC)
+SETUPS = $(addsuffix .bin, BYPASS/FULL_SEX_CLEAR BYPASS/SEQFULL_SEX_CLEAR BYPASS/FULL_SEX_wRC BYPASS/FULL_SEX_wRC)
 
 define RM
 	find $(1) -type f -name $(2) -print -delete
