@@ -1,0 +1,81 @@
+{the program for this research is to see how the n-bar flipping occurs}
+{ when approaching the spin resonance nu->0 (shoud be n=ny -> n=nxz)}
+{ and then the reverse movement by means of the radial compensator }
+
+INCLUDE 'bin/setups/BYPASS/FULL_SEX_wRC';
+
+PROCEDURE OUTPUT_MAP_DATA WHERE MRKR;
+  VARIABLE MU 800; VARIABLE NBAR 800 3; VARIABLE EL 1;
+  
+  TSS MU NBAR 0;
+  OPENF 3618 WHERE&'NU:'&MRKR&'.da' 'REPLACE'; WRITE 3618 MU; CLOSEF 3618;
+  LOOP EL 1 3;
+    OPENF 3618 WHERE&'NBAR'&MRK(EL)&':'&MRKR&'.da' 'REPLACE';
+      WRITE 3618 NBAR(EL);
+      CLOSEF 3618;
+  ENDLOOP;
+  {print transfer map}
+  OPENF 636 WHERE&'TrMAP:'&MRKR 'REPLACE';
+  PM 636; CLOSEF 636;
+  {print spin transfer map}
+  OPENF 636 WHERE&'SpTrMAP:'&MRKR 'REPLACE';
+  PSM 636; CLOSEF 636;
+  {print aberrations}
+  OPENF 636 WHERE&'ABERRATIONS:'&MRKR 'REPLACE';
+  PA 636; CLOSEF 636;
+ENDPROCEDURE; {map data output}
+
+FUNCTION TURNNUM NUM;
+    VARIABLE KILOS 1; VARIABLE MILS 1;
+    KILOS := NUM/1000;
+    MILS := NUM/1000000;
+    IF MILS<1;
+      TURNNUM := MRK(KILOS)&'K';
+    ELSEIF LO(1);
+      TURNNUM := MRK(MILS)&'M';
+    ENDIF;
+  ENDFUNCTION;
+
+
+PROCEDURE RESFLIP EBE {99.1475-..85} TILTS MRKR; { flip n-bar by approaching nu->0 on an imperfect lattice }
+  VARIABLE WHERE 300; {file metadata}
+
+  {lattice parameters}
+  VARIABLE SGX 1; VARIABLE SGY 1; {sextupole gradients}
+
+  WRITE 6 'MARKER:' MRKR;
+  DIRSET WHERE 'data/BYPASS_SEX_wRC/RESFLIP/'; DIRSET_AUTO 1;
+  GROUTF 'img/dump/TR' 1;
+
+
+  SGX := 0.0475358; SGY := -0.0124713; {optimal sextupole values (at this point)}
+
+  OV 3 3 0;
+  DAEPS 1E-12; {this sets DA garbage collection tolerance so that the TRANSFER MAP doesn't get the 1e-15 ABERRATION coefficient}
+  { SET lattice parameters }
+  SET_FOR_DEUTERONS 1.1279235;
+  LATTICE SGX SGX SGY
+          EBE
+          0 0 TILTS;
+  OPENF 9292 WHERE&'LATTICE-PARAMETERS:'&MRKR 'REPLACE';
+    WRITE 9292 '    SEXT-GX         SEXT-GY          EBE          RCNU           LCNU ';
+    WRITE 9292 SF(SGX, '(F15.7)')&SF(SGY, '(F15.7)')&SF(EBE, '(F15.7)')&SF(0, '(F15.7)')&SF(0, '(F15.7)');
+    CLOSEF 9292;
+  OUTPUT_MAP_DATA WHERE MRKR;
+    WRITE 6 'LATTICE LENGTH' SPOS;
+
+ENDPROCEDURE; {RESFLIP}
+
+PROCEDURE RUNRESFLIP;
+  VARIABLE TILTS 92; {elements' tilts vector}
+  VARIABLE I 1; VARIABLE EBE0 1; VARIABLE EBE1 1;
+  VARIABLE MRKR 100;
+  TILTS := VEGAUSS(0.5e-4, 1E-4, 92, 'data/BYPASS_SEX_wRC/EB_GAUSS:RESFLIP'); {in radians}  { <- ensure mean tilt value @ half RMS }
+  EBE0 := 99.14835;
+  LOOP I 0 50; MRKR := 'CASE_'&MRK(I); EBE1 := EBE0 + I*5E-6;
+    RESFLIP EBE1 TILTS MRKR; ENDLOOP;
+ENDPROCEDURE; {RUNRESFLIP}
+
+
+
+RUNRESFLIP; END;

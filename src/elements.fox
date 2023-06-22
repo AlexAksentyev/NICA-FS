@@ -146,7 +146,7 @@ PROCEDURE SBEND L {m} ANGLE {rad} TILT {rad} E1 {rad} H1 {1/m} E2 {rad} H2{1/m} 
   { ROTATE -TILT0; }  { * }
   IF ANGLE<0; CB; ENDIF;
   IF TILT#0; {this version of tilt implementation is only spin-dynamics effective * }
-    B0 = CONS(CHIM)/R; {B = BRho/Rho}
+    B0 := CONS(CHIM)/R; {B = BRho/Rho}
     BX := B0*TAN(TILT); {B0 = B' cos theta; Bx = B' sin theta}
     DWMDM := Z0/M0*EZERO/AMU*G0*BX;   {rad/sec}
     TOF := L/CONS(V0);                {sec}

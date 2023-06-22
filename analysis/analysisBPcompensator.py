@@ -86,7 +86,7 @@ def plot_RC_action(tilts0, nu0, n0, nuRLC): # vary RC at a fixed tilt distributi
     ax1.set_ylabel(r'$\angle(\bar n_x,\bar n_y)$ [deg]')
 
 if __name__ == '__main__':
-    cases = [int(re.sub('_','',e[-2:])) for e in glob(DIR+'ABERRATIONS:'+case_sign)]
+    cases = [int(re.findall(r'\d+',e)[0]) for e in glob(DIR+'ABERRATIONS:'+case_sign)]
     cases.sort()
     ncases = len(cases)
     nbar = {}; nu = {}

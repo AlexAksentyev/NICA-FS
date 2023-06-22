@@ -6,7 +6,7 @@ INCLUDE 'bin/common/BYPASS/header';
 
 {GAMMA := 1.12792344429;}  {this gamma gives 240 MeV for deuterons}
 
-PROCEDURE LATTICE SEXTGx1 SEXTGx2 SEXTGy EB NURC {RC spin tune} NUSL {LC spin tune} TILTVEC {12 WF tilts};
+PROCEDURE LATTICE SEXTGx1 SEXTGx2 SEXTGy EB NURC {RC spin tune} NUSL {LC spin tune} TILTVEC {92 WF+BENDS' tilts};
                                             
   VARIABLE VRF 1 1 1;
   VARIABLE FREQ 1;
