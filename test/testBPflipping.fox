@@ -76,6 +76,44 @@ PROCEDURE RUNRESFLIP;
     RESFLIP EBE1 TILTS MRKR; ENDLOOP;
 ENDPROCEDURE; {RUNRESFLIP}
 
+PROCEDURE REVFLIP nuRC {corrector varies * } TILTS MRKR; { the reVerse of resflip: standing in resonance, apply RC to restore n=ny }
+  VARIABLE WHERE 300; {file metadata}
 
+  {lattice parameters}
+  VARIABLE EBE0 1; {ground EB E-field resonance value: 99.14854 [kV/cm] }
+  VARIABLE SGX 1; VARIABLE SGY 1; {sextupole gradients}
 
-RUNRESFLIP; END;
+  WRITE 6 'MARKER:' MRKR;
+  DIRSET WHERE 'data/BYPASS_SEX_wRC/REVFLIP/'; DIRSET_AUTO 1;
+  GROUTF 'img/dump/TR' 1;
+
+  EBE0 := 99.14854;  {optimal EB E-field (found by reSflip)}
+  SGX := 0.0475358; SGY := -0.0124713; {optimal sextupole values (at this point)}
+
+  OV 3 3 0;
+  DAEPS 1E-12; {this sets DA garbage collection tolerance so that the TRANSFER MAP doesn't get the 1e-15 ABERRATION coefficient}
+  { SET lattice parameters }
+  SET_FOR_DEUTERONS 1.1279235;
+  LATTICE SGX SGX SGY
+          EBE0   {EB fixed  *  }
+          nuRC 0 TILTS;
+  OPENF 9292 WHERE&'LATTICE-PARAMETERS:'&MRKR 'REPLACE';
+    WRITE 9292 '    SEXT-GX         SEXT-GY          EBE          RCNU           LCNU ';
+    WRITE 9292 SF(SGX, '(F15.7)')&SF(SGY, '(F15.7)')&SF(EBE0, '(F15.7)')&SF(nuRC, '(F15.7)')&SF(0, '(F15.7)');
+    CLOSEF 9292;
+  OUTPUT_MAP_DATA WHERE MRKR;
+    WRITE 6 'LATTICE LENGTH' SPOS;
+
+ENDPROCEDURE; {REVFLIP}
+
+PROCEDURE RUNREVFLIP;
+  VARIABLE TILTS 92; {elements' tilts vector}
+  VARIABLE I 1; VARIABLE UFORCE 1;
+  VARIABLE MRKR 100;
+  TILTS := VEGAUSS(0.5e-4, 1E-4, 92, 'data/BYPASS_SEX_wRC/EB_GAUSS:REVFLIP'); {in radians}  { <- ensure mean tilt value @ half RMS }
+  UFORCE := -1e-2;
+  LOOP I 0 50; MRKR := 'CASE_'&MRK(I);
+    REVFLIP I*UFORCE TILTS MRKR; ENDLOOP;
+ENDPROCEDURE; {RUNREVFLIP}
+
+RUNREVFLIP; END;
