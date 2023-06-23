@@ -134,7 +134,8 @@ ENDPROCEDURE;
 PROCEDURE SBEND L {m} ANGLE {rad} TILT {rad} E1 {rad} H1 {1/m} E2 {rad} H2{1/m} FINT {unit} FINTX {unit};
   VARIABLE R 1; VARIABLE ANGLE0 1; VARIABLE TILT0 1;
   VARIABLE E10 1; VARIABLE E20 1;
-  VARIABLE B0 1; VARIABLE BX 1; VARIABLE TOF 1; VARIABLE DWMDM 1;
+  VARIABLE B0 1; VARIABLE BX 1;
+  VARIABLE GAMMA 1; VARIABLE TOF 1; VARIABLE DWMDM 1;
   E10 := E1/DEGRAD;
   E20 := E2/DEGRAD;
   ANGLE0 := ABS(ANGLE)/DEGRAD;
@@ -148,7 +149,9 @@ PROCEDURE SBEND L {m} ANGLE {rad} TILT {rad} E1 {rad} H1 {1/m} E2 {rad} H2{1/m} 
   IF TILT#0; {this version of tilt implementation is only spin-dynamics effective * }
     B0 := CONS(CHIM)/R; {B = BRho/Rho}
     BX := B0*TAN(TILT); {B0 = B' cos theta; Bx = B' sin theta}
-    DWMDM := Z0/M0*EZERO/AMU*G0*BX;   {rad/sec}
+    GAMMA := CONS(1 + E0/(M0*AMUMEV));
+    DWMDM := Z0/(M0*GAMMA)*EZERO/AMU*(GAMMA*G0+1)*BX; { since it is RSX (vertical) we don't remove +1 from (yG+1)*B }
+                                      {rad/sec} 
     TOF := L/CONS(V0);                {sec}
     RSX TOF*DWMDM/DEGRAD;             {deg} 
   ENDIF;
@@ -218,7 +221,8 @@ PROCEDURE WIEN L2 {m} B1 {kGs} B2 {kV/cm} TILT {rad}; {homogenous WF; closed orb
   VARIABLE L1 1;
   VARIABLE TILT0 1; VARIABLE TOF 1;
   VARIABLE BX 1; VARIABLE EY 1;
-  VARIABLE BETA 1; VARIABLE DWMDM 1; 
+  VARIABLE BETA 1;VARIABLE GAMMA 1;
+  VARIABLE DWMDMb 1; VARIABLE DWMDMe 1; VARIABLE DWMWM 1;
   L1:=L2; {in meters}
   B0:=ABS(B1)/10; {in Tesla}
   B3:=ABS(B2)*1e5;   {in V/m}
@@ -232,7 +236,10 @@ PROCEDURE WIEN L2 {m} B1 {kGs} B2 {kV/cm} TILT {rad}; {homogenous WF; closed orb
     BX := B0*TAN(TILT0); { WRITE 6 '--> BX, B0 = '&ST(BX)&', '&ST(B0); }
     EY := CONS(CHIE)/CONS(CHIM)*BX; { WRITE 6 '--> EY = '&ST(EY); }
     BETA := CONS(V0)/CLIGHT;
-    DWMDM := Z0/M0*EZERO/AMU*(G0*BX - (G0 - 1/BETA/BETA + 1)*BETA*EY/CLIGHT);              {rad/sec}
+    GAMMA := CONS(1 + E0/(M0*AMUMEV));
+    DWMDMb := (GAMMA*G0+1)*BX;                          {reduced   *}
+    DWMDMe := - GAMMA*(G0 + 1/(GAMMA+1))*BETA*EY/CLIGHT;  {reduced   *}  {original: [ - (G0 - 1/BETA/BETA + 1)*BETA*EY/CLIGHT ] }
+    DWMDM := Z0/(M0*GAMMA)*EZERO/AMU*(DWMDMb + DWMDMe); {fulfilled *}                      {rad/sec}
     TOF := L1/CONS(V0); { WRITE 6 '---> delta W mdm = '&ST(DWMDM); }                       {sec}
     RSX TOF*DWMDM/DEGRAD; { WRITE 6 '---> extra radial spin rotation = '&ST(TOF*DWMDM); }  {deg}
   ENDIF;    
