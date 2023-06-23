@@ -4,8 +4,12 @@ from analysis import DAVEC
 from glob import glob
 import re
 
-DIR = '../data/BYPASS_SEX_wRC/REVFLIP/'
-par_name = 'RCNU'
+DIR = '../data/BYPASS_SEX_wRC/REVFLIP-GAMMA/'
+par_name = 'GAMMA'
+
+xlabdict = {'RCNU':r'$\nu_{RC}$',
+                'EBE':'EB E-field [kV/cm]',
+                'GAMMA':r'beam $\gamma$'} # in TSS vs PAR
 mrkr_form = lambda n: 'CASE_{:d}'.format(n)
 case_sign = '*'
 
@@ -26,12 +30,12 @@ class NBAR:
 def load_data(dir):
     cases = [int(re.findall(r'\d+',e)[0]) for e in glob(DIR+'ABERRATIONS:'+case_sign)]
     cases.sort()
-    cases = np.arange(50)
+    #cases = np.arange(20)
     ncases = len(cases)
     nbar = {}; nu = {}
     n0 = np.zeros(ncases, dtype=list(zip(['X','Y','Z'],[float]*3))); nu0 = np.zeros(ncases)
     par = np.zeros(ncases)
-    pardict = {'EBE':2, 'RCNU':3}
+    pardict = {'EBE':2, 'RCNU':3, 'GAMMA':5}
     for i, case in enumerate(cases):
         print(case)
         nbar.update({case: NBAR(DIR, mrkr_form(case))})
@@ -60,7 +64,6 @@ def plot_nbar_vs_EB(EBe, n0):
 
 def plot_TSS_vs_PAR(par, nu0, n0):
     fig, ax = plt.subplots(4,1,sharex=True)
-    xlabdict = {'RCNU':r'$\nu_{RC}$', 'EBE':'EB E-field [kV/cm]'}
     color = ['k','g','r','b']
     ax[0].plot(par, nu0, color=color[0])
     ax[0].set_ylabel(r'$\nu_0$')
