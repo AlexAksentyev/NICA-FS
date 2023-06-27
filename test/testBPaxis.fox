@@ -1,0 +1,68 @@
+{ this test does spin-tracking in an imperfect (bend-tilted) lattice }
+{ in order to compute the invariant spin axis }
+
+INCLUDE 'bin/setups/BYPASS/FULL_SEX_wRC';
+
+PROCEDURE INJECT NUM ; 
+  VARIABLE X 100; VARIABLE I 1;
+  X := LINSPACE(-1E-3, 1E-3, NUM);
+  SR 0 0 0 0 0 0 0 0 1; SSR 0 0 1;
+  LOOP I 1 NUM;
+    SR X|I 0 0 0 0 0 0 0 1; SSR 0 0 1;
+    SR 0 0 X|I 0 0 0 0 0 1; SSR 0 0 1;
+    SR 0 0 0 0 0 (X|I)/10 0 0 1; SSR 0 0 1;
+  ENDLOOP;
+ENDPROCEDURE;
+
+PROCEDURE MAIN MRKR; { flip n-bar by approaching nu->0 on an imperfect lattice }
+  VARIABLE WHERE 300; {file metadata}
+  VARIABLE NTURN 1;
+  {lattice parameters}
+  VARIABLE SGX 1; VARIABLE SGY 1; {sextupole gradients}
+  VARIABLE TILTS 92; VARIABLE EBE0 1;
+
+  WRITE 6 'MARKER:' MRKR;
+  DIRSET WHERE 'data/BYPASS_SEX_wRC/AXIS/'; DIRSET_AUTO 1;
+  GROUTF 'img/dump/TR' 1;
+
+  SGX := 0.0475358; SGY := -0.0124713; {optimal sextupole values (at this point)}
+  TILTS := VEGAUSS(0, 1E-4, 92, WHERE&'GAUSS:'&MRKR); {in radians}  { <- ensure mean tilt value @ half RMS }
+  EBE0 := 99.14855;
+
+  OV 3 3 0;
+  DAEPS 1E-12; {this sets DA garbage collection tolerance so that the TRANSFER MAP doesn't get the 1e-15 ABERRATION coefficient}
+  { SET lattice parameters }
+  SET_FOR_DEUTERONS 1.1279235;
+  LATTICE SGX SGX SGY
+          EBE0
+          0 0 TILTS;
+  OPENF 9292 WHERE&'LATTICE-PARAMETERS:'&MRKR 'REPLACE';
+    WRITE 9292 '    SEXT-GX         SEXT-GY          EBE          RCNU           LCNU ';
+    WRITE 9292 SF(SGX, '(F15.7)')&SF(SGY, '(F15.7)')&SF(EBE0, '(F15.7)')&SF(0, '(F15.7)')&SF(0, '(F15.7)');
+    CLOSEF 9292;
+  OUTPUT_MAP_DATA WHERE MRKR;
+    WRITE 6 'LATTICE LENGTH' SPOS;
+
+  {tracking}
+  NTURN := 300000; INJECT 10;
+  WRITE 6 '******************** STARTING TRACKING';
+  OPENF 99 WHERE&'PRAY:'&MRKR&'.dat' 'REPLACE';
+  PRAY 99; CLOSEF 99;
+  OPENF 772 WHERE&'TRPRAY:'&MRKR&'.dat' 'REPLACE';
+  OPENF 893 WHERE&'TRPSPI:'&MRKR&'.dat' 'REPLACE';
+  TRPRAY 772; TRPSPI 893;
+  TR NTURN NINT(NTURN/5000) -1 -3 1.2 1.2 0 0 -12;
+  CLOSEF 772; CLOSEF 893;
+
+ENDPROCEDURE; {MAIN}
+
+PROCEDURE RUN;
+  VARIABLE TILTS 92; {elements' tilts vector}
+  VARIABLE I 1;
+  VARIABLE MRKR 100;
+  
+  LOOP I 0 10; MRKR := 'CASE_'&MRK(I);
+    MAIN MRKR; ENDLOOP;
+ENDPROCEDURE; {RUN}
+
+RUN; END;

@@ -1,0 +1,106 @@
+import numpy as np
+import matplotlib.pyplot as plt; plt.ion()
+from analysis import DAVEC, load_data
+from glob import glob
+import re
+from analysisBPflipping import NBAR
+from scipy.optimize import curve_fit
+
+DIR = '../data/BYPASS_SEX_wRC/AXIS/'
+
+Fcyc = 0.2756933208648683e6 # beam revolution frequency [Hz]
+TAU = 1/Fcyc # revolution period [sec]
+
+mrkr_form = lambda n: 'CASE_{:d}'.format(n)
+case_sign = '*'
+    
+def load_tss(dir):
+    cases = [int(re.findall(r'\d+',e)[0]) for e in glob(DIR+'ABERRATIONS:'+case_sign)]
+    cases.sort()
+    #cases = np.arange(20)
+    ncases = len(cases)
+    nbar = {}; nu = {}
+    n0 = np.zeros(ncases, dtype=list(zip(['X','Y','Z'],[float]*3))); nu0 = np.zeros(ncases)
+    tilts = np.zeros((ncases, 92))
+    for i, case in enumerate(cases):
+        print(case)
+        nbar.update({case: NBAR(DIR, mrkr_form(case))})
+        nu.update({case: DAVEC(DIR+'NU:'+mrkr_form(case)+'.da')})
+        tmp = [nbar[case].mean[e] for e in range(3)]
+        n0[i] = tmp[0],tmp[1], tmp[2]
+        nu0[i] = nu[case].const
+        tilts[i] = np.loadtxt(DIR+'GAUSS:'+mrkr_form(case)+'.in')
+    return nu, nbar, nu0, n0, tilts
+
+def load_tr(dir):
+    cases = [int(re.findall(r'\d+',e)[0]) for e in glob(DIR+'ABERRATIONS:'+case_sign)]
+    cases.sort()
+    #cases = np.arange(20)
+    ncases = len(cases)
+    #datdict = {}
+    psdatdict = {}
+    for i, case in enumerate(cases):
+        print(case)
+        #datdict.update({case: load_data(dir, 'TRPRAY:CASE_{}.dat'.format(case))})
+        psdatdict.update({case: load_data(dir, 'TRPSPI:CASE_{}.dat'.format(case))})
+    return psdatdict#, datdict
+
+def fit_const(x,y):
+    const = lambda x, c: 0*x + c
+    popt, perr = curve_fit(const, x, y)
+    popt = popt[0]; perr = perr[0,0]
+    return popt, perr
+
+def average_nbar(vect):
+    x = np.arange(vect['X'].shape[0])
+    avg = {}; err = {}
+    for tag in ['X','Y','Z']:
+        popt, perr = fit_const(x, vect[tag])
+        avg.update({tag:popt})
+        err.update({tag:perr})
+    return avg, err
+
+def compute_nbar0(trdat):
+    spin0 = trdat[:,0] # pick reference ray only
+    A = spin0[:-1] # S_ini;   normalized, hence 
+    B = spin0[1:] # S_fin     no need to normalize
+    n = np.zeros(A.shape, dtype=list(zip(['X','Y','Z'], [float]*3)))
+    # cross product components
+    n['X'] = A['S_Y']*B['S_Z']-A['S_Z']*B['S_Y']
+    n['Y'] = A['S_Z']*B['S_X']-A['S_X']*B['S_Z']
+    n['Z'] = A['S_X']*B['S_Y']-A['S_Y']*B['S_X']
+    # normalizing
+    nn = np.sqrt(n['X']**2 + n['Y']**2 + n['Z']**2)
+    for tag in ['X','Y','Z']:
+        n[tag] /= nn
+    # angle computation
+    theta = np.arccos(
+        np.sum(list(A[tag]*B[tag] for tag in ['S_X','S_Y','S_Z']), axis=0)
+        ) # rotation angle
+    
+    return n, theta
+
+def nbar_analysis(n0tss, trdat):
+    n0trk, thtrk = compute_nbar0(trdat)
+    n0trk_mean, n0trk_err = average_nbar(n0trk)
+    t = trdat[1:,0]['iteration']*TAU
+    fig, ax = plt.subplots(3,1, sharex=True)
+    for i, tag in enumerate(['X','Y','Z']):
+        ax[i].plot(t, n0trk[tag],
+                       label='tracking',
+                       ls='solid')
+        ax[i].plot(t, n0trk_mean[tag]+0*t,
+                       label='mean',
+                       ls='dashed')
+        ax[i].plot(t, n0tss[tag]+0*t,
+                       label='tss',
+                       ls='dotted')
+        ax[i].legend()
+        ax[i].set_ylabel(r'$\bar n_{}$'.format(tag))
+    ax[2].set_xlabel('t [sec]')
+    return fig, ax
+
+if __name__ == '__main__':
+    nu, nbar, nu0, n0, tilts = load_tss(DIR)
+    psdat = load_tr(DIR)
+    nbar, theta = compute_nbar0(psdat[0])
