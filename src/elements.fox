@@ -182,7 +182,6 @@ PROCEDURE RBEND L {m} ANGLE {rad} TILT {rad};
   IF ANGLE<0; CB; ENDIF;
 ENDPROCEDURE; {RBEND}
 
-
 PROCEDURE SOLENOID L {m} KS {rad/m}; {this solenoid implementation accounts for the saturation effect (top B-field)}
   VARIABLE B0 1; VARIABLE A 1;
   VARIABLE BTOP 1; {maximum magnetic field in solenoid; cannot go any further}
@@ -266,14 +265,14 @@ PROCEDURE RADC1 L {m} B {kGs} ; { radial magnetic field compensator (modeled by 
   DL L; RSX TOF*DWMDM;
 ENDPROCEDURE;
 
-PROCEDURE RADC L {m} W {rad/s};
+PROCEDURE RADC L {m} W {rad/s} ;
   VARIABLE L1 1; VARIABLE W1 1; VARIABLE TOF 1;
   VARIABLE DS 1;
   L1 := L;
-  W1 := W;            { WRITE 6 'RADIAL CORRECTOR' };
+  W1 := W;            { WRITE 6 'RADIAL CORRECTOR'; }
   TOF := L1/CONS(V0); { WRITE 6 'TIME-OF-FLIGHT = '&SF(TOF, '(E15.7)'); }
   DS := TOF * W;      { WRITE 6 'DELTA SPIN = '&SF(DS, '(E15.7)'); }
   DL L; RSX DS;
 ENDPROCEDURE;
- 
+
 SAVE 'bin/elements';
