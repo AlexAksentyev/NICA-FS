@@ -1,6 +1,6 @@
 import numpy as np
 import matplotlib.pyplot as plt; plt.ion()
-from analysis import DAVEC, load_data
+from analysis import DAVEC, load_data, guess_freq
 from glob import glob
 import re
 from analysisBPflipping import NBAR
@@ -13,7 +13,37 @@ TAU = 1/Fcyc # revolution period [sec]
 
 mrkr_form = lambda n: 'CASE_{:d}'.format(n)
 case_sign = '*'
-    
+
+def fit_sine(x,y):
+    fun = lambda x, a,f,p: a*np.sin(2*np.pi*f*x + p)
+    popt, pcov = curve_fit(fun, x, y)
+    perr = np.sqrt(np.diag(pcov))
+    return popt, perr
+def fit_SPN(spdat, pid=0):
+    t = spdat[:,pid]['iteration']*TAU
+    fun = lambda x, a,f,p: a*np.sin(2*np.pi*f*x + p)
+    par, err = {}, {}
+    names = ['A','F','P']
+    p0dict = {'S_X':0, 'S_Y':0, 'S_Z':1}
+    fig, ax = plt.subplots(3,1,sharex=True)
+    for i, tag in enumerate(['S_X','S_Y','S_Z']):
+        y = spdat[:,pid][tag]
+        # initial guesses
+        a0 = (np.max(y) - np.min(y))/2
+        f0 = guess_freq(t, y)
+        print(a0, f0)
+        # fit
+        popt, pcov = curve_fit(fun, t, y, p0 = (a0,f0,p0dict[tag]))
+        perr = np.sqrt(np.diag(pcov))
+        par.update({tag:dict(zip(names, popt))})
+        err.update({tag:dict(zip(names, perr))})
+        # plot
+        ax[i].plot(t, y, 'b-')
+        ax[i].plot(t, fun(t, *popt), 'r--', label='f = {:4.2f}'.format(popt[1]))
+        ax[i].set_ylabel(tag)
+        ax[i].legend()
+    ax[2].set_xlabel('t [sec]')
+    return par, err
 def load_tss(dir):
     cases = [int(re.findall(r'\d+',e)[0]) for e in glob(DIR+'ABERRATIONS:'+case_sign)]
     cases.sort()
@@ -121,7 +151,8 @@ def plot_PS(phdat, pid=0):
     ax2.set_xlabel('Y [mm]'); ax2.set_ylabel('B [mrad]')
     ax3.plot(ph['T'], ph['D'], '.')
     ax3.set_xlabel('T'); ax3.set_ylabel('D')
-    ax3.ticklabel_format(style='sci', scilimits=(0,0),useMathText=True,axis='both')
+    for ax in (ax1, ax2, ax3):
+        ax.ticklabel_format(style='sci', scilimits=(0,0),useMathText=True,axis='both')
     ax4.plot(t, ph['X']*1000, label='X')
     ax4.plot(t, ph['Y']*1000, label='Y')
     ax4.set_xlabel('t [sec]'); ax4.set_ylabel('trans. coord')
@@ -144,5 +175,6 @@ def plot_SPN(spdat, pid=0):
 if __name__ == '__main__':
     nu, nbar, nu0, n0, tilts = load_tss(DIR)
     spdat, phdat = load_tr(DIR)
-    nbar, theta = compute_nbar0(spdat[0])
-    fig, ax = nbar_analysis(n0[0], spdat[0])
+    nbar, theta = compute_nbar0(spdat[3])
+    fig, ax = nbar_analysis(n0[3], spdat[3])
+    fig = plot_PS(phdat[3])
