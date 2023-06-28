@@ -1,9 +1,8 @@
 import numpy as np
 import matplotlib.pyplot as plt; plt.ion()
-from analysis import DAVEC, load_data, guess_freq
+from analysis import DAVEC, NBAR, load_data, guess_freq
 from glob import glob
 import re
-from analysisBPflipping import NBAR
 from scipy.optimize import curve_fit
 
 DIR = '../data/BYPASS_SEX_wRC/AXIS/LONG/'

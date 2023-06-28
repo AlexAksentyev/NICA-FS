@@ -184,6 +184,20 @@ class DAVEC:
     def __add__(self, other):
         return self.poly.add(other.poly)
 
+class NBAR:
+    def __init__(self, folder, mrkr):
+        self._dict = {}
+        for i, lbl in [(1,'X'),(2,'Y'),(3,'Z')]:
+            self._dict.update({lbl:DAVEC(folder+'NBAR{:d}:{}.da'.format(i, mrkr))})
+        self._mean = np.array([self._dict[e].const for e in ['X','Y','Z']])
+        self._norm = np.sqrt(np.sum(self._mean**2))
+    @property
+    def mean(self):
+        return self._mean
+    @property
+    def norm(self):
+        return self._norm
+
 class Polarization(Data):
     def __init__(self, iteration, eid, value, spin_proj):
         self._data = np.array(list(zip(iteration, eid, value)),

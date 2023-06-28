@@ -37,29 +37,32 @@ FUNCTION TURNNUM NUM;
   ENDFUNCTION;
 
 
-PROCEDURE RESFLIP EBE {99.1475-..85} TILTS MRKR; { flip n-bar by approaching nu->0 on an imperfect lattice }
+PROCEDURE RESFLIP DGAMMA TILTS MRKR; { flip n-bar by approaching nu->0 on an imperfect lattice }
   VARIABLE WHERE 300; {file metadata}
 
   {lattice parameters}
   VARIABLE SGX 1; VARIABLE SGY 1; {sextupole gradients}
+  VARIABLE EBE0 1; {Wien-filter E-field (optimum)}
 
   WRITE 6 'MARKER:' MRKR;
-  DIRSET WHERE 'data/BYPASS_SEX_wRC/RESFLIP/'; DIRSET_AUTO 1;
+  DIRSET WHERE 'data/BYPASS_SEX_wRC/RESFLIP-GAMMA/'; DIRSET_AUTO 1;
   GROUTF 'img/dump/TR' 1;
 
 
   SGX := 0.0475358; SGY := -0.0124713; {optimal sextupole values (at this point)}
+  EBE0 := 99.14855;
 
   OV 3 3 0;
-  DAEPS 1E-12; {this sets DA garbage collection tolerance so that the TRANSFER MAP doesn't get the 1e-15 ABERRATION coefficient}
+  DAEPS 1E-12; {this sets DA garbage collection tolerance so that}
+               {the TRANSFER MAP doesn't get the 1e-15 ABERRATION coefficient}
   { SET lattice parameters }
-  SET_FOR_DEUTERONS 1.1279235;
+  SET_FOR_DEUTERONS 1.1279235+DGAMMA;
   LATTICE SGX SGX SGY
-          EBE
+          EBE0
           0 0 TILTS;
   OPENF 9292 WHERE&'LATTICE-PARAMETERS:'&MRKR 'REPLACE';
-    WRITE 9292 '    SEXT-GX         SEXT-GY          EBE          RCNU           LCNU ';
-    WRITE 9292 SF(SGX, '(F15.7)')&SF(SGY, '(F15.7)')&SF(EBE, '(F15.7)')&SF(0, '(F15.7)')&SF(0, '(F15.7)');
+    WRITE 9292 '    SEXT-GX         SEXT-GY          EBE          DGAMMA ';
+    WRITE 9292 SF(SGX, '(F15.7)')&SF(SGY, '(F15.7)')&SF(EBE0, '(F15.7)')&SF(DGAMMA, '(F15.7)');
     CLOSEF 9292;
   OUTPUT_MAP_DATA WHERE MRKR;
     WRITE 6 'LATTICE LENGTH' SPOS;
@@ -68,12 +71,11 @@ ENDPROCEDURE; {RESFLIP}
 
 PROCEDURE RUNRESFLIP;
   VARIABLE TILTS 92; {elements' tilts vector}
-  VARIABLE I 1; VARIABLE EBE0 1; VARIABLE EBE1 1;
+  VARIABLE I 1; VARIABLE DGAMMA 1;
   VARIABLE MRKR 100;
   TILTS := VEGAUSS(0.5e-4, 1E-4, 92, 'data/BYPASS_SEX_wRC/EB_GAUSS:RESFLIP'); {in radians}  { <- ensure mean tilt value @ half RMS }
-  EBE0 := 99.14835;
-  LOOP I 0 50; MRKR := 'CASE_'&MRK(I); EBE1 := EBE0 + I*5E-6;
-    RESFLIP EBE1 TILTS MRKR; ENDLOOP;
+  LOOP I 0 20; MRKR := 'CASE_'&MRK(I); DGAMMA := (I-10)*5E-5;
+    RESFLIP DGAMMA TILTS MRKR; ENDLOOP;
 ENDPROCEDURE; {RUNRESFLIP}
 
 PROCEDURE REVFLIP PAR {nuRC or GAMMA * } TILTS MRKR; { the reVerse of resflip: standing in resonance, apply RC to restore n=ny }
@@ -119,4 +121,4 @@ PROCEDURE RUNREVFLIP;
     REVFLIP I*PARUF TILTS MRKR; ENDLOOP;
 ENDPROCEDURE; {RUNREVFLIP}
 
-RUNREVFLIP; END;
+RUNRESFLIP; END;

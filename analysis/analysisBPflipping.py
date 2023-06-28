@@ -1,41 +1,27 @@
 import numpy as np
 import matplotlib.pyplot as plt; plt.ion()
-from analysis import DAVEC
+from analysis import DAVEC, NBAR
 from glob import glob
 import re
 
-DIR = '../data/BYPASS_SEX_wRC/REVFLIP-GAMMA/'
-par_name = 'GAMMA'
-
+DIR = '../data/BYPASS_SEX_wRC/RESFLIP-GAMMA/'
+par_name = 'DGAMMA'
+pardict = {'EBE':2, 'DGAMMA':3}
 xlabdict = {'RCNU':r'$\nu_{RC}$',
-                'EBE':'EB E-field [kV/cm]',
-                'GAMMA':r'beam $\gamma$'} # in TSS vs PAR
+            'EBE':'EB E-field [kV/cm]',
+            'DGAMMA':r'beam $\Delta\gamma$'} # in TSS vs PAR
 mrkr_form = lambda n: 'CASE_{:d}'.format(n)
 case_sign = '*'
 
-class NBAR:
-    def __init__(self, folder, mrkr):
-        self._dict = {}
-        for i, lbl in [(1,'X'),(2,'Y'),(3,'Z')]:
-            self._dict.update({lbl:DAVEC(folder+'NBAR{:d}:{}.da'.format(i, mrkr))})
-        self._mean = np.array([self._dict[e].const for e in ['X','Y','Z']])
-        self._norm = np.sqrt(np.sum(self._mean**2))
-    @property
-    def mean(self):
-        return self._mean
-    @property
-    def norm(self):
-        return self._norm
 
 def load_data(dir):
     cases = [int(re.findall(r'\d+',e)[0]) for e in glob(DIR+'ABERRATIONS:'+case_sign)]
     cases.sort()
-    #cases = np.arange(20)
+    #cases = np.arange(10)
     ncases = len(cases)
     nbar = {}; nu = {}
     n0 = np.zeros(ncases, dtype=list(zip(['X','Y','Z'],[float]*3))); nu0 = np.zeros(ncases)
     par = np.zeros(ncases)
-    pardict = {'EBE':2, 'RCNU':3, 'GAMMA':5}
     for i, case in enumerate(cases):
         print(case)
         nbar.update({case: NBAR(DIR, mrkr_form(case))})
