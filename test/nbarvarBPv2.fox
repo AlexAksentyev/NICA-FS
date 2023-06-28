@@ -1,3 +1,8 @@
+{in this code i approach the Wien-filter E-field from a non-frozen}
+{to the frozen value. as i do so, the n-bar axis flips from the vertical}
+{to a horizontal orientation (the lattice is tilted). i look at how}
+{spin-vector dispersion behaves during this flipping}
+
 INCLUDE 'bin/setups/BYPASS/FULL_SEX_wRC';
 
 PROCEDURE INJECT NUM PSI_DEG; {at injection: SX = 0, SY, SZ = sin PSI, cos PSI}
@@ -26,6 +31,7 @@ PROCEDURE MAIN CASEPARS        LATPARS     TILTS   DATDIR;
   VARIABLE EBE_I 1; VARIABLE EBE_F 1; {EB E-field change range}
   VARIABLE EBE 1; {current EB E-field value}
   VARIABLE NSWITCH 1; {number of EB E-field switchings}
+  VARIABLE NFREE 1; {number of turns to track AFTER flipping}
   VARIABLE FTR 1; {number of turns at a constant EB E-field}
   VARIABLE SCALE 1; {scale needed to keep data below a certain size}
   VARIABLE CASE 1; {current switch case} VARIABLE PCT 1; {tracking percent}
@@ -55,9 +61,10 @@ PROCEDURE MAIN CASEPARS        LATPARS     TILTS   DATDIR;
   SGX  := LATPARS(1); SGY  := LATPARS(2);
   NURC := LATPARS(3); NULS := LATPARS(4);
   {********** CONTROLS **********}
-  NSWITCH := 300000;
+  NSWITCH := 3000;
   FTR := 1; {number of turns at a CONSTANT psi SETTING}
   SCALE := INT(NSWITCH/5000); IF SCALE=0; SCALE:=1; ENDIF; {output data every SCALE}
+  NFREE := 3000; {a small number of post-flipping turns}
   {***********************************}
   DIRSET WHERE DATDIR;
   
@@ -81,7 +88,7 @@ PROCEDURE MAIN CASEPARS        LATPARS     TILTS   DATDIR;
   WRITE 100503 '# TURN PID NU NX NY NZ';
   {+++++++++++++++++++++++++++++++++++++++++++++++++++++}
   
-  {tracking}
+  {tracking (during flipping)}
   LOOP CASE 1 NSWITCH; EBE := EBE_F - (CASE - NSWITCH)*CASEPARS(2); {CASEPARS(2) (var ATTUNE in RUN) = [kV/cm/switch]}
     WRITE 6 'CASE '&SF(CASE, '(I10)');
     PUSH EBE;  {push through FTR turns}
@@ -92,9 +99,22 @@ PROCEDURE MAIN CASEPARS        LATPARS     TILTS   DATDIR;
         WRITETBL 100503 MUARR 4 SF(CASE*FTR, '(I15)');
       ENDIF;
   ENDLOOP;
+  {continue    (lattice is set the last case of the previous loop)   }
+  {   tracking after flipping for awhile   }
+  WRITE 6 'FREE POST-FLIP TRACKING';
+  FTR := INT(NFREE/500); {track for NFREE turns, output data every FTR turns}
+  LRAY RAYH; LSPI SPIH;              {loads RAY, SPI after previous tracking ...}
+  LOOP CASE 1 500;
+    TR FTR -FTR -1 -3 1.1 1.1 0 0 -12; {track for FTR turns}
+      GET_TUNE_ENSEMBLE MUARR;          {compute nu, nbar for the current turn}
+      WRITETBL 100501 SPI   3 SF(NSWITCH+CASE*FTR, '(I15)');  {output data}
+      WRITETBL 100502 RAY   6 SF(NSWITCH+CASE*FTR, '(I15)');
+      WRITETBL 100503 MUARR 4 SF(NSWITCH+CASE*FTR, '(I15)');
+      {... saving RAY, SPI unnecessary since lattice unchanged}
+  ENDLOOP;
 ENDPROCEDURE; {MAIN}
 
-PROCEDURE RUN;                                               {code iterates over a field of possible nbar rates-of-change}
+PROCEDURE RUN;                                      {code iterates over a field of possible nbar rates-of-change}
   VARIABLE DATDIR 500; {where to output data files}
   VARIABLE TRIALV 1; VARIABLE TRIALP 1; {iterator over DEGperSWITCH}
   VARIABLE ATTUNE 1 2; {EB E-field attuning end-field and change rate [kV/cm/switch]}
